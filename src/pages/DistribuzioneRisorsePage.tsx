@@ -144,7 +144,6 @@ const VariableFundingItem: React.FC<{
   );
 };
 
-// FIX: Made the SimpleFundingItem component generic to resolve type errors by accepting a type parameter T.
 const SimpleFundingItem = <T extends Record<string, any>>({
   id,
   description,
@@ -599,7 +598,11 @@ export const DistribuzioneRisorsePage: React.FC = () => {
                   setIsMaggiorazioneUserEdited(false);
                   handleChange('criteri_percMaggiorazionePremio', e.target.value === '' ? undefined : parseFloat(e.target.value));
                 }}
-                min="0" max="100" step="1"
+                min="0"
+                max="100" 
+                step="1"
+                inputInfo="Il valore non può essere inferiore al 30% del valore medio pro capite."
+                warning={(distribuzioneRisorseData.criteri_percMaggiorazionePremio ?? 0) < 30 ? "Valore inferiore al minimo contrattuale del 30%." : undefined}
               />
               <Input
                 label="% Dipendenti con Bonus Maggiorazione"

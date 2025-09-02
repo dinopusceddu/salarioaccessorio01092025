@@ -1,10 +1,10 @@
 // components/dataInput/HistoricalDataForm.tsx
 import React from 'react';
-import { useAppContext } from '../../contexts/AppContext.tsx';
-import { HistoricalData } from '../../types.ts';
-import { Input } from '../shared/Input.tsx';
-import { Card } from '../shared/Card.tsx';
-import { TEXTS_UI } from '../../constants.ts';
+import { useAppContext } from '../../contexts/AppContext';
+import { HistoricalData } from '../../types';
+import { Input } from '../shared/Input';
+import { Card } from '../shared/Card';
+import { TEXTS_UI } from '../../constants';
 
 export const HistoricalDataForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -98,8 +98,6 @@ export const HistoricalDataForm: React.FC = () => {
           {formatCurrencyForDisplay(limiteComplessivo2016)}
         </p>
       </div>
-
-      <hr className="my-6 border-t border-[#d1c0c1]" />
-
-      <h4 className="text-base font-semibold text-[#1b0e0e] mb-1">Dati Anno Precedente per Confronto Dashboard</h4>
-      <p className="text-sm text-[#5f5252] mb-4
+    </Card>
+  );
+};

@@ -144,7 +144,6 @@ const VariableFundingItem: React.FC<{
   );
 };
 
-// FIX: Made the SimpleFundingItem component generic to resolve type errors
 const SimpleFundingItem = <T extends Record<string, any>>({
   id,
   description,
@@ -162,28 +161,35 @@ const SimpleFundingItem = <T extends Record<string, any>>({
   disabled?: boolean;
   inputInfo?: string | React.ReactNode;
 }) => (
-    <div className={`grid grid-cols-12 gap-x-4 gap-y-2 py-4 border-b border-[#f3e7e8] last:border-b-0 items-start transition-colors hover:bg-[#fcf8f8] ${disabled ? 'opacity-60 bg-gray-50' : ''}`}>
-      <div className="col-span-12 md:col-span-8 flex flex-col justify-center h-full">
-        <label htmlFor={id as string} className={`block text-sm text-[#1b0e0e] ${disabled ? 'cursor-not-allowed' : ''}`}>
-          {description}
-        </label>
-        {riferimentoNormativo && <p className="text-xs text-[#5f5252] mt-0.5">{riferimentoNormativo}</p>}
-      </div>
-      <div className="col-span-12 md:col-span-4">
-        <Input
-          type="number"
-          id={id as string}
-          value={value ?? ''}
-          onChange={(e) => onChange(id, e.target.value === '' ? undefined : parseFloat(e.target.value))}
-          placeholder="0.00"
-          step="0.01"
-          inputClassName={`text-right w-full h-11 p-2.5 ${disabled ? 'bg-white' : 'bg-[#f3e7e8]'}`}
-          containerClassName="mb-0"
-          disabled={disabled}
-        />
-        {inputInfo && <div className="text-xs text-[#5f5252] mt-1">{inputInfo}</div>}
-      </div>
+  <div
+    className={`grid grid-cols-12 gap-x-4 gap-y-2 py-4 border-b border-[#f3e7e8] last:border-b-0 items-start transition-colors hover:bg-[#fcf8f8] ${
+      disabled ? 'opacity-60 bg-gray-50' : ''
+    }`}
+  >
+    <div className="col-span-12 md:col-span-8 flex flex-col justify-center h-full">
+      <label
+        htmlFor={id as string}
+        className={`block text-sm text-[#1b0e0e] ${disabled ? 'cursor-not-allowed' : ''}`}
+      >
+        {description}
+      </label>
+      {riferimentoNormativo && <p className="text-xs text-[#5f5252] mt-0.5">{riferimentoNormativo}</p>}
     </div>
+    <div className="col-span-12 md:col-span-4">
+      <Input
+        type="number"
+        id={id as string}
+        value={value ?? ''}
+        onChange={(e) => onChange(id, e.target.value === '' ? undefined : parseFloat(e.target.value))}
+        placeholder="0.00"
+        step="0.01"
+        inputClassName={`text-right w-full h-11 p-2.5 ${disabled ? 'bg-white' : 'bg-[#f3e7e8]'}`}
+        containerClassName="mb-0"
+        disabled={disabled}
+      />
+      {inputInfo && <div className="text-xs text-[#5f5252] mt-1">{inputInfo}</div>}
+    </div>
+  </div>
 );
 
 const CalculatedDisplayItem: React.FC<{ label: string; value?: number; infoText?: string | React.ReactNode; isWarning?: boolean; isBold?: boolean }> = ({ label, value, infoText, isWarning = false, isBold = false }) => (
@@ -592,7 +598,11 @@ export const DistribuzioneRisorsePage: React.FC = () => {
                   setIsMaggiorazioneUserEdited(false);
                   handleChange('criteri_percMaggiorazionePremio', e.target.value === '' ? undefined : parseFloat(e.target.value));
                 }}
-                min="0" max="100" step="1"
+                min="0"
+                max="100" 
+                step="1"
+                inputInfo="Il valore non può essere inferiore al 30% del valore medio pro capite."
+                warning={(distribuzioneRisorseData.criteri_percMaggiorazionePremio ?? 0) < 30 ? "Valore inferiore al minimo contrattuale del 30%." : undefined}
               />
               <Input
                 label="% Dipendenti con Bonus Maggiorazione"

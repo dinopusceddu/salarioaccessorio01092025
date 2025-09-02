@@ -112,7 +112,6 @@ export const getFadEffectiveValueHelper = (
     isDisabledBySourceDefinition: boolean | undefined,
     isEnteInCondizioniSpecialiGlobal: boolean | undefined,
     simulatoreRisultati?: SimulatoreIncrementoRisultati,
-    // FIX: Added 'incrementoEQconRiduzioneDipendenti' to the function signature to handle specific calculation cases.
     incrementoEQconRiduzioneDipendenti?: number
 ): number => {
     if (isDisabledBySourceDefinition && isEnteInCondizioniSpecialiGlobal) {
@@ -406,8 +405,96 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
 };
 
 // --- Compliance Checks ---
+
+const verificaCorrispondenzaRisorseVincolate = (fundData: FundData): ComplianceCheck[] => {
+  const { fondoAccessorioDipendenteData, distribuzioneRisorseData } = fundData;
+  const results: ComplianceCheck[] = [];
+
+  const MAPPINGS_FONTI_USI_VINCOLATI = [
+    {
+      fonteKey: 'vn_art54_art67c3f_rimborsoSpeseNotifica',
+      usoKey: 'p_compensiMessiNotificatori',
+      descrizione: 'Corrispondenza Risorse Messi Notificatori',
+      riferimento: 'Art. 54 CCNL 01.04.1999',
+    },
+    {
+      fonteKey: 'vs_art67c3g_personaleCaseGioco',
+      usoKey: 'p_compensiCaseGioco',
+      descrizione: 'Corrispondenza Risorse Personale Case da Gioco',
+      riferimento: 'Art. 67 c.3g CCNL 2018',
+    },
+    {
+      fonteKey: 'vn_l145_art1c1091_incentiviRiscossioneIMUTARI',
+      usoKey: 'p_incentiviIMUTARI',
+      descrizione: 'Corrispondenza Risorse Incentivi IMU/TARI',
+      riferimento: 'L. 145/2018 Art.1 c.1091',
+    },
+     {
+      fonteKey: 'vn_art15c1k_art67c3c_incentiviTecniciCondoni',
+      usoKeys: ['p_incentiviFunzioniTecnichePost2018', 'p_incentiviCondonoFunzioniTecnichePre2018'],
+      descrizione: 'Corrispondenza Risorse Incentivi Funzioni Tecniche',
+      riferimento: 'Art. 45 D.Lgs 36/2023',
+    }
+  ];
+
+  for (const mapping of MAPPINGS_FONTI_USI_VINCOLATI) {
+    const fonteImporto = fondoAccessorioDipendenteData[mapping.fonteKey as keyof FondoAccessorioDipendenteData] as number || 0;
+    
+    let usoImporto = 0;
+    if ('usoKey' in mapping) {
+       usoImporto = (distribuzioneRisorseData[mapping.usoKey as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
+    } else if ('usoKeys' in mapping) {
+        usoImporto = mapping.usoKeys.reduce((sum, key) => {
+            const importo = (distribuzioneRisorseData[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
+            return sum + importo;
+        }, 0);
+    }
+
+    const id = `corrispondenza_${mapping.fonteKey}`;
+    const valoreAttuale = `Fonte: ${fonteImporto.toFixed(2)}€, Uso: ${usoImporto.toFixed(2)}€`;
+
+    if (usoImporto > fonteImporto) {
+      results.push({
+        id,
+        descrizione: mapping.descrizione,
+        isCompliant: false,
+        valoreAttuale,
+        limite: `Uso <= Fonte`,
+        messaggio: `L'importo distribuito per questa finalità (${usoImporto.toFixed(2)}€) supera la fonte dedicata (${fonteImporto.toFixed(2)}€). Questo costituisce un'errata imputazione delle risorse.`,
+        riferimentoNormativo: mapping.riferimento,
+        gravita: 'error',
+      });
+    } else if (fonteImporto > 0 && usoImporto < fonteImporto) {
+      results.push({
+        id,
+        descrizione: mapping.descrizione,
+        isCompliant: true, // Technically compliant, but worth a warning
+        valoreAttuale,
+        limite: `Uso <= Fonte`,
+        messaggio: `Non tutte le risorse della fonte dedicata (${fonteImporto.toFixed(2)}€) sono state allocate per questa finalità. Si suggerisce di verificare la corretta allocazione di ${ (fonteImporto - usoImporto).toFixed(2) }€.`,
+        riferimentoNormativo: mapping.riferimento,
+        gravita: 'warning',
+      });
+    } else {
+        results.push({
+            id,
+            descrizione: mapping.descrizione,
+            isCompliant: true,
+            valoreAttuale,
+            limite: `Uso <= Fonte`,
+            messaggio: "Le risorse stanziate corrispondono a quelle allocate.",
+            riferimentoNormativo: mapping.riferimento,
+            gravita: 'info',
+        });
+    }
+  }
+
+  return results;
+};
+
+
 export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData: FundData, normativeData: NormativeData): ComplianceCheck[] => {
-  const checks: ComplianceCheck[] = [];
+  let checks: ComplianceCheck[] = [];
   const { annualData, fondoAccessorioDipendenteData, fondoElevateQualificazioniData, distribuzioneRisorseData } = fundData;
   const { riferimenti_normativi } = normativeData;
 
@@ -487,117 +574,146 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
       }
   }
 
-  // 3. Controlli per la Distribuzione Risorse Dipendenti
-  const risorseDaDistribuire = calculatedFund.dettaglioFondi.dipendente.totale;
-  if (risorseDaDistribuire > 0) {
-      const data = distribuzioneRisorseData || ({} as DistribuzioneRisorseData);
-      const utilizziParteStabile = 
-            (data.u_diffProgressioniStoriche || 0) +
-            (data.u_indennitaComparto || 0) +
-            (data.u_incrIndennitaEducatori?.stanziate || 0) +
-            (data.u_incrIndennitaScolastico?.stanziate || 0) +
-            (data.u_indennitaEx8QF?.stanziate || 0);
+  // Controlli che si attivano solo in modalità distribuzione
+  if (annualData.isDistributionMode) {
+      // 3. Controlli per la Distribuzione Risorse Dipendenti
+      const risorseDaDistribuire = calculatedFund.dettaglioFondi.dipendente.totale;
+      if (risorseDaDistribuire > 0) {
+          const data = distribuzioneRisorseData || ({} as DistribuzioneRisorseData);
+          const utilizziParteStabile = 
+                (data.u_diffProgressioniStoriche || 0) +
+                (data.u_indennitaComparto || 0) +
+                (data.u_incrIndennitaEducatori?.stanziate || 0) +
+                (data.u_incrIndennitaScolastico?.stanziate || 0) +
+                (data.u_indennitaEx8QF?.stanziate || 0);
 
-      const utilizziParteVariabile = Object.keys(data)
-          .filter(key => key.startsWith('p_'))
-          .reduce((sum, key) => {
-              const value = data[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail | undefined;
-              return sum + (value?.stanziate || 0);
-          }, 0);
-      
-      const totaleAllocato = utilizziParteStabile + utilizziParteVariabile;
-      const importoRimanente = risorseDaDistribuire - totaleAllocato;
+          const utilizziParteVariabile = Object.keys(data)
+              .filter(key => key.startsWith('p_'))
+              .reduce((sum, key) => {
+                  const value = data[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail | undefined;
+                  return sum + (value?.stanziate || 0);
+              }, 0);
+          
+          const totaleAllocato = utilizziParteStabile + utilizziParteVariabile;
+          const importoRimanente = risorseDaDistribuire - totaleAllocato;
+          const importoDisponibileContrattazione = risorseDaDistribuire - utilizziParteStabile;
 
-      if (utilizziParteStabile > risorseDaDistribuire) {
-          checks.push({
-              id: 'distribuzione_stabile_supera_totale',
-              descrizione: "Costi Parte Stabile superano le Risorse Disponibili",
-              isCompliant: false,
-              valoreAttuale: `€ ${utilizziParteStabile.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              limite: `€ ${risorseDaDistribuire.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              messaggio: `I costi fissi della Parte Stabile superano il totale da distribuire. Impossibile procedere con l'allocazione della parte variabile.`,
-              riferimentoNormativo: "Principi di corretta gestione finanziaria",
-              gravita: 'error',
-          });
-      }
+          if (utilizziParteStabile > risorseDaDistribuire) {
+              checks.push({
+                  id: 'distribuzione_stabile_supera_totale',
+                  descrizione: "Costi Parte Stabile superano le Risorse Disponibili",
+                  isCompliant: false,
+                  valoreAttuale: `€ ${utilizziParteStabile.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  limite: `€ ${risorseDaDistribuire.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  messaggio: `I costi fissi della Parte Stabile superano il totale da distribuire. Impossibile procedere con l'allocazione della parte variabile.`,
+                  riferimentoNormativo: "Principi di corretta gestione finanziaria",
+                  gravita: 'error',
+              });
+          }
 
-      if (importoRimanente < -0.005) { // Tolleranza per errori di arrotondamento
-          checks.push({
-              id: 'distribuzione_superamento_budget',
-              descrizione: "Superamento del budget nella Distribuzione Risorse Dipendenti",
-              isCompliant: false,
-              valoreAttuale: `€ ${totaleAllocato.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              limite: `€ ${risorseDaDistribuire.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              messaggio: `L'importo totale allocato per il personale dipendente supera le risorse disponibili di € ${Math.abs(importoRimanente).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
-              riferimentoNormativo: "Art. 80 CCNL 16.11.2022",
-              gravita: 'error',
-          });
-      } else {
-          checks.push({
-              id: 'distribuzione_rispetto_budget',
-              descrizione: "Rispetto del budget nella Distribuzione Risorse Dipendenti",
-              isCompliant: true,
-              valoreAttuale: `€ ${totaleAllocato.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              limite: `€ ${risorseDaDistribuire.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              messaggio: `L'allocazione delle risorse per il personale dipendente rispetta il budget. Rimanenza: € ${importoRimanente.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
-              riferimentoNormativo: "Art. 80 CCNL 16.11.2022",
-              gravita: 'info',
-          });
-      }
-  }
-  
-  // 4. Controlli per la Distribuzione Risorse EQ
-  const totaleFondoEQ = calculatedFund.dettaglioFondi.eq.totale;
-  if (totaleFondoEQ > 0) {
-      const eqData = fondoElevateQualificazioniData || ({} as FondoElevateQualificazioniData);
-      const sommaDistribuzioneFondoEQ = 
-          (eqData.st_art17c2_retribuzionePosizione || 0) +
-          (eqData.st_art17c3_retribuzionePosizioneArt16c4 || 0) +
-          (eqData.st_art17c5_interimEQ || 0) +
-          (eqData.st_art23c5_maggiorazioneSedi || 0) +
-          (eqData.va_art17c4_retribuzioneRisultato || 0);
+          if (importoRimanente < -0.005) { // Tolleranza per errori di arrotondamento
+              checks.push({
+                  id: 'distribuzione_superamento_budget',
+                  descrizione: "Superamento del budget nella Distribuzione Risorse Dipendenti",
+                  isCompliant: false,
+                  valoreAttuale: `€ ${totaleAllocato.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  limite: `€ ${risorseDaDistribuire.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  messaggio: `L'importo totale allocato per il personale dipendente supera le risorse disponibili di € ${Math.abs(importoRimanente).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
+                  riferimentoNormativo: "Art. 80 CCNL 16.11.2022",
+                  gravita: 'error',
+              });
+          } else {
+              checks.push({
+                  id: 'distribuzione_rispetto_budget',
+                  descrizione: "Rispetto del budget nella Distribuzione Risorse Dipendenti",
+                  isCompliant: true,
+                  valoreAttuale: `€ ${totaleAllocato.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  limite: `€ ${risorseDaDistribuire.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  messaggio: `L'allocazione delle risorse per il personale dipendente rispetta il budget. Rimanenza: € ${importoRimanente.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
+                  riferimentoNormativo: "Art. 80 CCNL 16.11.2022",
+                  gravita: 'info',
+              });
+          }
 
-      if (sommaDistribuzioneFondoEQ > totaleFondoEQ) {
-          checks.push({
-              id: 'distribuzione_eq_superamento_budget',
-              descrizione: "Superamento budget nella Distribuzione Risorse EQ",
-              isCompliant: false,
-              valoreAttuale: `€ ${sommaDistribuzioneFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              limite: `€ ${totaleFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              messaggio: `La somma delle retribuzioni di posizione e risultato per le EQ supera il fondo disponibile di € ${(sommaDistribuzioneFondoEQ - totaleFondoEQ).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
-              riferimentoNormativo: "Principi di corretta gestione finanziaria",
-              gravita: 'error',
-          });
-      } else {
-          checks.push({
-              id: 'distribuzione_eq_rispetto_budget',
-              descrizione: "Rispetto del budget nella Distribuzione Risorse EQ",
-              isCompliant: true,
-              valoreAttuale: `€ ${sommaDistribuzioneFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              limite: `€ ${totaleFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              messaggio: "L'allocazione delle risorse per le EQ rispetta il budget.",
-              riferimentoNormativo: "Principi di corretta gestione finanziaria",
-              gravita: 'info',
-          });
+          if (importoDisponibileContrattazione > 0) {
+            const totalePerformanceIndividuale = 
+              (data.p_performanceIndividuale?.stanziate || 0) +
+              (data.p_maggiorazionePerformanceIndividuale?.stanziate || 0);
+            
+            const limiteMinimo30 = importoDisponibileContrattazione * 0.30;
+            const isCompliant = totalePerformanceIndividuale >= limiteMinimo30;
+
+            checks.push({
+              id: 'verifica_quota_minima_performance_individuale',
+              descrizione: "Verifica Quota Minima Performance Individuale (Art. 80 CCNL 2022)",
+              isCompliant,
+              valoreAttuale: `€ ${totalePerformanceIndividuale.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              limite: `≥ € ${limiteMinimo30.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              messaggio: isCompliant
+                ? "La quota destinata alla performance individuale (inclusa maggiorazione) rispetta il minimo del 30% delle risorse disponibili alla contrattazione."
+                : "La quota destinata alla performance individuale (inclusa maggiorazione) è inferiore al minimo obbligatorio del 30% delle risorse disponibili alla contrattazione.",
+              riferimentoNormativo: "Art. 80, c. penultimo, CCNL 16.11.2022",
+              gravita: isCompliant ? 'info' : 'error',
+            });
+          }
       }
       
-      const minimoRisultatoEQ = totaleFondoEQ * 0.15;
-      const risultatoStanziatoEQ = eqData.va_art17c4_retribuzioneRisultato || 0;
-      if (risultatoStanziatoEQ < minimoRisultatoEQ) {
-          checks.push({
-              id: 'verifica_quota_minima_risultato_eq',
-              descrizione: "Verifica quota minima Retribuzione di Risultato EQ",
-              isCompliant: false,
-              valoreAttuale: `€ ${risultatoStanziatoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              limite: `≥ € ${minimoRisultatoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              messaggio: "La quota destinata alla retribuzione di risultato è inferiore al 15% minimo previsto dal CCNL.",
-              riferimentoNormativo: `${riferimenti_normativi.art17_ccnl2022} c.4`,
-              gravita: 'warning',
-          });
+      // 4. Controlli per la Distribuzione Risorse EQ
+      const totaleFondoEQ = calculatedFund.dettaglioFondi.eq.totale;
+      if (totaleFondoEQ > 0) {
+          const eqData = fondoElevateQualificazioniData || ({} as FondoElevateQualificazioniData);
+          const sommaDistribuzioneFondoEQ = 
+              (eqData.st_art17c2_retribuzionePosizione || 0) +
+              (eqData.st_art17c3_retribuzionePosizioneArt16c4 || 0) +
+              (eqData.st_art17c5_interimEQ || 0) +
+              (eqData.st_art23c5_maggiorazioneSedi || 0) +
+              (eqData.va_art17c4_retribuzioneRisultato || 0);
+
+          if (sommaDistribuzioneFondoEQ > totaleFondoEQ) {
+              checks.push({
+                  id: 'distribuzione_eq_superamento_budget',
+                  descrizione: "Superamento budget nella Distribuzione Risorse EQ",
+                  isCompliant: false,
+                  valoreAttuale: `€ ${sommaDistribuzioneFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  limite: `€ ${totaleFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  messaggio: `La somma delle retribuzioni di posizione e risultato per le EQ supera il fondo disponibile di € ${(sommaDistribuzioneFondoEQ - totaleFondoEQ).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
+                  riferimentoNormativo: "Principi di corretta gestione finanziaria",
+                  gravita: 'error',
+              });
+          } else {
+              checks.push({
+                  id: 'distribuzione_eq_rispetto_budget',
+                  descrizione: "Rispetto del budget nella Distribuzione Risorse EQ",
+                  isCompliant: true,
+                  valoreAttuale: `€ ${sommaDistribuzioneFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  limite: `€ ${totaleFondoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  messaggio: "L'allocazione delle risorse per le EQ rispetta il budget.",
+                  riferimentoNormativo: "Principi di corretta gestione finanziaria",
+                  gravita: 'info',
+              });
+          }
+          
+          const minimoRisultatoEQ = totaleFondoEQ * 0.15;
+          const risultatoStanziatoEQ = eqData.va_art17c4_retribuzioneRisultato || 0;
+          if (risultatoStanziatoEQ < minimoRisultatoEQ) {
+              checks.push({
+                  id: 'verifica_quota_minima_risultato_eq',
+                  descrizione: "Verifica quota minima Retribuzione di Risultato EQ",
+                  isCompliant: false,
+                  valoreAttuale: `€ ${risultatoStanziatoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  limite: `≥ € ${minimoRisultatoEQ.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                  messaggio: "La quota destinata alla retribuzione di risultato è inferiore al 15% minimo previsto dal CCNL.",
+                  riferimentoNormativo: `${riferimenti_normativi.art17_ccnl2022} c.4`,
+                  gravita: 'warning',
+              });
+          }
       }
+
+      // 5. Coerenza Fonti-Usi Vincolati
+      checks = [...checks, ...verificaCorrispondenzaRisorseVincolate(fundData)];
   }
 
-  // 5. Coerenza Simulatore vs. Incremento Decreto PA
+  // 6. Coerenza Simulatore vs. Incremento Decreto PA
   const maxIncrementoSimulatore = annualData.simulatoreRisultati?.fase5_incrementoNettoEffettivoFondo;
   if (maxIncrementoSimulatore !== undefined && maxIncrementoSimulatore > 0) {
       const incrementoInserito = fondoAccessorioDipendenteData?.st_incrementoDecretoPA || 0;

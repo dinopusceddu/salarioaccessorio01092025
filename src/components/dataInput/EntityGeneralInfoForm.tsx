@@ -1,11 +1,11 @@
 // components/dataInput/EntityGeneralInfoForm.tsx
 import React from 'react';
-import { useAppContext } from '../../contexts/AppContext.tsx';
-import { AnnualData, TipologiaEnte } from '../../types.ts';
-import { Input } from '../shared/Input.tsx';
-import { Select } from '../shared/Select.tsx';
-import { Card } from '../shared/Card.tsx';
-import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants.ts';
+import { useAppContext } from '../../contexts/AppContext';
+import { AnnualData, TipologiaEnte } from '../../types';
+import { Input } from '../shared/Input';
+import { Select } from '../shared/Select';
+import { Card } from '../shared/Card';
+import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants';
 
 const booleanOptions = [
   { value: 'true', label: TEXTS_UI.trueText },
@@ -146,6 +146,24 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Seleziona..."
           aria-required="true"
           containerClassName="mb-3"
+        />
+      </div>
+
+      <hr className="my-6 border-t border-[#d1c0c1]" />
+
+      <h4 className="text-base font-semibold text-[#1b0e0e] mb-1">Dati Specifici Anno di Riferimento</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0">
+        <Input
+          label="Fondo per il Lavoro Straordinario (€)"
+          type="number"
+          id="fondoLavoroStraordinario"
+          name="fondoLavoroStraordinario"
+          value={annualData.fondoLavoroStraordinario ?? ''}
+          onChange={handleChange}
+          placeholder="Es. 20000.00"
+          step="0.01"
+          containerClassName="mb-3"
+          inputInfo="Inserire l'importo stanziato per il lavoro straordinario per l'anno di riferimento."
         />
       </div>
     </Card>

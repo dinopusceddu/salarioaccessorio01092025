@@ -273,6 +273,7 @@ export interface AnnualData {
   simulatoreRisultati?: SimulatoreIncrementoRisultati; 
   fondoStabile2016PNRR?: number;
   calcolatoIncrementoPNRR3?: number;
+  fondoLavoroStraordinario?: number;
 }
 
 export interface RisorsaVariabileDetail {

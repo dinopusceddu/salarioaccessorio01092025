@@ -106,7 +106,6 @@ export const calculateSimulazione = (
 
 // --- FROM pages/FondoAccessorioDipendentePageHelpers.ts ---
 
-// FIX: Update function signature to accept 6 arguments for consistency and handle special cases centrally.
 export const getFadEffectiveValueHelper = (
     key: keyof FondoAccessorioDipendenteData, 
     originalValue: number | undefined,
@@ -139,7 +138,6 @@ export const calculateFadTotals = (
     
     const getValue = (key: keyof FondoAccessorioDipendenteData) => {
         const definition = fadFieldDefinitions.find(def => def.key === key);
-        // FIX: Pass all 6 arguments to the helper function for consistent value calculation.
         return getFadEffectiveValueHelper(
             key, 
             fadData[key], 
@@ -168,7 +166,6 @@ export const calculateFadTotals = (
         getValue('st_art79c1d_differenzialiStipendiali2022') +
         getValue('st_art79c1bis_diffStipendialiB3D3') +
         getValue('st_incrementoDecretoPA') -
-        // FIX: Use getValue for consistency instead of handling this case separately.
         getValue('st_riduzionePerIncrementoEQ');
 
 
@@ -408,8 +405,102 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
 };
 
 // --- Compliance Checks ---
+
+const verificaCorrispondenzaRisorseVincolate = (fundData: FundData): ComplianceCheck[] => {
+  const { fondoAccessorioDipendenteData, distribuzioneRisorseData } = fundData;
+  const results: ComplianceCheck[] = [];
+
+  const MAPPINGS_FONTI_USI_VINCOLATI = [
+    {
+      fonteKey: 'vn_art54_art67c3f_rimborsoSpeseNotifica',
+      usoKey: 'p_compensiMessiNotificatori',
+      descrizione: 'Corrispondenza Risorse Messi Notificatori',
+      riferimento: 'Art. 54 CCNL 01.04.1999',
+    },
+    {
+      fonteKey: 'vs_art67c3g_personaleCaseGioco',
+      usoKey: 'p_compensiCaseGioco',
+      descrizione: 'Corrispondenza Risorse Personale Case da Gioco',
+      riferimento: 'Art. 67 c.3g CCNL 2018',
+    },
+    {
+      fonteKey: 'vn_l145_art1c1091_incentiviRiscossioneIMUTARI',
+      usoKey: 'p_incentiviIMUTARI',
+      descrizione: 'Corrispondenza Risorse Incentivi IMU/TARI',
+      riferimento: 'L. 145/2018 Art.1 c.1091',
+    },
+     {
+      fonteKey: 'vn_art15c1k_art67c3c_incentiviTecniciCondoni',
+      usoKeys: ['p_incentiviFunzioniTecnichePost2018', 'p_incentiviCondonoFunzioniTecnichePre2018'],
+      descrizione: 'Corrispondenza Risorse Incentivi Funzioni Tecniche',
+      riferimento: 'Art. 45 D.Lgs 36/2023',
+    },
+    {
+      fonteKey: 'vn_art18h_art67c3c_incentiviSpeseGiudizioCensimenti',
+      usoKeys: ['p_incentiviContoTerzi', 'p_compensiAvvocatura'],
+      descrizione: 'Corrispondenza Risorse Avvocatura e Censimenti/ISTAT',
+      riferimento: 'Art. 67 c.3c CCNL 2018 (Spese Giudizio/ISTAT)',
+    }
+  ];
+
+  for (const mapping of MAPPINGS_FONTI_USI_VINCOLATI) {
+    const fonteImporto = fondoAccessorioDipendenteData[mapping.fonteKey as keyof FondoAccessorioDipendenteData] as number || 0;
+    
+    let usoImporto = 0;
+    if ('usoKey' in mapping) {
+       usoImporto = (distribuzioneRisorseData[mapping.usoKey as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
+    } else if ('usoKeys' in mapping) {
+        usoImporto = mapping.usoKeys.reduce((sum, key) => {
+            const importo = (distribuzioneRisorseData[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
+            return sum + importo;
+        }, 0);
+    }
+
+    const id = `corrispondenza_${mapping.fonteKey}`;
+    const valoreAttuale = `Fonte: ${fonteImporto.toFixed(2)}€, Uso: ${usoImporto.toFixed(2)}€`;
+
+    if (usoImporto > fonteImporto) {
+      results.push({
+        id,
+        descrizione: mapping.descrizione,
+        isCompliant: false,
+        valoreAttuale,
+        limite: `Uso <= Fonte`,
+        messaggio: `L'importo distribuito per questa finalità (${usoImporto.toFixed(2)}€) supera la fonte dedicata (${fonteImporto.toFixed(2)}€). Questo costituisce un'errata imputazione delle risorse.`,
+        riferimentoNormativo: mapping.riferimento,
+        gravita: 'error',
+      });
+    } else if (fonteImporto > 0 && usoImporto < fonteImporto) {
+      results.push({
+        id,
+        descrizione: mapping.descrizione,
+        isCompliant: true, // Technically compliant, but worth a warning
+        valoreAttuale,
+        limite: `Uso <= Fonte`,
+        messaggio: `Non tutte le risorse della fonte dedicata (${fonteImporto.toFixed(2)}€) sono state allocate per questa finalità. Si suggerisce di verificare la corretta allocazione di ${ (fonteImporto - usoImporto).toFixed(2) }€.`,
+        riferimentoNormativo: mapping.riferimento,
+        gravita: 'warning',
+      });
+    } else {
+        results.push({
+            id,
+            descrizione: mapping.descrizione,
+            isCompliant: true,
+            valoreAttuale,
+            limite: `Uso <= Fonte`,
+            messaggio: "Le risorse stanziate corrispondono a quelle allocate.",
+            riferimentoNormativo: mapping.riferimento,
+            gravita: 'info',
+        });
+    }
+  }
+
+  return results;
+};
+
+
 export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData: FundData, normativeData: NormativeData): ComplianceCheck[] => {
-  const checks: ComplianceCheck[] = [];
+  let checks: ComplianceCheck[] = [];
   const { annualData, fondoAccessorioDipendenteData, fondoElevateQualificazioniData, distribuzioneRisorseData } = fundData;
   const { riferimenti_normativi } = normativeData;
 
@@ -509,6 +600,7 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
       
       const totaleAllocato = utilizziParteStabile + utilizziParteVariabile;
       const importoRimanente = risorseDaDistribuire - totaleAllocato;
+      const importoDisponibileContrattazione = risorseDaDistribuire - utilizziParteStabile;
 
       if (utilizziParteStabile > risorseDaDistribuire) {
           checks.push({
@@ -545,6 +637,28 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
               riferimentoNormativo: "Art. 80 CCNL 16.11.2022",
               gravita: 'info',
           });
+      }
+
+      if (importoDisponibileContrattazione > 0) {
+        const totalePerformanceIndividuale = 
+          (data.p_performanceIndividuale?.stanziate || 0) +
+          (data.p_maggiorazionePerformanceIndividuale?.stanziate || 0);
+        
+        const limiteMinimo30 = importoDisponibileContrattazione * 0.30;
+        const isCompliant = totalePerformanceIndividuale >= limiteMinimo30;
+
+        checks.push({
+          id: 'verifica_quota_minima_performance_individuale',
+          descrizione: "Verifica Quota Minima Performance Individuale (Art. 80 CCNL 2022)",
+          isCompliant,
+          valoreAttuale: `€ ${totalePerformanceIndividuale.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          limite: `≥ € ${limiteMinimo30.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          messaggio: isCompliant
+            ? "La quota destinata alla performance individuale (inclusa maggiorazione) rispetta il minimo del 30% delle risorse disponibili alla contrattazione."
+            : "La quota destinata alla performance individuale (inclusa maggiorazione) è inferiore al minimo obbligatorio del 30% delle risorse disponibili alla contrattazione.",
+          riferimentoNormativo: "Art. 80, c. penultimo, CCNL 16.11.2022",
+          gravita: isCompliant ? 'info' : 'error',
+        });
       }
   }
   
@@ -599,7 +713,10 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
       }
   }
 
-  // 5. Coerenza Simulatore vs. Incremento Decreto PA
+  // 5. Coerenza Fonti-Usi Vincolati
+  checks = [...checks, ...verificaCorrispondenzaRisorseVincolate(fundData)];
+
+  // 6. Coerenza Simulatore vs. Incremento Decreto PA
   const maxIncrementoSimulatore = annualData.simulatoreRisultati?.fase5_incrementoNettoEffettivoFondo;
   if (maxIncrementoSimulatore !== undefined && maxIncrementoSimulatore > 0) {
       const incrementoInserito = fondoAccessorioDipendenteData?.st_incrementoDecretoPA || 0;

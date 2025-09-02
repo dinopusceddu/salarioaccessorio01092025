@@ -13,7 +13,7 @@ export const RIF_ART45_DLGS36_2023 = "Art. 45 D.Lgs. 36/2023";
 export const RIF_ART208_CDS = "Art. 208, D.Lgs. 285/1992";
 export const RIF_ART14_DL25_2025 = "Art. 14, D.L. 25/2025";
 export const RIF_DM_17_03_2020 = "DM 17/03/2020";
-export const RIF_L296_06_C557 = "Art. 1, c. 557, L. 296/2006";
+export const RIF_L296_06_C557 = "Art. 1, c. 557, L. 296/06";
 export const RIF_INCREMENTO_DECRETO_PA = "DL PA / Misure Urgenti";
 export const RIF_ART23_DLGS75_2017 = "Art. 23, c.2, D.Lgs. 75/2017";
 export const RIF_ART8_DL13_2023 = "Art. 8, D.L. 13/2023";
@@ -43,9 +43,6 @@ export const RIF_CCNL_DIR_17122020_ART57C2D = "Art. 57, c.2d, CCNL Dirigenza 17.
 export const RIF_CCNL_DIR_17122020_ART57C3 = "Art. 57, c.3, CCNL Dirigenza 17.12.2020";
 export const RIF_CCNL_DIR_16072024_ART39C2 = "Art. 39, c.2, CCNL Dirigenza 16.07.2024";
 export const RIF_DL16_2014_ART4 = "Art. 4, DL 16/2014";
-export const RIF_ART17_CCNL2022 = "Art. 17 CCNL 16.11.2022";
-export const RIF_ART23_C5_CCNL2022 = "Art. 23, c.5, CCNL 16.11.2022";
-
 
 export const INITIAL_HISTORICAL_DATA = {
   fondoSalarioAccessorioPersonaleNonDirEQ2016: undefined,
@@ -203,7 +200,7 @@ export const INITIAL_DISTRIBUZIONE_RISORSE_DATA: DistribuzioneRisorseData = {
   p_pianiWelfare: undefined,
   criteri_isConsuntivoMode: false,
   criteri_percPerfIndividuale: 50,
-  criteri_percMaggiorazionePremio: 20,
+  criteri_percMaggiorazionePremio: 30,
   criteri_percDipendentiBonus: 5,
 };
 
@@ -296,23 +293,3 @@ export const INDENNITA_COMPARTO_VALUES = {
     [AreaQualifica.ISTRUTTORE]: 500,
     [AreaQualifica.FUNZIONARIO_EQ]: 600,
 };
-
-// FIX: Added placeholder data for distribuzioneFieldDefinitions
-export const distribuzioneFieldDefinitions: Array<{
-  key: keyof DistribuzioneRisorseData;
-  description: string;
-  riferimento: string;
-  section: 'Utilizzi Parte Stabile (Art. 80 c.1)' | 'Utilizzi Parte Variabile (Art. 80 c.2)';
-}> = [
-  // Utilizzi Parte Stabile
-  { key: 'u_diffProgressioniStoriche', description: "Differenziali progressioni orizzontali storiche", riferimento: `Art. 80, c.1`, section: 'Utilizzi Parte Stabile (Art. 80 c.1)' },
-  { key: 'u_indennitaComparto', description: "Indennità di comparto", riferimento: `Art. 80, c.1`, section: 'Utilizzi Parte Stabile (Art. 80 c.1)' },
-  { key: 'u_incrIndennitaEducatori', description: "Incremento indennità personale educativo asili nido", riferimento: `Art. 80, c.1`, section: 'Utilizzi Parte Stabile (Art. 80 c.1)' },
-  { key: 'u_incrIndennitaScolastico', description: "Incremento indennità personale scolastico", riferimento: `Art. 80, c.1`, section: 'Utilizzi Parte Stabile (Art. 80 c.1)' },
-  { key: 'u_indennitaEx8QF', description: "Indennità personale ex 8^ q.f. non titolare di PO", riferimento: `Art. 80, c.1`, section: 'Utilizzi Parte Stabile (Art. 80 c.1)' },
-
-  // Utilizzi Parte Variabile
-  { key: 'p_performanceOrganizzativa', description: "Premi correlati alla performance organizzativa", riferimento: `Art. 80, c.2, lett. a)`, section: 'Utilizzi Parte Variabile (Art. 80 c.2)' },
-  { key: 'p_performanceIndividuale', description: "Premi correlati alla performance individuale", riferimento: `Art. 80, c.2, lett. b)`, section: 'Utilizzi Parte Variabile (Art. 80 c.2)' },
-  { key: 'p_maggiorazionePerformanceIndividuale', description: "Premi per la maggiorazione della performance individuale", riferimento: `Art. 80, c.2, lett. b)`, section: 'Utilizzi Parte Variabile (Art. 80 c.2)' },
-];

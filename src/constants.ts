@@ -200,7 +200,7 @@ export const INITIAL_DISTRIBUZIONE_RISORSE_DATA: DistribuzioneRisorseData = {
   p_pianiWelfare: undefined,
   criteri_isConsuntivoMode: false,
   criteri_percPerfIndividuale: 50,
-  criteri_percMaggiorazionePremio: 30,
+  criteri_percMaggiorazionePremio: 20,
   criteri_percDipendentiBonus: 5,
 };
 
@@ -228,7 +228,9 @@ export const INITIAL_ANNUAL_DATA = {
   simulatoreInput: INITIAL_SIMULATORE_INPUT,
   simulatoreRisultati: undefined, 
   fondoStabile2016PNRR: undefined,
-  calcolatoIncrementoPNRR3: undefined, 
+  calcolatoIncrementoPNRR3: undefined,
+  // FIX: Added missing property 'fondoLavoroStraordinario' to the initial state object.
+  fondoLavoroStraordinario: undefined, 
 };
 
 export const DEFAULT_USER = {

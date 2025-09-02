@@ -9,6 +9,7 @@ import { TEXTS_UI } from '../../constants';
 export const HistoricalDataForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { historicalData } = state.fundData;
+  const { validationErrors } = state;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -57,6 +58,7 @@ export const HistoricalDataForm: React.FC = () => {
           step="0.01"
           aria-required="true"
           containerClassName="mb-3"
+          error={validationErrors.fondoSalarioAccessorioPersonaleNonDirEQ2016}
         />
         <Input
           label="Fondo Elevate Qualificazioni (EQ) 2016 (€)"
@@ -97,6 +99,24 @@ export const HistoricalDataForm: React.FC = () => {
         <p className="text-xl font-bold text-[#ea2832] mt-1">
           {formatCurrencyForDisplay(limiteComplessivo2016)}
         </p>
+      </div>
+
+      <hr className="my-6 border-t border-[#d1c0c1]" />
+
+      <h4 className="text-base font-semibold text-[#1b0e0e] mb-1">Dati Anno Precedente per Confronto Dashboard</h4>
+      <p className="text-sm text-[#5f5252] mb-4">Inserire i valori dell'anno precedente per visualizzare i trend nella dashboard.</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0">
+        <Input
+          label={`Totale Fondo Anno Precedente (${state.fundData.annualData.annoRiferimento - 1}) (€)`}
+          type="number"
+          id="totaleFondoAnnoPrecedente"
+          name="totaleFondoAnnoPrecedente"
+          value={historicalData.totaleFondoAnnoPrecedente ?? ''}
+          onChange={handleChange}
+          placeholder="Es. 350000.00"
+          step="0.01"
+          containerClassName="mb-3"
+        />
       </div>
     </Card>
   );

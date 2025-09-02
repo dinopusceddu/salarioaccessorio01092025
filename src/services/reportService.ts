@@ -10,13 +10,15 @@ import {
     SimulatoreIncrementoInput,
     SimulatoreIncrementoRisultati,
     TipologiaEnte,
-    NormativeData
-} from './types';
+    NormativeData,
+    DistribuzioneRisorseData,
+    RisorsaVariabileDetail
+} from '../types';
 import { 
     getFadFieldDefinitions, 
-} from './pages/FondoAccessorioDipendentePageHelpers';
-import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from './constants'; 
-import { getFadEffectiveValueHelper, calculateFadTotals } from './logic/fundEngine';
+} from '../pages/FondoAccessorioDipendentePageHelpers';
+import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../constants'; 
+import { getFadEffectiveValueHelper, calculateFadTotals } from '../logic/fundEngine';
 
 
 // --- PDF Helper Functions ---
@@ -35,7 +37,8 @@ const checkYAndAddPage = (doc: jsPDF, spaceNeeded: number) => {
 };
 
 const addSectionTitle = (doc: jsPDF, title: string, bold: boolean = true) => {
-    checkYAndAddPage(doc, LINE_SPACING * 2);
+    checkYAndAddPage(doc, LINE_SPACING * 3);
+    CURRENT_Y += SECTION_SPACING * 0.5;
     doc.setFontSize(14);
     if (bold) doc.setFont('helvetica', 'bold');
     doc.text(title, MARGIN, CURRENT_Y);
@@ -44,7 +47,7 @@ const addSectionTitle = (doc: jsPDF, title: string, bold: boolean = true) => {
 };
 
 const addSubTitle = (doc: jsPDF, title: string) => {
-    checkYAndAddPage(doc, LINE_SPACING * 1.5);
+    checkYAndAddPage(doc, LINE_SPACING * 2);
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text(title, MARGIN, CURRENT_Y);
@@ -52,11 +55,13 @@ const addSubTitle = (doc: jsPDF, title: string) => {
     CURRENT_Y += LINE_SPACING * 1.2;
 };
 
-const addKeyValueTable = (doc: jsPDF, data: Array<{ label: string; value: string | undefined }>, title?: string) => {
+const addKeyValueTable = (doc: jsPDF, data: Array<{ label: string; value: string | number | undefined }>, title?: string) => {
     if (title) addSubTitle(doc, title);
     const body = data.map(row => [row.label, row.value || TEXTS_UI.notApplicable]);
     
-    checkYAndAddPage(doc, body.length * LINE_SPACING * 1.2); 
+    // Estimate height and add page if needed
+    const estimatedHeight = body.length * 8 + 10; // Approx 8px per row + head
+    checkYAndAddPage(doc, estimatedHeight); 
 
     autoTable(doc, {
         startY: CURRENT_Y,
@@ -65,7 +70,7 @@ const addKeyValueTable = (doc: jsPDF, data: Array<{ label: string; value: string
         theme: 'grid',
         headStyles: { fillColor: '#e0e7ff', textColor: '#1e3a8a', fontStyle: 'bold' as FontStyle, fontSize: 9 }, 
         bodyStyles: { fontSize: 8, cellPadding: 1.5 },
-        columnStyles: { 0: { cellWidth: 70 }, 1: { cellWidth: 'auto'} },
+        columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 'auto'} },
         didDrawPage: (data) => { CURRENT_Y = data.cursor?.y ? data.cursor.y + LINE_SPACING : MARGIN; }
     });
     CURRENT_Y = (doc as any).lastAutoTable.finalY + SECTION_SPACING * 0.5;
@@ -106,7 +111,7 @@ export const generateFullSummaryPDF = (
 ): void => {
     const doc = new jsPDF();
     CURRENT_Y = MARGIN;
-    const { annualData, historicalData } = fundData;
+    const { annualData, historicalData, distribuzioneRisorseData, fondoElevateQualificazioniData } = fundData;
 
     // Report Header
     doc.setFontSize(18);
@@ -120,36 +125,88 @@ export const generateFullSummaryPDF = (
     CURRENT_Y += LINE_SPACING;
     doc.text(`Generato da: ${currentUser.name} (${currentUser.role})`, MARGIN, CURRENT_Y);
     doc.text(`Data Generazione: ${formatDate(new Date())}`, doc.internal.pageSize.width - MARGIN, CURRENT_Y, { align: 'right' });
-    CURRENT_Y += SECTION_SPACING;
-
+    
     // --- 1. DATI DI INPUT ---
-    addSectionTitle(doc, '1. Dati di Input Riepilogati');
+    addSectionTitle(doc, '1. Dati Generali e di Contesto');
 
     const tipologiaEnteLabel = ALL_TIPOLOGIE_ENTE.find(t => t.value === annualData.tipologiaEnte)?.label || annualData.tipologiaEnte || TEXTS_UI.notApplicable;
     const infoGeneraliData = [
         { label: 'Denominazione Ente', value: annualData.denominazioneEnte },
-        { label: 'Tipologia Ente', value: tipologiaEnteLabel },
+        { label: 'Tipologia Ente', value: annualData.tipologiaEnte === TipologiaEnte.ALTRO ? `${tipologiaEnteLabel}: ${annualData.altroTipologiaEnte}` : tipologiaEnteLabel },
         { label: 'Numero Abitanti (31.12 anno prec.)', value: formatNumber(annualData.numeroAbitanti, 0) },
-        { label: 'Ente in Dissesto Finanziario?', value: formatBoolean(annualData.isEnteDissestato) },
         { label: 'Ente con Personale Dirigente?', value: formatBoolean(annualData.hasDirigenza) },
+        { label: 'Ente in Dissesto Finanziario?', value: formatBoolean(annualData.isEnteDissestato) },
+        { label: 'Ente Strutturalmente Deficitario?', value: formatBoolean(annualData.isEnteStrutturalmenteDeficitario) },
+        { label: 'Ente in Riequilibrio Finanziario?', value: formatBoolean(annualData.isEnteRiequilibrioFinanziario) },
+        { label: 'Fondo per Lavoro Straordinario', value: formatCurrency(annualData.fondoLavoroStraordinario) },
+
     ];
     addKeyValueTable(doc, infoGeneraliData, '1.1 Informazioni Generali Ente');
     
-    const datiStorici2016Data = [
-        { label: 'Limite Complessivo Originale 2016', value: formatCurrency(calculatedFund.fondoBase2016) },
+    const datiStoriciData = [
+        { label: 'Limite Complessivo Originale 2016 (Base per Art. 23 c.2)', value: formatCurrency(calculatedFund.fondoBase2016) },
+        { label: 'Fondo Personale (non Dir/EQ) 2018 (Base per Art. 23 c.2)', value: formatCurrency(historicalData.fondoPersonaleNonDirEQ2018_Art23) },
+        { label: 'Fondo Elevate Qualificazioni 2018 (Base per Art. 23 c.2)', value: formatCurrency(historicalData.fondoEQ2018_Art23) },
+        { label: `Totale Fondo Anno Precedente (${annualData.annoRiferimento - 1})`, value: formatCurrency(historicalData.totaleFondoAnnoPrecedente) }
     ];
-    addKeyValueTable(doc, datiStorici2016Data, '1.2 Dati Storici per Limite Fondo 2016 (Art. 23 c.2)');
+    addKeyValueTable(doc, datiStoriciData, '1.2 Dati Storici Rilevanti');
 
-    const si = annualData.simulatoreInput || {} as SimulatoreIncrementoInput;
-    const inputSimulatoreData = [
-        { label: 'Stipendi tabellari personale 31.12.2023', value: formatCurrency(si.simStipendiTabellari2023) },
-        { label: 'Spesa di personale (Consuntivo 2023)', value: formatCurrency(si.simSpesaPersonaleConsuntivo2023) },
-        { label: 'Media Entrate Correnti 2021-23', value: formatCurrency(si.simMediaEntrateCorrenti2021_2023) },
+    // --- 2. ANALISI E SIMULAZIONI ---
+    addSectionTitle(doc, '2. Analisi e Simulazioni Preliminari');
+    
+    const dipendentiEquivalenti2018 = (annualData.personale2018PerArt23 || []).reduce((sum, emp) => sum + ((emp.partTimePercentage || 100) / 100), 0);
+    const dipendentiEquivalentiAnnoRif = (annualData.personaleAnnoRifPerArt23 || []).reduce((sum, emp) => sum + (((emp.partTimePercentage || 100) / 100) * ((emp.cedoliniEmessi || 12) / 12)), 0);
+    const variazioneDipendenti = dipendentiEquivalentiAnnoRif - dipendentiEquivalenti2018;
+    const fondoBase2018 = (historicalData.fondoPersonaleNonDirEQ2018_Art23 || 0) + (historicalData.fondoEQ2018_Art23 || 0);
+    const valoreMedioProCapite2018 = dipendentiEquivalenti2018 > 0 ? fondoBase2018 / dipendentiEquivalenti2018 : 0;
+    
+    const adeguamentoLimiteData = [
+        { label: 'Dipendenti Equivalenti 31.12.2018', value: formatNumber(dipendentiEquivalenti2018) },
+        { label: `Dipendenti Equivalenti Anno ${annualData.annoRiferimento}`, value: formatNumber(dipendentiEquivalentiAnnoRif) },
+        { label: 'Variazione Dipendenti Equivalenti', value: formatNumber(variazioneDipendenti) },
+        { label: 'Fondo Base 2018 (Personale non Dir/EQ)', value: formatCurrency(fondoBase2018) },
+        { label: 'Valore Medio Pro-Capite 2018', value: formatCurrency(valoreMedioProCapite2018) },
+        { label: 'Incremento Netto Limite (se > 0)', value: formatCurrency(calculatedFund.incrementoDeterminatoArt23C2?.importo) }
     ];
-    addKeyValueTable(doc, inputSimulatoreData, '1.3 Dati Chiave per Simulatore Incremento Potenziale');
+    addKeyValueTable(doc, adeguamentoLimiteData, '2.1 Calcolo Adeguamento Limite 2016 (Art. 23 c.2)');
 
-    // --- 2. RISULTATI ---
-    addSectionTitle(doc, '2. Risultati Calcolo Fondo');
+    const analisiPNRR3Data = [
+        { label: 'Rispetto Equilibrio Bilancio Anno Prec.?', value: formatBoolean(annualData.rispettoEquilibrioBilancioPrecedente) },
+        { label: 'Rispetto Debito Commerciale Anno Prec.?', value: formatBoolean(annualData.rispettoDebitoCommercialePrecedente) },
+        { label: 'Approvazione Rendiconto Anno Prec. nei Termini?', value: formatBoolean(annualData.approvazioneRendicontoPrecedente) },
+        { label: 'Incidenza Salario Accessorio Ultimo Rendiconto', value: formatPercentage(annualData.incidenzaSalarioAccessorioUltimoRendiconto) },
+        { label: 'Fondo Stabile 2016 (base PNRR3)', value: formatCurrency(annualData.fondoStabile2016PNRR) },
+        { label: 'Possibile Incremento Variabile PNRR 3 (calcolato)', value: formatCurrency(annualData.calcolatoIncrementoPNRR3) }
+    ];
+    addKeyValueTable(doc, analisiPNRR3Data, '2.2 Analisi Virtuosità per Incremento PNRR 3');
+
+    if(annualData.simulatoreRisultati) {
+        const si = annualData.simulatoreInput || {};
+        const sr = annualData.simulatoreRisultati;
+        const simulatoreInputData = [
+            { label: 'Stipendi tabellari personale 2023', value: formatCurrency(si.simStipendiTabellari2023) },
+            { label: 'Fondo stabile anno applicazione', value: formatCurrency(si.simFondoStabileAnnoApplicazione) },
+            { label: 'Risorse EQ anno applicazione', value: formatCurrency(si.simRisorsePOEQAnnoApplicazione) },
+            { label: 'Spesa di personale (Consuntivo 2023)', value: formatCurrency(si.simSpesaPersonaleConsuntivo2023) },
+            { label: 'Media Entrate Correnti 2021-23', value: formatCurrency(si.simMediaEntrateCorrenti2021_2023) },
+            { label: 'Tetto spesa personale L. 296/06', value: formatCurrency(si.simTettoSpesaPersonaleL296_06) },
+            { label: 'Costo annuo nuove assunzioni PIAO', value: formatCurrency(si.simCostoAnnuoNuoveAssunzioniPIAO) },
+        ];
+        addKeyValueTable(doc, simulatoreInputData, '2.3 Simulatore Incremento Potenziale - Dati di Input');
+        
+        const simulatoreRisultatiData = [
+            { label: 'Fase 1: Incremento Potenziale Lordo (Target 48%)', value: formatCurrency(sr.fase1_incrementoPotenzialeLordo) },
+            { label: 'Fase 2: Spazio Disponibile (Limite Sostenibilità)', value: formatCurrency(sr.fase2_spazioDisponibileDL34) },
+            { label: 'Fase 3: Margine Disponibile (Tetto Storico)', value: formatCurrency(sr.fase3_margineDisponibileL296_06) },
+            { label: 'Fase 4: Spazio Utilizzabile Lordo (minore dei 3)', value: formatCurrency(sr.fase4_spazioUtilizzabileLordo) },
+            { label: 'Fase 5: Incremento Netto Effettivo del Fondo', value: formatCurrency(sr.fase5_incrementoNettoEffettivoFondo) }
+        ];
+        addKeyValueTable(doc, simulatoreRisultatiData, '2.3 Simulatore Incremento Potenziale - Risultati');
+    }
+
+    // --- 3. COSTITUZIONE E RIEPILOGO FONDI ---
+    addSectionTitle(doc, '3. Costituzione e Riepilogo Fondi');
+    
     const { dettaglioFondi } = calculatedFund;
     const summaryBody = [
         ['Fondo Personale Dipendente', formatCurrency(dettaglioFondi.dipendente.stabile), formatCurrency(dettaglioFondi.dipendente.variabile), formatCurrency(dettaglioFondi.dipendente.totale)],
@@ -170,20 +227,45 @@ export const generateFullSummaryPDF = (
         didDrawPage: (data) => { CURRENT_Y = data.cursor?.y ? data.cursor.y + LINE_SPACING : MARGIN; }
     });
     CURRENT_Y = (doc as any).lastAutoTable.finalY + SECTION_SPACING;
+
+    const verificaLimite2016Data = [
+        { label: 'Limite Effettivo Fondo 2016 (modificato)', value: formatCurrency(calculatedFund.limiteArt23C2Modificato) },
+        { label: 'Somma Risorse Soggette al Limite', value: formatCurrency(calculatedFund.totaleRisorseSoggetteAlLimiteDaFondiSpecifici) },
+        { label: 'Superamento Limite (se > 0)', value: calculatedFund.superamentoLimite2016 ? formatCurrency(calculatedFund.superamentoLimite2016, "€ 0,00") : "€ 0,00" },
+    ];
+    addKeyValueTable(doc, verificaLimite2016Data, '3.1 Verifica Limite di Spesa Art. 23 c.2');
     
-    if (annualData.simulatoreRisultati) {
-        addSubTitle(doc, '2.1 Risultati Simulatore Incremento');
-        const sr = annualData.simulatoreRisultati;
-        const risultatiSimulatoreData = [
-            { label: 'Fase 1: Incremento Potenziale Lordo (Target 48%)', value: formatCurrency(sr.fase1_incrementoPotenzialeLordo) },
-            { label: 'Fase 4: Spazio Utilizzabile Lordo (minore dei 3 limiti)', value: formatCurrency(sr.fase4_spazioUtilizzabileLordo) },
-            { label: 'Fase 5: Incremento Netto Effettivo del Fondo', value: formatCurrency(sr.fase5_incrementoNettoEffettivoFondo) },
+    // --- 4. DISTRIBUZIONE RISORSE ---
+    if (annualData.isDistributionMode) {
+        addSectionTitle(doc, '4. Distribuzione Risorse');
+        
+        const utilizziParteStabile = (distribuzioneRisorseData.u_diffProgressioniStoriche || 0) + (distribuzioneRisorseData.u_indennitaComparto || 0) + (distribuzioneRisorseData.u_incrIndennitaEducatori?.stanziate || 0) + (distribuzioneRisorseData.u_incrIndennitaScolastico?.stanziate || 0) + (distribuzioneRisorseData.u_indennitaEx8QF?.stanziate || 0);
+        const utilizziParteVariabile = Object.keys(distribuzioneRisorseData).filter(key => key.startsWith('p_')).reduce((sum, key) => sum + ((distribuzioneRisorseData[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0), 0);
+        const totaleAllocato = utilizziParteStabile + utilizziParteVariabile;
+        const totaleDaDistribuire = dettaglioFondi.dipendente.totale;
+        
+        const allocazioneDipendentiData = [
+            { label: 'Totale Risorse da Distribuire (Fondo Dipendenti)', value: formatCurrency(totaleDaDistribuire) },
+            { label: '(-) Utilizzi Parte Stabile (PEO storiche, Ind. Comparto, etc)', value: formatCurrency(utilizziParteStabile) },
+            { label: '(=) Importo Disponibile alla Contrattazione', value: formatCurrency(totaleDaDistribuire - utilizziParteStabile) },
+            { label: '(-) Utilizzi Parte Variabile (Performance, Indennità, etc)', value: formatCurrency(utilizziParteVariabile) },
+            { label: '(=) Importo Rimanente (non allocato)', value: formatCurrency(totaleDaDistribuire - totaleAllocato) }
         ];
-        addKeyValueTable(doc, risultatiSimulatoreData);
+        addKeyValueTable(doc, allocazioneDipendentiData, '4.1 Riepilogo Allocazione Fondo Dipendenti');
+        
+        const eqData = fondoElevateQualificazioniData || {};
+        const sommaDistribuzioneEQ = (eqData.st_art17c2_retribuzionePosizione || 0) + (eqData.st_art17c3_retribuzionePosizioneArt16c4 || 0) + (eqData.st_art17c5_interimEQ || 0) + (eqData.st_art23c5_maggiorazioneSedi || 0) + (eqData.va_art17c4_retribuzioneRisultato || 0);
+        
+        const allocazioneEQData = [
+            { label: 'Totale Risorse Fondo EQ', value: formatCurrency(dettaglioFondi.eq.totale) },
+            { label: 'Totale Distribuito (Retr. Posizione + Risultato)', value: formatCurrency(sommaDistribuzioneEQ) },
+            { label: 'Importo Rimanente (non allocato)', value: formatCurrency(dettaglioFondi.eq.totale - sommaDistribuzioneEQ) }
+        ];
+        addKeyValueTable(doc, allocazioneEQData, '4.2 Riepilogo Allocazione Fondo EQ');
     }
 
-    // --- 3. CONTROLLI DI CONFORMITÀ ---
-    addSectionTitle(doc, '3. Controlli di Conformità');
+    // --- 5. CONTROLLI DI CONFORMITÀ ---
+    addSectionTitle(doc, '5. Controlli di Conformità');
     const complianceBody = complianceChecks.map(c => [
         c.descrizione,
         c.isCompliant ? 'Conforme' : 'NON Conforme',
@@ -198,7 +280,7 @@ export const generateFullSummaryPDF = (
         theme: 'striped',
         headStyles: { fillColor: '#e0e7ff', textColor: '#1e3a8a', fontSize: 9, fontStyle: 'bold' as FontStyle }, 
         bodyStyles: { fontSize: 8 },
-        columnStyles: { 4: { cellWidth: 60 } },
+        columnStyles: { 0: {cellWidth: 40}, 1: {cellWidth: 20}, 2: {cellWidth: 20}, 3: {cellWidth: 20}, 4: { cellWidth: 'auto' } },
         didDrawPage: (data) => { CURRENT_Y = data.cursor?.y ? data.cursor.y + LINE_SPACING : MARGIN; }
     });
     CURRENT_Y = (doc as any).lastAutoTable.finalY + SECTION_SPACING;
@@ -226,7 +308,7 @@ export const generateDeterminazioneTXT = (
         if (n === 0) return 'zero';
 
         const units = ["", "uno", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove"];
-        const teens = ["dieci", "undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove"];
+        const teens = ["dieci", "undici", "dodici", "tredici", "quattordici", "quinidici", "sedici", "diciassette", "diciotto", "diciannove"];
         const tens = ["", "", "venti", "trenta", "quaranta", "cinquanta", "sessanta", "settanta", "ottanta", "novanta"];
         
         function toWords(num: number): string {
@@ -494,6 +576,7 @@ export const generateFADXLS = (
         if (sectionFields.length > 0) {
             html += `<tr><td colspan="4" class="section-header">${section.title.toUpperCase()}</td></tr>`;
             sectionFields.forEach(def => {
+                // FIX: `getFadEffectiveValueHelper` expects 6 arguments. This call has been updated to pass `incrementoEQconRiduzioneDipendenti` to align with the function signature and ensure correct calculations for all fields.
                 const effectiveValue = getFadEffectiveValueHelper(
                     def.key,
                     fadData[def.key as keyof FondoAccessorioDipendenteData],

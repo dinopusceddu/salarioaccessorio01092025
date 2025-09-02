@@ -273,6 +273,8 @@ export interface AnnualData {
   simulatoreRisultati?: SimulatoreIncrementoRisultati; 
   fondoStabile2016PNRR?: number;
   calcolatoIncrementoPNRR3?: number;
+  // FIX: Added missing property 'fondoLavoroStraordinario' to fix type error.
+  fondoLavoroStraordinario?: number;
 }
 
 export interface RisorsaVariabileDetail {

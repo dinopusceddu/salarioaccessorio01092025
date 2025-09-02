@@ -64,12 +64,24 @@ export const ComplianceStatusWidget: React.FC<ComplianceStatusWidgetProps> = ({ 
             <div key={check.id} className={`p-3 border rounded-lg ${styles.card}`}>
               <div className="flex items-start">
                 <span className={`text-xl mr-3 ${styles.iconText}`}>{getIconForGravita(check.gravita)}</span>
-                <div>
+                <div className="flex-1">
                   <h5 className={`font-semibold ${styles.title}`}>{check.descrizione}</h5>
                   <p className="text-sm text-[#1b0e0e]">{check.messaggio}</p>
                   <p className="text-xs text-[#5f5252] mt-1">
                     Valore: {check.valoreAttuale ?? TEXTS_UI.notApplicable} {check.limite ? `(Limite: ${check.limite})` : ''} - Rif: {check.riferimentoNormativo}
                   </p>
+                  {check.relatedPage && check.gravita !== 'info' && (
+                    <div className="mt-2">
+                        <Button
+                            variant="link"
+                            size="sm"
+                            className="p-0 h-auto text-xs"
+                            onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: check.relatedPage! })}
+                        >
+                            Vai alla correzione →
+                        </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

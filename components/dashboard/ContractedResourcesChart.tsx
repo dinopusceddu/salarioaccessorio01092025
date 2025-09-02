@@ -6,7 +6,11 @@ import { Card } from '../shared/Card.tsx';
 import { TEXTS_UI } from '../../constants.ts';
 import { RisorsaVariabileDetail, DistribuzioneRisorseData, NormativeData } from '../../types.ts';
 import { getDistribuzioneFieldDefinitions } from '../../pages/FondoAccessorioDipendentePageHelpers.ts';
-import { CustomChartTooltip } from './CustomChartTooltip.tsx';
+
+const formatCurrency = (value?: number) => {
+    if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
+    return `€ ${value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
 // A more varied color palette for multiple slices
 const COLORS = [
@@ -30,7 +34,7 @@ export const ContractedResourcesChart: React.FC = () => {
         const stanziateValue = (distribuzioneRisorseData[def.key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
         return {
           // Shorten long names for better display in legend
-          name: typeof def.description === 'string' && def.description.length > 35 ? def.description.substring(0, 32) + '...' : String(def.description),
+          name: def.description.length > 35 ? def.description.substring(0, 32) + '...' : def.description,
           value: stanziateValue,
         };
       })
@@ -59,7 +63,7 @@ export const ContractedResourcesChart: React.FC = () => {
     if (percent < 0.05) return null; // Don't render label for very small slices
 
     return (
-      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="font-bold text-sm" style={{ textShadow: '0 0 3px black' }}>
+      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="font-bold text-sm" style={{ textShadow: '0 0 3px black' }}>
         {`${(percent * 100).toFixed(0)}%`}
       </text>
     );
@@ -82,14 +86,19 @@ export const ContractedResourcesChart: React.FC = () => {
               dataKey="value"
               stroke="#fcf8f8"
               strokeWidth={3}
-              isAnimationActive={true}
-              animationDuration={800}
             >
               {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip content={<CustomChartTooltip />} />
+            <Tooltip
+              formatter={(value: number, name: string) => [`${formatCurrency(value)}`, name]}
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                border: '1px solid #f3e7e8',
+                borderRadius: '0.5rem',
+              }}
+            />
             <Legend 
               iconType="circle"
               layout="vertical"
@@ -98,8 +107,6 @@ export const ContractedResourcesChart: React.FC = () => {
               wrapperStyle={{
                   fontSize: '12px',
                   paddingLeft: '20px',
-                  maxHeight: '380px',
-                  overflowY: 'auto'
               }}
             />
           </PieChart>

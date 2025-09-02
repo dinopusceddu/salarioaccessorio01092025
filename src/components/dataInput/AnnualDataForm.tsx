@@ -1,11 +1,11 @@
 // components/dataInput/AnnualDataForm.tsx
 import React, { useEffect } from 'react';
-import { useAppContext } from '../../contexts/AppContext.tsx';
-import { AnnualData } from '../../types.ts';
-import { Input } from '../shared/Input.tsx';
-import { Select } from '../shared/Select.tsx';
-import { Card } from '../shared/Card.tsx';
-import { TEXTS_UI } from '../../constants.ts'; 
+import { useAppContext } from '../../contexts/AppContext';
+import { AnnualData } from '../../types';
+import { Input } from '../shared/Input';
+import { Select } from '../shared/Select';
+import { Card } from '../shared/Card';
+import { TEXTS_UI } from '../../constants'; 
 
 const booleanOptions = [
   { value: 'true', label: TEXTS_UI.trueText },
@@ -20,6 +20,7 @@ const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) =>
 export const AnnualDataForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { annualData } = state.fundData;
+  const { validationErrors } = state;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -48,13 +49,13 @@ export const AnnualDataForm: React.FC = () => {
   } = annualData;
   
   // Validation logic
-  const incidenzaError = incidenzaSalarioAccessorioUltimoRendiconto !== undefined && incidenzaSalarioAccessorioUltimoRendiconto < 0 
+  const incidenzaError = (validationErrors.incidenzaSalarioAccessorioUltimoRendiconto) || (incidenzaSalarioAccessorioUltimoRendiconto !== undefined && incidenzaSalarioAccessorioUltimoRendiconto < 0 
     ? "Il valore non può essere negativo." 
-    : undefined;
+    : undefined);
   
-  const fondoStabileError = fondoStabile2016PNRR !== undefined && fondoStabile2016PNRR < 0 
+  const fondoStabileError = (validationErrors.fondoStabile2016PNRR) || (fondoStabile2016PNRR !== undefined && fondoStabile2016PNRR < 0 
     ? "Il valore non può essere negativo." 
-    : undefined;
+    : undefined);
 
   const isEquilibrioOk = rispettoEquilibrioBilancioPrecedente === true;
   const isDebitoOk = rispettoDebitoCommercialePrecedente === true;
@@ -110,6 +111,7 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
+            error={validationErrors.rispettoEquilibrioBilancioPrecedente}
           />
           <Select
             label="Rispetto Parametri Debito Commerciale Anno Precedente?"
@@ -121,6 +123,7 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
+            error={validationErrors.rispettoDebitoCommercialePrecedente}
           />
           <Input
             label="Incidenza Salario Accessorio su Spesa Personale (Ultimo Rendiconto Approvato %)"
@@ -147,6 +150,7 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
+            error={validationErrors.approvazioneRendicontoPrecedente}
           />
         </div>
         

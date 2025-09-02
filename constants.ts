@@ -228,7 +228,9 @@ export const INITIAL_ANNUAL_DATA = {
   simulatoreInput: INITIAL_SIMULATORE_INPUT,
   simulatoreRisultati: undefined, 
   fondoStabile2016PNRR: undefined,
-  calcolatoIncrementoPNRR3: undefined, 
+  calcolatoIncrementoPNRR3: undefined,
+  // FIX: Added missing property 'fondoLavoroStraordinario' to the initial state object.
+  fondoLavoroStraordinario: undefined, 
 };
 
 export const DEFAULT_USER = {

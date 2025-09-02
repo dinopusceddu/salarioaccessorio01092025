@@ -4,6 +4,7 @@ import { useAppContext } from '../contexts/AppContext.tsx';
 import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI } from '../constants.ts';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
+import { Button } from '../components/shared/Button.tsx';
 
 const getIconForGravita = (gravita: 'info' | 'warning' | 'error'): string => {
   if (gravita === 'error') return '❌';
@@ -31,7 +32,7 @@ const getStylesForGravita = (gravita: 'info' | 'warning' | 'error'): { card: str
 };
 
 export const CompliancePage: React.FC = () => {
-  const { state } = useAppContext();
+  const { state, dispatch } = useAppContext();
   const { complianceChecks, isLoading } = state;
 
   if (isLoading && (!complianceChecks || complianceChecks.length === 0)) {
@@ -46,100 +47,63 @@ export const CompliancePage: React.FC = () => {
     );
   }
 
-  const incrementoConsistenzaCheck = complianceChecks.find(c => c.id === 'verifica_incremento_consistenza');
   const criticalIssues = complianceChecks.filter(c => c.gravita === 'error');
-  const warnings = complianceChecks.filter(c => c.gravita === 'warning' && c.id !== 'verifica_incremento_consistenza');
-  const infos = complianceChecks.filter(c => c.gravita === 'info' && c.id !== 'verifica_incremento_consistenza');
+  const warnings = complianceChecks.filter(c => c.gravita === 'warning');
+  const infos = complianceChecks.filter(c => c.gravita === 'info');
 
+  const renderCheck = (check: typeof complianceChecks[0]) => (
+    <div key={check.id} className={`p-4 mb-3 border rounded-lg ${getStylesForGravita(check.gravita).card}`}>
+      <div className="flex items-start">
+        <span className={`text-2xl mr-3 ${getStylesForGravita(check.gravita).iconText}`}>
+          {getIconForGravita(check.gravita)}
+        </span>
+        <div className="flex-1">
+          <h5 className={`font-semibold ${getStylesForGravita(check.gravita).title}`}>
+            {check.descrizione}
+          </h5>
+          <p className="text-sm text-[#1b0e0e]">{check.messaggio}</p>
+          <p className="text-xs text-[#5f5252] mt-1">
+            Valore: {check.valoreAttuale ?? TEXTS_UI.notApplicable} {check.limite ? `(Limite: ${check.limite})` : ''} - Rif: {check.riferimentoNormativo}
+          </p>
+          {check.relatedPage && check.gravita !== 'info' && (
+            <div className="mt-2">
+                <Button
+                    variant="link"
+                    size="sm"
+                    className="p-0 h-auto text-xs"
+                    onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: check.relatedPage! })}
+                >
+                    Vai alla correzione →
+                </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-8">
       <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight">Controllo dei limiti</h2>
       
-      {incrementoConsistenzaCheck && (
-        <Card title="Verifica del fondo del salario accessorio" className="mb-6">
-          <div className={`p-4 mb-3 border rounded-lg ${getStylesForGravita(incrementoConsistenzaCheck.gravita).card}`}>
-            <div className="flex items-start">
-              <span className={`text-2xl mr-3 ${getStylesForGravita(incrementoConsistenzaCheck.gravita).iconText}`}>
-                {getIconForGravita(incrementoConsistenzaCheck.gravita)}
-              </span>
-              <div>
-                <h5 className={`font-semibold ${getStylesForGravita(incrementoConsistenzaCheck.gravita).title}`}>
-                  {incrementoConsistenzaCheck.descrizione}
-                </h5>
-                <p className="text-sm text-[#1b0e0e]">{incrementoConsistenzaCheck.messaggio}</p>
-                <p className="text-xs text-[#5f5252] mt-1">
-                  Valore: {incrementoConsistenzaCheck.valoreAttuale ?? TEXTS_UI.notApplicable} {incrementoConsistenzaCheck.limite ? `(Limite: ${incrementoConsistenzaCheck.limite})` : ''} - Rif: {incrementoConsistenzaCheck.riferimentoNormativo}
-                </p>
-              </div>
-            </div>
-          </div>
+      {(criticalIssues.length > 0) && (
+        <Card title="Criticità Rilevate" className="border-l-4 border-[#ea2832]">
+            {criticalIssues.map(renderCheck)}
         </Card>
       )}
 
-      {(criticalIssues.length > 0 || warnings.length > 0) && (
-        <Card title="Criticità e Avvisi Importanti" className="border-l-4 border-[#ea2832]">
-            {criticalIssues.length > 0 && (
-                <div className="mb-6">
-                <h3 className={`text-xl font-semibold mb-3 ${getStylesForGravita('error').title}`}>Criticità Rilevate</h3>
-                {criticalIssues.map(check => (
-                    <div key={check.id} className={`p-4 mb-3 border rounded-lg ${getStylesForGravita(check.gravita).card}`}>
-                        <div className="flex items-start">
-                        <span className={`text-2xl mr-3 ${getStylesForGravita(check.gravita).iconText}`}>{getIconForGravita(check.gravita)}</span>
-                        <div>
-                            <h5 className={`font-semibold ${getStylesForGravita(check.gravita).title}`}>{check.descrizione}</h5>
-                            <p className="text-sm text-[#1b0e0e]">{check.messaggio}</p>
-                            <p className="text-xs text-[#5f5252] mt-1">Valore: {check.valoreAttuale ?? TEXTS_UI.notApplicable} {check.limite ? `(Limite: ${check.limite})` : ''} - Rif: {check.riferimentoNormativo}</p>
-                        </div>
-                        </div>
-                    </div>
-                ))}
-                </div>
-            )}
-            {warnings.length > 0 && (
-                 <div className="mb-6">
-                <h3 className={`text-xl font-semibold mb-3 ${getStylesForGravita('warning').title}`}>Avvisi da Verificare</h3>
-                {warnings.map(check => (
-                    <div key={check.id} className={`p-4 mb-3 border rounded-lg ${getStylesForGravita(check.gravita).card}`}>
-                        <div className="flex items-start">
-                        <span className={`text-2xl mr-3 ${getStylesForGravita(check.gravita).iconText}`}>{getIconForGravita(check.gravita)}</span>
-                        <div>
-                            <h5 className={`font-semibold ${getStylesForGravita(check.gravita).title}`}>{check.descrizione}</h5>
-                            <p className="text-sm text-[#1b0e0e]">{check.messaggio}</p>
-                            <p className="text-xs text-[#5f5252] mt-1">Valore: {check.valoreAttuale ?? TEXTS_UI.notApplicable} {check.limite ? `(Limite: ${check.limite})` : ''} - Rif: {check.riferimentoNormativo}</p>
-                        </div>
-                        </div>
-                    </div>
-                ))}
-                </div>
-            )}
+      {(warnings.length > 0) && (
+        <Card title="Avvisi da Verificare" className="border-l-4 border-amber-500">
+            {warnings.map(renderCheck)}
         </Card>
       )}
 
 
-      <Card title="Tutti i Controlli Eseguiti">
-        {infos.length > 0 && (
-             <div className="mb-6">
-                <h3 className={`text-xl font-semibold mb-3 ${getStylesForGravita('info').title}`}>Informazioni e Controlli Positivi</h3>
-                {infos.map(check => (
-                     <div key={check.id} className={`p-4 mb-3 border rounded-lg ${getStylesForGravita(check.gravita).card}`}>
-                        <div className="flex items-start">
-                        <span className={`text-2xl mr-3 ${getStylesForGravita(check.gravita).iconText}`}>{getIconForGravita(check.gravita)}</span>
-                        <div>
-                            <h5 className={`font-semibold ${getStylesForGravita(check.gravita).title}`}>{check.descrizione}</h5>
-                            <p className="text-sm text-[#1b0e0e]">{check.messaggio}</p>
-                            <p className="text-xs text-[#5f5252] mt-1">Valore: {check.valoreAttuale ?? TEXTS_UI.notApplicable} {check.limite ? `(Limite: ${check.limite})` : ''} - Rif: {check.riferimentoNormativo}</p>
-                        </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        )}
-        {(criticalIssues.length === 0 && warnings.length > 0 && infos.length === 0 && complianceChecks.length > 0) && (
-            <p className="text-[#1b0e0e]">Tutti i controlli eseguiti non hanno rilevato criticità o avvisi particolari.</p>
-        )}
-         {complianceChecks.length === 0 && (
-            <p className="text-[#1b0e0e]">Nessun controllo disponibile.</p>
+      <Card title="Controlli Positivi e Informativi">
+        {infos.length > 0 ? (
+          infos.map(renderCheck)
+        ) : (
+          <p className="text-[#5f5252] text-sm">Nessun controllo puramente informativo da mostrare.</p>
         )}
       </Card>
       

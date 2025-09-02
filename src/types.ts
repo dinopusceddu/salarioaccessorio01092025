@@ -273,6 +273,7 @@ export interface AnnualData {
   simulatoreRisultati?: SimulatoreIncrementoRisultati; 
   fondoStabile2016PNRR?: number;
   calcolatoIncrementoPNRR3?: number;
+  // FIX: Added missing property 'fondoLavoroStraordinario' to fix type error.
   fondoLavoroStraordinario?: number;
 }
 
@@ -386,6 +387,7 @@ export interface ComplianceCheck {
   messaggio: string;
   riferimentoNormativo: string;
   gravita: 'info' | 'warning' | 'error';
+  relatedPage?: string;
 }
 
 export interface AppState {
@@ -402,6 +404,7 @@ export interface AppState {
   isNormativeDataLoading: boolean;
   normativeData?: NormativeData;
   error?: string;
+  validationErrors: { [key: string]: string };
   activeTab: string;
 }
 
@@ -421,6 +424,7 @@ export type AppAction =
   | { type: 'SET_NORMATIVE_DATA_LOADING'; payload: boolean }
   | { type: 'SET_NORMATIVE_DATA'; payload: NormativeData }
   | { type: 'SET_ERROR'; payload: string | undefined }
+  | { type: 'SET_VALIDATION_ERRORS'; payload: { [key: string]: string } }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'ADD_ART23_EMPLOYEE_DETAIL'; payload: { yearType: '2018' | 'annoRif'; detail: Art23EmployeeDetail } }
   | { type: 'UPDATE_ART23_EMPLOYEE_DETAIL'; payload: { yearType: '2018' | 'annoRif'; detail: Art23EmployeeDetail } }

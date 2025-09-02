@@ -94,7 +94,7 @@ export const PersonaleServizioPage: React.FC = () => {
     const newTargetList: PersonaleServizioDettaglio[] = sourceList.map(sourceEmp => {
       const isFullYear = (sourceEmp.cedoliniEmessi === undefined || sourceEmp.cedoliniEmessi >= 12);
       return {
-          id: crypto.randomUUID(),
+          id: sourceEmp.id, // FIX: Use stable ID from source to fix sync issues
           matricola: sourceEmp.matricola,
           partTimePercentage: sourceEmp.partTimePercentage,
           fullYearService: isFullYear,

@@ -3,6 +3,7 @@ import React, { createContext, useReducer, Dispatch, useContext, useCallback, us
 import { AppState, AppAction, UserRole, FundData, CalculatedFund, ComplianceCheck, ProventoSpecifico, EmployeeCategory, Art23EmployeeDetail, SimulatoreIncrementoInput, FondoAccessorioDipendenteData, FondoElevateQualificazioniData, FondoSegretarioComunaleData, FondoDirigenzaData, SimulatoreIncrementoRisultati, PersonaleServizioDettaglio, LivelloPeo, TipoMaggiorazione, AreaQualifica, DistribuzioneRisorseData, NormativeData } from '../types';
 import { DEFAULT_CURRENT_YEAR, INITIAL_HISTORICAL_DATA, INITIAL_ANNUAL_DATA, DEFAULT_USER, INITIAL_FONDO_ACCESSORIO_DIPENDENTE_DATA, INITIAL_FONDO_ELEVATE_QUALIFICAZIONI_DATA, INITIAL_FONDO_SEGRETARIO_COMUNALE_DATA, INITIAL_FONDO_DIRIGENZA_DATA, INITIAL_DISTRIBUZIONE_RISORSE_DATA } from '../constants';
 import { calculateFundCompletely, runAllComplianceChecks } from '../logic/fundEngine'; 
+import { validateFundData } from '../logic/validation';
 
 const LOCAL_STORAGE_KEY = 'salario-accessorio-app-state';
 
@@ -28,6 +29,7 @@ const defaultInitialState: AppState = {
   isNormativeDataLoading: true,
   normativeData: undefined,
   error: undefined,
+  validationErrors: {},
   activeTab: 'benvenuto', 
 };
 
@@ -53,6 +55,7 @@ const loadInitialState = (): AppState => {
         isLoading: false,
         isNormativeDataLoading: true, // Always true on start, will be set to false after fetch
         error: undefined,
+        validationErrors: {},
       };
     }
   } catch (error) {
@@ -318,9 +321,9 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         },
       };
     case 'CALCULATE_FUND_START':
-      return { ...state, isLoading: true, error: undefined };
+      return { ...state, isLoading: true, error: undefined, validationErrors: {} };
     case 'CALCULATE_FUND_SUCCESS':
-      return { ...state, isLoading: false, calculatedFund: action.payload.fund, complianceChecks: action.payload.checks };
+      return { ...state, isLoading: false, calculatedFund: action.payload.fund, complianceChecks: action.payload.checks, validationErrors: {} };
     case 'CALCULATE_FUND_ERROR':
       return { ...state, isLoading: false, error: action.payload, calculatedFund: undefined, complianceChecks: [] };
     case 'SET_LOADING':
@@ -332,6 +335,8 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, normativeData: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload };
+    case 'SET_VALIDATION_ERRORS':
+        return { ...state, validationErrors: action.payload };
     case 'SET_ACTIVE_TAB':
       return { ...state, activeTab: action.payload };
     default:
@@ -367,7 +372,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const saveState = useCallback(() => {
     try {
       // FIX: Don't save loading states or fetched data to localStorage
-      const stateToSave = { ...state, isLoading: undefined, error: undefined, isNormativeDataLoading: undefined, normativeData: undefined };
+      const stateToSave = { ...state, isLoading: undefined, error: undefined, isNormativeDataLoading: undefined, normativeData: undefined, validationErrors: undefined };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (error) {
       console.error("Could not save state to localStorage.", error);
@@ -376,7 +381,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 
   const performFundCalculation = useCallback(async () => {
-    // FIX: Ensure normative data is loaded before calculating
+    // 1. Clear previous errors
+    dispatch({ type: 'SET_VALIDATION_ERRORS', payload: {} });
+    dispatch({ type: 'SET_ERROR', payload: undefined });
+
+    // 2. Run validation
+    const validationErrors = validateFundData(state.fundData);
+    if (Object.keys(validationErrors).length > 0) {
+        dispatch({ type: 'SET_VALIDATION_ERRORS', payload: validationErrors });
+        dispatch({ type: 'CALCULATE_FUND_ERROR', payload: 'Sono presenti errori di validazione. Correggere i campi evidenziati prima di procedere.' });
+        return;
+    }
+
+    // 3. If validation passes, proceed with calculation
     if (!state.normativeData) {
         dispatch({ type: 'CALCULATE_FUND_ERROR', payload: 'Dati normativi non caricati. Impossibile eseguire il calcolo.' });
         return;

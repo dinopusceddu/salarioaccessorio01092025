@@ -4,11 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import { useAppContext } from '../../contexts/AppContext.tsx';
 import { Card } from '../shared/Card.tsx';
 import { TEXTS_UI } from '../../constants.ts';
-
-const formatCurrency = (value?: number) => {
-    if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
-    return `€ ${value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-};
+import { CustomChartTooltip } from './CustomChartTooltip.tsx';
 
 export const FundAllocationChart: React.FC = () => {
   const { state } = useAppContext();
@@ -29,7 +25,8 @@ export const FundAllocationChart: React.FC = () => {
     { name: 'Parte Variabile', value: calculatedFund.totaleComponenteVariabile || 0 },
   ];
 
-  const COLORS = ['#94a3b8', '#ea2832']; // slate-400, primary-red
+  // Using theme colors: a light contrasting color and the primary red
+  const COLORS = ['#d1c0c1', '#ea2832'];
 
   const RADIAN = Math.PI / 180;
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
@@ -37,10 +34,10 @@ export const FundAllocationChart: React.FC = () => {
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-    if (percent === 0) return null;
+    if (percent < 0.05) return null; // Avoid clutter for small slices
 
     return (
-      <text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" className="font-bold text-shadow">
+      <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="font-bold text-shadow text-sm">
         {`${(percent * 100).toFixed(0)}%`}
       </text>
     );
@@ -64,19 +61,14 @@ export const FundAllocationChart: React.FC = () => {
               dataKey="value"
               stroke="#fcf8f8"
               strokeWidth={3}
+              isAnimationActive={true}
+              animationDuration={800}
             >
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip
-              formatter={(value: number) => formatCurrency(value)}
-              contentStyle={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                border: '1px solid #f3e7e8',
-                borderRadius: '0.5rem',
-              }}
-             />
+            <Tooltip content={<CustomChartTooltip />} />
             <Legend iconType="circle" />
           </PieChart>
         </ResponsiveContainer>

@@ -5,6 +5,7 @@ import { Button } from '../components/shared/Button.tsx';
 import { TEXTS_UI } from '../constants.ts';
 import { DashboardSummary } from '../components/dashboard/DashboardSummary.tsx';
 import { FundAllocationChart } from '../components/dashboard/FundAllocationChart.tsx';
+import { ContractedResourcesChart } from '../components/dashboard/ContractedResourcesChart.tsx';
 import { ComplianceStatusWidget } from '../components/dashboard/ComplianceStatusWidget.tsx';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
 
@@ -67,8 +68,9 @@ export const HomePage: React.FC = () => {
           />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <FundAllocationChart />
-            <ComplianceStatusWidget complianceChecks={complianceChecks} />
+            <ContractedResourcesChart />
           </div>
+          <ComplianceStatusWidget complianceChecks={complianceChecks} />
         </div>
       )}
     </div>

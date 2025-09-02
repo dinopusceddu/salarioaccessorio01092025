@@ -41,6 +41,17 @@ export const FundDetailsPage: React.FC = () => {
   const fadData = fundData.fondoAccessorioDipendenteData || {} as FondoAccessorioDipendenteData;
   const fadFieldDefinitions = getFadFieldDefinitions(normativeData);
 
+  const sections: Array<{
+    title: string;
+    sectionKey: (typeof fadFieldDefinitions)[number]['section'];
+  }> = [
+      { title: "Fonti di Finanziamento Stabili", sectionKey: 'stabili' },
+      { title: "Fonti di Finanziamento Variabili Soggette al Limite", sectionKey: 'vs_soggette' },
+      { title: "Fonti di Finanziamento Variabili Non Soggette al Limite", sectionKey: 'vn_non_soggette' },
+      { title: "Altre Risorse e Decurtazioni Finali", sectionKey: 'fin_decurtazioni' },
+      { title: "Calcolo del rispetto dei limiti", sectionKey: 'cl_limiti' },
+  ];
+
   return (
     <div className="space-y-8">
       <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight">Dettaglio Calcolo Fondo Risorse Decentrate {fundData.annualData.annoRiferimento}</h2>
@@ -102,17 +113,23 @@ export const FundDetailsPage: React.FC = () => {
         defaultCollapsed={true}
       >
         <p className="text-sm text-[#5f5252] mb-4">Questo è un riepilogo dei valori inseriti per il Fondo del Personale Dipendente, non include i totali calcolati.</p>
-        {fadFieldDefinitions.filter(def => def.section === 'stabili').map(def => (
-            <FundingItem<FondoAccessorioDipendenteData>
-                key={String(def.key)} 
-                id={def.key} 
-                description={def.description}
-                value={fadData[def.key]} 
-                onChange={()=>{}} 
-                riferimentoNormativo={def.riferimento}
-                isSubtractor={def.isSubtractor}
-                disabled={true}
-            />
+        
+        {sections.map(section => (
+          <div key={section.sectionKey} className="mb-6 last:mb-0">
+              <h4 className="text-md font-semibold text-[#5f5252] border-b border-[#d1c0c1] pb-2 mb-2">{section.title}</h4>
+              {fadFieldDefinitions.filter(def => def.section === section.sectionKey).map(def => (
+                  <FundingItem<FondoAccessorioDipendenteData>
+                      key={String(def.key)} 
+                      id={def.key} 
+                      description={def.description}
+                      value={fadData[def.key]} 
+                      onChange={()=>{}} 
+                      riferimentoNormativo={def.riferimento}
+                      isSubtractor={def.isSubtractor}
+                      disabled={true} // all items are read-only here
+                  />
+              ))}
+          </div>
         ))}
       </Card>
 

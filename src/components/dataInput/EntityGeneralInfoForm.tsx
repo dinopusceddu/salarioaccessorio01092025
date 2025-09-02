@@ -15,6 +15,7 @@ const booleanOptions = [
 export const EntityGeneralInfoForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { annualData } = state.fundData;
+  const { validationErrors } = state;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -63,6 +64,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Es. Comune di..."
           containerClassName="md:col-span-2 mb-3"
           aria-required="true"
+          error={validationErrors.denominazioneEnte}
         />
         <Select
           label="Tipologia Ente"
@@ -74,6 +76,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Seleziona tipologia..."
           aria-required="true"
           containerClassName="mb-3"
+          error={validationErrors.tipologiaEnte}
         />
         {annualData.tipologiaEnte === TipologiaEnte.ALTRO && (
           <Input
@@ -86,6 +89,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
             placeholder="Indicare la tipologia"
             aria-required={annualData.tipologiaEnte === TipologiaEnte.ALTRO}
             containerClassName="mb-3"
+            error={validationErrors.altroTipologiaEnte}
           />
         )}
          <Input
@@ -100,6 +104,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           min="0"
           aria-required="true"
           containerClassName="mb-3"
+          error={validationErrors.numeroAbitanti}
         />
       </div>
       <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0"> {/* Reduced gap-y */}
@@ -146,6 +151,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Seleziona..."
           aria-required="true"
           containerClassName="mb-3"
+          error={validationErrors.hasDirigenza}
         />
       </div>
 

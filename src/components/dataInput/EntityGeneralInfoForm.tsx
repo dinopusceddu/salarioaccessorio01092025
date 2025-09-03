@@ -40,7 +40,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
   };
 
   return (
-    <Card title="Informazioni Generali Ente e Anno di Riferimento" className="mb-8"> {/* Increased mb */}
+    <Card title="Informazioni Generali Ente e Anno di Riferimento" className="mb-8">
        <Input
           label="Anno di Riferimento per la Costituzione del Fondo"
           type="number"
@@ -50,10 +50,10 @@ export const EntityGeneralInfoForm: React.FC = () => {
           onChange={(e) => dispatch({ type: 'SET_CURRENT_YEAR', payload: parseInt(e.target.value) || new Date().getFullYear() })}
           min="2000"
           max="2099"
-          containerClassName="mb-6" // Aggiunge spazio sotto
+          containerClassName="mb-6"
           aria-required="true"
         />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0"> {/* Reduced gap-y */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0">
         <Input
           label="Denominazione Ente"
           type="text"
@@ -64,7 +64,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Es. Comune di..."
           containerClassName="md:col-span-2 mb-3"
           aria-required="true"
-          error={validationErrors.denominazioneEnte}
+          error={validationErrors['fundData.annualData.denominazioneEnte']}
         />
         <Select
           label="Tipologia Ente"
@@ -76,7 +76,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Seleziona tipologia..."
           aria-required="true"
           containerClassName="mb-3"
-          error={validationErrors.tipologiaEnte}
+          error={validationErrors['fundData.annualData.tipologiaEnte']}
         />
         {annualData.tipologiaEnte === TipologiaEnte.ALTRO && (
           <Input
@@ -89,7 +89,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
             placeholder="Indicare la tipologia"
             aria-required={annualData.tipologiaEnte === TipologiaEnte.ALTRO}
             containerClassName="mb-3"
-            error={validationErrors.altroTipologiaEnte}
+            error={validationErrors['fundData.annualData.altroTipologiaEnte']}
           />
         )}
          <Input
@@ -104,10 +104,10 @@ export const EntityGeneralInfoForm: React.FC = () => {
           min="0"
           aria-required="true"
           containerClassName="mb-3"
-          error={validationErrors.numeroAbitanti}
+          error={validationErrors['fundData.annualData.numeroAbitanti']}
         />
       </div>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0"> {/* Reduced gap-y */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0">
          <Select
           label="Ente in dissesto finanziario (art. 244 TUEL)?"
           id="isEnteDissestato"
@@ -151,7 +151,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Seleziona..."
           aria-required="true"
           containerClassName="mb-3"
-          error={validationErrors.hasDirigenza}
+          error={validationErrors['fundData.annualData.hasDirigenza']}
         />
       </div>
 

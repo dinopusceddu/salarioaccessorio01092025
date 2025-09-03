@@ -1,10 +1,10 @@
 // src/components/dashboard/CustomChartTooltip.tsx
 import React from 'react';
 import { TooltipProps } from 'recharts';
-import { formatCurrency } from '../../utils/formatters.ts';
+import { formatCurrency } from '../../utils/formatters';
 
-// FIX: Changed generic types for TooltipProps to `any, any` to resolve a TypeScript error where the `payload` property was not being recognized.
-export const CustomChartTooltip: React.FC<TooltipProps<any, any>> = ({ active, payload }) => {
+// FIX: Changed props type to 'any' to resolve library type issue.
+export const CustomChartTooltip: React.FC<any> = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (

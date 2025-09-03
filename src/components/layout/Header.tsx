@@ -50,9 +50,9 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
 
   return (
     <header className="sticky top-0 z-40 bg-[#fcf8f8] border-b border-solid border-b-[#f3e7e8]">
-      <div className="mx-auto px-6 sm:px-10"> {/* Adjusted padding */}
+      <div className="mx-auto px-6 sm:px-10">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-4"> {/* Increased gap for logo */}
+          <div className="flex items-center gap-4">
             <button
               onClick={toggleSidebar}
               className="text-[#1b0e0e] hover:text-[#ea2832] focus:outline-none focus:text-[#ea2832] md:hidden"
@@ -69,7 +69,6 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <span className="text-[#1b0e0e] text-sm font-medium mr-3 hidden sm:block">
               {currentUser.name} ({currentUser.role})
             </span>
-            {/* User menu can be added here */}
           </div>
         </div>
       </div>

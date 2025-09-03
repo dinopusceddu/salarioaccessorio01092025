@@ -5,6 +5,7 @@ import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI } from '../constants.ts';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
 import { Button } from '../components/shared/Button.tsx';
+import { ComplianceCheck } from '../types.ts';
 
 const getIconForGravita = (gravita: 'info' | 'warning' | 'error'): string => {
   if (gravita === 'error') return '❌';
@@ -12,22 +13,21 @@ const getIconForGravita = (gravita: 'info' | 'warning' | 'error'): string => {
   return 'ℹ️';
 };
 
-// Adjusted colors to fit the new theme
 const getStylesForGravita = (gravita: 'info' | 'warning' | 'error'): { card: string; title: string; iconText: string } => {
   if (gravita === 'error') return { 
-    card: 'bg-[#fef2f2] border-[#fecaca]', // Lighter red, Tailwind red-50, border red-200
-    title: 'text-[#991b1b]', // Tailwind red-800
-    iconText: 'text-[#ef4444]' // Tailwind red-500
+    card: 'bg-[#fef2f2] border-[#fecaca]',
+    title: 'text-[#991b1b]',
+    iconText: 'text-[#ef4444]'
   };
   if (gravita === 'warning') return { 
-    card: 'bg-[#fffbeb] border-[#fde68a]', // Lighter yellow, Tailwind amber-50, border amber-200
-    title: 'text-[#92400e]', // Tailwind amber-800
-    iconText: 'text-[#f59e0b]' // Tailwind amber-500
+    card: 'bg-[#fffbeb] border-[#fde68a]',
+    title: 'text-[#92400e]',
+    iconText: 'text-[#f59e0b]'
   };
-  return { // info
-    card: 'bg-[#eff6ff] border-[#bfdbfe]', // Lighter blue, Tailwind blue-50, border blue-200
-    title: 'text-[#1e40af]', // Tailwind blue-800
-    iconText: 'text-[#3b82f6]' // Tailwind blue-500
+  return { 
+    card: 'bg-[#eff6ff] border-[#bfdbfe]',
+    title: 'text-[#1e40af]',
+    iconText: 'text-[#3b82f6]'
   };
 };
 
@@ -51,7 +51,7 @@ export const CompliancePage: React.FC = () => {
   const warnings = complianceChecks.filter(c => c.gravita === 'warning');
   const infos = complianceChecks.filter(c => c.gravita === 'info');
 
-  const renderCheck = (check: typeof complianceChecks[0]) => (
+  const renderCheck = (check: ComplianceCheck) => (
     <div key={check.id} className={`p-4 mb-3 border rounded-lg ${getStylesForGravita(check.gravita).card}`}>
       <div className="flex items-start">
         <span className={`text-2xl mr-3 ${getStylesForGravita(check.gravita).iconText}`}>
@@ -97,7 +97,6 @@ export const CompliancePage: React.FC = () => {
             {warnings.map(renderCheck)}
         </Card>
       )}
-
 
       <Card title="Controlli Positivi e Informativi">
         {infos.length > 0 ? (

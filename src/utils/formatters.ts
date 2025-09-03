@@ -1,5 +1,5 @@
 // src/utils/formatters.ts
-import { TEXTS_UI } from '../constants.ts';
+import { TEXTS_UI } from '../constants';
 
 export const formatCurrency = (value?: number, notApplicableText = TEXTS_UI.notApplicable): string => {
   if (value === undefined || value === null || isNaN(value)) return notApplicableText;

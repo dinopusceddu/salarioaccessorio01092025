@@ -7,6 +7,7 @@ import { Input } from '../components/shared/Input';
 import { Select } from '../components/shared/Select';
 import { Button } from '../components/shared/Button';
 import { TEXTS_UI, ALL_AREE_QUALIFICA, ALL_TIPI_MAGGIORAZIONE } from '../constants';
+import { Checkbox } from '../components/shared/Checkbox';
 
 const NESSUNA_PEO_VALUE = ""; // Sentinel value for "Nessuna PEO"
 
@@ -94,7 +95,7 @@ export const PersonaleServizioPage: React.FC = () => {
     const newTargetList: PersonaleServizioDettaglio[] = sourceList.map(sourceEmp => {
       const isFullYear = (sourceEmp.cedoliniEmessi === undefined || sourceEmp.cedoliniEmessi >= 12);
       return {
-          id: sourceEmp.id, // FIX: Use stable ID from source to fix sync issues
+          id: sourceEmp.id,
           matricola: sourceEmp.matricola,
           partTimePercentage: sourceEmp.partTimePercentage,
           fullYearService: isFullYear,
@@ -201,7 +202,7 @@ export const PersonaleServizioPage: React.FC = () => {
   if (!normativeData) return <div>Caricamento...</div>;
 
   return (
-    <div className="space-y-8 pb-24"> {/* Added padding-bottom to avoid overlap with sticky bar */}
+    <div className="space-y-8 pb-24">
       <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight">
         Personale in servizio nel {annoRiferimento}
       </h2>
@@ -228,7 +229,7 @@ export const PersonaleServizioPage: React.FC = () => {
               title={`Dipendente ${index + 1} ${employee.matricola ? `- Matricola: ${employee.matricola}` : ''}`} 
               className="mb-6 bg-white" 
               isCollapsible 
-              defaultCollapsed={employeeList.length > 1} // Collapse if more than 1 employee
+              defaultCollapsed={employeeList.length > 1}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-0">
                 <Input
@@ -257,16 +258,12 @@ export const PersonaleServizioPage: React.FC = () => {
                   containerClassName="mb-3"
                 />
                 <div className="flex items-center col-span-full md:col-span-1 mb-3 mt-2 md:mt-8"> 
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id={`fullYear_${employee.id}`}
+                    label="In servizio tutto l'anno?"
                     checked={employee.fullYearService}
                     onChange={(e) => handleUpdateEmployee(employee.id, 'fullYearService', e.target.checked)}
-                    className="h-5 w-5 text-[#ea2832] border-[#d1c0c1] rounded focus:ring-[#ea2832]/50"
                   />
-                  <label htmlFor={`fullYear_${employee.id}`} className="ml-2 text-sm text-[#1b0e0e]">
-                    In servizio tutto l'anno?
-                  </label>
                 </div>
 
                 {!employee.fullYearService && (

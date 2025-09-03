@@ -48,12 +48,11 @@ export const AnnualDataForm: React.FC = () => {
     fondoStabile2016PNRR
   } = annualData;
   
-  // Validation logic
-  const incidenzaError = (validationErrors.incidenzaSalarioAccessorioUltimoRendiconto) || (incidenzaSalarioAccessorioUltimoRendiconto !== undefined && incidenzaSalarioAccessorioUltimoRendiconto < 0 
+  const incidenzaError = validationErrors['fundData.annualData.incidenzaSalarioAccessorioUltimoRendiconto'] || (incidenzaSalarioAccessorioUltimoRendiconto !== undefined && incidenzaSalarioAccessorioUltimoRendiconto < 0 
     ? "Il valore non può essere negativo." 
     : undefined);
   
-  const fondoStabileError = (validationErrors.fondoStabile2016PNRR) || (fondoStabile2016PNRR !== undefined && fondoStabile2016PNRR < 0 
+  const fondoStabileError = validationErrors['fundData.annualData.fondoStabile2016PNRR'] || (fondoStabile2016PNRR !== undefined && fondoStabile2016PNRR < 0 
     ? "Il valore non può essere negativo." 
     : undefined);
 
@@ -111,7 +110,7 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
-            error={validationErrors.rispettoEquilibrioBilancioPrecedente}
+            error={validationErrors['fundData.annualData.rispettoEquilibrioBilancioPrecedente']}
           />
           <Select
             label="Rispetto Parametri Debito Commerciale Anno Precedente?"
@@ -123,7 +122,7 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
-            error={validationErrors.rispettoDebitoCommercialePrecedente}
+            error={validationErrors['fundData.annualData.rispettoDebitoCommercialePrecedente']}
           />
           <Input
             label="Incidenza Salario Accessorio su Spesa Personale (Ultimo Rendiconto Approvato %)"
@@ -150,7 +149,7 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
-            error={validationErrors.approvazioneRendicontoPrecedente}
+            error={validationErrors['fundData.annualData.approvazioneRendicontoPrecedente']}
           />
         </div>
         

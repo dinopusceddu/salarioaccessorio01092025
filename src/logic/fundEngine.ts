@@ -15,9 +15,9 @@ import {
     DistribuzioneRisorseData,
     RisorsaVariabileDetail,
     NormativeData
-} from '../types.ts';
+} from '../types';
 
-import { getFadFieldDefinitions } from '../pages/FondoAccessorioDipendentePageHelpers.ts';
+import { getFadFieldDefinitions } from '../pages/FondoAccessorioDipendentePageHelpers';
 
 // --- FROM hooks/useSimulatoreCalculations.ts ---
 
@@ -233,7 +233,7 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
     fondoDirigenzaData 
   } = fundData;
 
-  const { valori_pro_capite, limiti, riferimenti_normativi } = normativeData;
+  const { riferimenti_normativi } = normativeData;
 
   const fondoBase2016_originale = 
     (historicalData.fondoSalarioAccessorioPersonaleNonDirEQ2016 || 0) +
@@ -279,25 +279,6 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
     esclusoDalLimite2016: false, 
   } : undefined;
   
-  const personale2018_perArt33 = historicalData.personaleServizio2018 || 0;
-  const spesaStipendiTabellari2023_perArt14 = historicalData.spesaStipendiTabellari2023 || 0;
-  const personaleNonDirigenteEQAttuale_perArt33 = annualData.personaleServizioAttuale.filter(p => p.category === EmployeeCategory.DIPENDENTE || p.category === EmployeeCategory.EQ).reduce((sum, p) => sum + (p.count || 0), 0);
-  const personaleTotaleAttuale_perArt33 = annualData.personaleServizioAttuale.reduce((sum, p) => sum + (p.count || 0), 0);
-  const incrementiStabiliCCNL: FundComponent[] = [];
-  if (personale2018_perArt33 > 0) { const importoArt67 = personale2018_perArt33 * valori_pro_capite.art67_ccnl_2018; incrementiStabiliCCNL.push({descrizione: `Incremento stabile CCNL (${valori_pro_capite.art67_ccnl_2018}€ pro-capite su personale 2018 per Art.33)`, importo: importoArt67, riferimento: riferimenti_normativi.art67_ccnl2018, tipo: 'stabile', esclusoDalLimite2016: false, });}
-  if (personaleNonDirigenteEQAttuale_perArt33 > 0) { const importoArt79b = personaleNonDirigenteEQAttuale_perArt33 * valori_pro_capite.art79_ccnl_2022_b; incrementiStabiliCCNL.push({descrizione: `Incremento stabile CCNL (${valori_pro_capite.art79_ccnl_2022_b}€ pro-capite personale non Dir/EQ per Art.33)`, importo: importoArt79b, riferimento: `${riferimenti_normativi.art79_ccnl2022} lett. b)`, tipo: 'stabile', esclusoDalLimite2016: false, });}
-  let importoAdeguamentoProCapiteArt33 = 0;
-  const valoreMedioProCapite2018_Art33 = (personale2018_perArt33 > 0 && fondoBase2016_originale > 0) ? fondoBase2016_originale / personale2018_perArt33 : 0;
-  if (valoreMedioProCapite2018_Art33 > 0) { importoAdeguamentoProCapiteArt33 = (personaleTotaleAttuale_perArt33 - personale2018_perArt33) * valoreMedioProCapite2018_Art33;}
-  const adeguamentoProCapite: FundComponent = { descrizione: "Adeguamento invarianza valore medio pro-capite 2018 (Art. 33 DL 34/2019)", importo: importoAdeguamentoProCapiteArt33, riferimento: riferimenti_normativi.art33_dl34_2019, tipo: 'stabile', esclusoDalLimite2016: false, };
-  let incrementoOpzionaleVirtuosi: FundComponent | undefined = undefined;
-  if (annualData.condizioniVirtuositaFinanziariaSoddisfatte && spesaStipendiTabellari2023_perArt14 > 0) { const importoMaxIncremento48 = spesaStipendiTabellari2023_perArt14 * limiti.incremento_virtuosi_dl25_2025; incrementoOpzionaleVirtuosi = {descrizione: "Incremento facoltativo enti virtuosi (max 48% stip. tab. non dir. 2023)", importo: importoMaxIncremento48, riferimento: riferimenti_normativi.art14_dl25_2025, tipo: 'stabile', esclusoDalLimite2016: false, }; }
-  const risorseVariabili: FundComponent[] = [];
-  const proventiArt45 = annualData.proventiSpecifici.find(p => p.riferimentoNormativo === riferimenti_normativi.art45_dlgs36_2023); if (proventiArt45 && proventiArt45.importo && proventiArt45.importo > 0) {risorseVariabili.push({descrizione: "Incentivi funzioni tecniche", importo: proventiArt45.importo, riferimento: riferimenti_normativi.art45_dlgs36_2023, tipo: 'variabile', esclusoDalLimite2016: true, }); }
-  const proventiArt208 = annualData.proventiSpecifici.find(p => p.riferimentoNormativo === riferimenti_normativi.art208_cds); if (proventiArt208 && proventiArt208.importo && proventiArt208.importo > 0) {risorseVariabili.push({descrizione: "Proventi Codice della Strada (quota destinata)", importo: proventiArt208.importo, riferimento: riferimenti_normativi.art208_cds, tipo: 'variabile', esclusoDalLimite2016: false, });}
-  annualData.proventiSpecifici.filter(p => p.riferimentoNormativo !== riferimenti_normativi.art45_dlgs36_2023 && p.riferimentoNormativo !== riferimenti_normativi.art208_cds).forEach(p => { if (p.importo && p.importo > 0) {risorseVariabili.push({descrizione: p.descrizione, importo: p.importo, riferimento: p.riferimentoNormativo, tipo: 'variabile', esclusoDalLimite2016: false });}});
-  if (annualData.condizioniVirtuositaFinanziariaSoddisfatte && annualData.incentiviPNRROpMisureStraordinarie && annualData.incentiviPNRROpMisureStraordinarie > 0) { const limitePNRR = fondoBase2016_originale * limiti.incremento_pnrr_dl13_2023; const importoEffettivoPNRR = Math.min(annualData.incentiviPNRROpMisureStraordinarie, limitePNRR); risorseVariabili.push({descrizione: "Incremento variabile PNRR/Misure Straordinarie (fino a 5% del fondo stabile 2016 originale)", importo: importoEffettivoPNRR, riferimento: riferimenti_normativi.art8_dl13_2023, tipo: 'variabile', esclusoDalLimite2016: true, });}
-  
   const limiteArt23C2Modificato = fondoBase2016_originale + (incrementoDeterminatoArt23C2?.importo || 0);
   
   const dipendenti_soggette = fondoAccessorioDipendenteData?.cl_totaleParzialeRisorsePerConfrontoTetto2016 || 0;
@@ -331,7 +312,7 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
   const fad_stabile = fadTotals.sommaStabili_Dipendenti;
   const fad_variabile = fadTotals.sommaVariabiliSoggette_Dipendenti 
                       + fadTotals.sommaVariabiliNonSoggette_Dipendenti 
-                      - fadTotals.altreRisorseDecurtazioniFinali_Dipendenti 
+                      + fadTotals.altreRisorseDecurtazioniFinali_Dipendenti 
                       - fadTotals.decurtazioniLimiteSalarioAccessorio_Dipendenti;
   const fad_totale = fad_stabile + fad_variabile;
 
@@ -374,15 +355,13 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
   const totaleComponenteVariabile = fad_variabile + eq_variabile + seg_variabile + dir_variabile;
   const totaleFondoRisorseDecentrate = totaleComponenteStabile + totaleComponenteVariabile;
 
-  const ammontareSoggettoLimite2016_legacy_calculation_part = (incrementiStabiliCCNL.filter(c => !c.esclusoDalLimite2016).reduce((s,c)=>s+c.importo,0) - (fondoAccessorioDipendenteData?.st_art79c1c_incrementoStabileConsistenzaPers || 0));
-
   return {
     fondoBase2016: fondoBase2016_originale,
-    incrementiStabiliCCNL,
-    adeguamentoProCapite, 
+    incrementiStabiliCCNL: [], // Legacy, now calculated within funds
+    adeguamentoProCapite: {descrizione: '', importo: 0, riferimento: '', tipo: 'stabile'}, // Legacy
     incrementoDeterminatoArt23C2, 
-    incrementoOpzionaleVirtuosi,
-    risorseVariabili,
+    incrementoOpzionaleVirtuosi: undefined, // Legacy
+    risorseVariabili: [], // Legacy
     totaleFondoRisorseDecentrate,
     limiteArt23C2Modificato, 
     ammontareSoggettoLimite2016: totaleRisorseSoggetteAlLimiteDaFondiSpecifici,
@@ -454,7 +433,7 @@ const verificaCorrispondenzaRisorseVincolate = (fundData: FundData): ComplianceC
     
     let usoImporto = 0;
     if ('usoKey' in mapping) {
-       usoImporto = (distribuzioneRisorseData[mapping.usoKey as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
+       usoImporto = (distribuzioneRisorseData[mapping.usoKey as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail | undefined)?.stanziate || 0;
     } else if ('usoKeys' in mapping) {
         usoImporto = mapping.usoKeys.reduce((sum, key) => {
             const importo = (distribuzioneRisorseData[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail | undefined)?.stanziate || 0;

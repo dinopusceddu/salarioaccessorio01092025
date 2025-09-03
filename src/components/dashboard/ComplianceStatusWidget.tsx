@@ -1,10 +1,10 @@
 // components/dashboard/ComplianceStatusWidget.tsx
 import React from 'react';
-import { ComplianceCheck } from '../../types.ts';
-import { Card } from '../shared/Card.tsx';
-import { TEXTS_UI } from '../../constants.ts';
-import { useAppContext } from '../../contexts/AppContext.tsx';
-import { Button } from '../shared/Button.tsx'; // Import Button for "Vedi dettagli"
+import { ComplianceCheck } from '../../types';
+import { Card } from '../shared/Card';
+import { TEXTS_UI } from '../../constants';
+import { useAppContext } from '../../contexts/AppContext';
+import { Button } from '../shared/Button'; 
 
 interface ComplianceStatusWidgetProps {
   complianceChecks: ComplianceCheck[];
@@ -16,22 +16,21 @@ const getIconForGravita = (gravita: 'info' | 'warning' | 'error'): string => {
   return 'ℹ️'; 
 };
 
-// Updated styles to match new theme
 const getStylesForGravita = (gravita: 'info' | 'warning' | 'error'): { card: string; title: string; iconText: string } => {
   if (gravita === 'error') return { 
-    card: 'bg-[#fef2f2] border-[#fecaca]', // Lighter red, Tailwind red-50, border red-200
-    title: 'text-[#991b1b]', // Tailwind red-800
-    iconText: 'text-[#ef4444]' // Tailwind red-500
+    card: 'bg-[#fef2f2] border-[#fecaca]',
+    title: 'text-[#991b1b]',
+    iconText: 'text-[#ef4444]'
   };
   if (gravita === 'warning') return { 
-    card: 'bg-[#fffbeb] border-[#fde68a]', // Lighter yellow, Tailwind amber-50, border amber-200
-    title: 'text-[#92400e]', // Tailwind amber-800
-    iconText: 'text-[#f59e0b]' // Tailwind amber-500
+    card: 'bg-[#fffbeb] border-[#fde68a]',
+    title: 'text-[#92400e]',
+    iconText: 'text-[#f59e0b]'
   };
-  return { // info
-    card: 'bg-[#eff6ff] border-[#bfdbfe]', // Lighter blue, Tailwind blue-50, border blue-200
-    title: 'text-[#1e40af]', // Tailwind blue-800
-    iconText: 'text-[#3b82f6]' // Tailwind blue-500
+  return { 
+    card: 'bg-[#eff6ff] border-[#bfdbfe]',
+    title: 'text-[#1e40af]',
+    iconText: 'text-[#3b82f6]'
   };
 };
 
@@ -57,7 +56,7 @@ export const ComplianceStatusWidget: React.FC<ComplianceStatusWidgetProps> = ({ 
         {warnings > 0 && <p className={`font-semibold ${getStylesForGravita('warning').title}`}>{warnings} Avvisi da Verificare</p>}
         {criticalIssues === 0 && warnings === 0 && <p className="font-semibold text-green-700">Nessuna criticità o avviso rilevante.</p>}
       </div>
-      <div className="space-y-3 max-h-96 overflow-y-auto pr-2"> {/* Added pr-2 for scrollbar space */}
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
         {complianceChecks.map(check => {
           const styles = getStylesForGravita(check.gravita);
           return (

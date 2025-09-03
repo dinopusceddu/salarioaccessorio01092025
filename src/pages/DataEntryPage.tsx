@@ -19,7 +19,8 @@ export const DataEntryPage: React.FC = () => {
     await performFundCalculation();
   };
 
-  const showSimulatoreAndArt23Form = tipologiaEnte === TipologiaEnte.COMUNE || tipologiaEnte === TipologiaEnte.PROVINCIA;
+  // FIX: Changed enum casing to match Zod schema definition.
+  const showSimulatoreAndArt23Form = tipologiaEnte === TipologiaEnte.Comune || tipologiaEnte === TipologiaEnte.Provincia;
 
   return (
     <div className="space-y-8">

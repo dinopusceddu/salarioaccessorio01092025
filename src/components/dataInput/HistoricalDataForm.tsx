@@ -58,7 +58,7 @@ export const HistoricalDataForm: React.FC = () => {
           step="0.01"
           aria-required="true"
           containerClassName="mb-3"
-          error={validationErrors.fondoSalarioAccessorioPersonaleNonDirEQ2016}
+          error={validationErrors['fundData.historicalData.fondoSalarioAccessorioPersonaleNonDirEQ2016']}
         />
         <Input
           label="Fondo Elevate Qualificazioni (EQ) 2016 (€)"

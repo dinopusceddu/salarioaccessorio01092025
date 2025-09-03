@@ -77,7 +77,7 @@ export const Art23EmployeeAndIncrementForm: React.FC = () => {
           step="0.01"
           aria-required="true"
           containerClassName="mb-3"
-          error={validationErrors.fondoPersonaleNonDirEQ2018_Art23}
+          error={validationErrors['fundData.historicalData.fondoPersonaleNonDirEQ2018_Art23']}
         />
         <Input
           label="Fondo Elevate Qualificazioni (EQ) 2018 (per Art. 23c2) (€)"

@@ -23,14 +23,11 @@ import {
   calculateFundCompletely,
   runAllComplianceChecks,
 } from '../logic/fundEngine';
-// FIX: Import validation function to use in calculation flow.
 import { validateFundData } from '../logic/validation';
 import {
   AppAction,
   AppState,
   Art23EmployeeDetail,
-  CalculatedFund,
-  ComplianceCheck,
   DistribuzioneRisorseData,
   FondoAccessorioDipendenteData,
   FondoDirigenzaData,
@@ -39,7 +36,6 @@ import {
   NormativeData,
   PersonaleServizioDettaglio,
   SimulatoreIncrementoInput,
-  SimulatoreIncrementoRisultati,
   TipoMaggiorazione,
 } from '../types';
 
@@ -63,11 +59,9 @@ const defaultInitialState: AppState = {
   calculatedFund: undefined,
   complianceChecks: [],
   isLoading: false,
-  // FIX: Initialize new state properties for normative data
   isNormativeDataLoading: true,
   normativeData: undefined,
   error: undefined,
-  // FIX: Initialize validationErrors in the default state
   validationErrors: {},
   activeTab: 'benvenuto',
 };
@@ -95,7 +89,6 @@ const loadInitialState = (): AppState => {
         isLoading: false,
         isNormativeDataLoading: true, // Always true on start, will be set to false after fetch
         error: undefined,
-        // FIX: Ensure validationErrors is reset on load
         validationErrors: {},
       };
     }
@@ -466,14 +459,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
-    // FIX: Add reducer cases for new actions
     case 'SET_NORMATIVE_DATA_LOADING':
       return { ...state, isNormativeDataLoading: action.payload };
     case 'SET_NORMATIVE_DATA':
       return { ...state, normativeData: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload };
-    // FIX: Add reducer case for SET_VALIDATION_ERRORS
+    // FIX: Added SET_VALIDATION_ERRORS case
     case 'SET_VALIDATION_ERRORS':
       return { ...state, validationErrors: action.payload };
     case 'SET_ACTIVE_TAB':
@@ -488,12 +480,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [state, dispatch] = useReducer(appReducer, loadInitialState());
 
-  // FIX: Fetch normative data on component mount
   useEffect(() => {
     const fetchNormativeData = async () => {
       dispatch({ type: 'SET_NORMATIVE_DATA_LOADING', payload: true });
       try {
-        // Assumes normativa.json is in the public folder
         const response = await fetch('/normativa.json');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -516,7 +506,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const saveState = useCallback(() => {
     try {
-      // FIX: Don't save loading states or fetched data to localStorage
       const stateToSave = {
         ...state,
         isLoading: undefined,
@@ -531,13 +520,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [state]);
 
-  // FIX: Updated performFundCalculation to include validation logic before running calculations.
   const performFundCalculation = useCallback(async () => {
-    // 1. Clear previous errors
     dispatch({ type: 'SET_VALIDATION_ERRORS', payload: {} });
     dispatch({ type: 'SET_ERROR', payload: undefined });
 
-    // 2. Run validation
     const validationErrors = validateFundData(state.fundData);
     if (Object.keys(validationErrors).length > 0) {
       dispatch({ type: 'SET_VALIDATION_ERRORS', payload: validationErrors });
@@ -549,7 +535,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    // 3. If validation passes, proceed with calculation
     if (!state.normativeData) {
       dispatch({
         type: 'CALCULATE_FUND_ERROR',
@@ -573,7 +558,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
         type: 'CALCULATE_FUND_SUCCESS',
         payload: { fund: calculatedFund, checks: complianceChecks },
       });
-      saveState(); // Save state after a successful calculation
+      saveState();
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
       dispatch({

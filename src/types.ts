@@ -387,6 +387,7 @@ export interface ComplianceCheck {
   messaggio: string;
   riferimentoNormativo: string;
   gravita: 'info' | 'warning' | 'error';
+  // FIX: Add optional relatedPage property to ComplianceCheck for navigation
   relatedPage?: string;
 }
 
@@ -404,6 +405,7 @@ export interface AppState {
   isNormativeDataLoading: boolean;
   normativeData?: NormativeData;
   error?: string;
+  // FIX: Add validationErrors property to AppState
   validationErrors: { [key: string]: string };
   activeTab: string;
 }
@@ -424,6 +426,7 @@ export type AppAction =
   | { type: 'SET_NORMATIVE_DATA_LOADING'; payload: boolean }
   | { type: 'SET_NORMATIVE_DATA'; payload: NormativeData }
   | { type: 'SET_ERROR'; payload: string | undefined }
+  // FIX: Add SET_VALIDATION_ERRORS action type
   | { type: 'SET_VALIDATION_ERRORS'; payload: { [key: string]: string } }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'ADD_ART23_EMPLOYEE_DETAIL'; payload: { yearType: '2018' | 'annoRif'; detail: Art23EmployeeDetail } }

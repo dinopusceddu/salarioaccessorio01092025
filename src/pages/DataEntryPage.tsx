@@ -19,7 +19,7 @@ export const DataEntryPage: React.FC = () => {
     await performFundCalculation();
   };
 
-  // FIX: Changed enum casing to match Zod schema definition.
+  // FIX: Corrected enum access for TipologiaEnte. The keys are 'Comune' and 'Provincia', not uppercase 'COMUNE' and 'PROVINCIA'.
   const showSimulatoreAndArt23Form = tipologiaEnte === TipologiaEnte.Comune || tipologiaEnte === TipologiaEnte.Provincia;
 
   return (

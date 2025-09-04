@@ -3,7 +3,6 @@ import React from 'react';
 import { TooltipProps } from 'recharts';
 import { formatCurrency } from '../../utils/formatters';
 
-// FIX: Changed props type to 'any' to resolve library type issue.
 export const CustomChartTooltip: React.FC<any> = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0];

@@ -53,6 +53,21 @@ export const UserSchema = z.object({
   role: UserRoleSchema,
 });
 
+export const NormativeDataSchema = z.object({
+  valori_pro_capite: z.object({
+    art67_ccnl_2018: z.number(),
+    art79_ccnl_2022_b: z.number(),
+  }),
+  limiti: z.object({
+    incidenza_salario_accessorio: z.number(),
+    incremento_virtuosi_dl25_2025: z.number(),
+    incremento_pnrr_dl13_2023: z.number(),
+  }),
+  riferimenti_normativi: z.record(z.string()),
+  progression_economic_values: z.record(z.record(z.number())),
+  indennita_comparto_values: z.record(z.number()),
+});
+
 export const HistoricalDataSchema = z.object({
   fondoSalarioAccessorioPersonaleNonDirEQ2016: numberOrUndefined.refine(v => v !== undefined, { message: "Questo campo è obbligatorio." }),
   fondoElevateQualificazioni2016: numberOrUndefined,
@@ -61,7 +76,7 @@ export const HistoricalDataSchema = z.object({
   personaleServizio2018: numberOrUndefined,
   spesaStipendiTabellari2023: numberOrUndefined,
   includeDifferenzialiStipendiali2023: z.boolean().optional(),
-  fondoPersonaleNonDirEQ2018_Art23: numberOrUndefined.refine(v => v !== undefined, { message: "Questo campo è obbligatorio per il calcolo dell'adeguamento." }),
+  fondoPersonaleNonDirEQ2018_Art23: numberOrUndefined,
   fondoEQ2018_Art23: numberOrUndefined,
   totaleFondoAnnoPrecedente: numberOrUndefined,
 });
@@ -121,10 +136,10 @@ export const AnnualDataSchema = z.object({
   hasDirigenza: z.boolean({ required_error: "Specificare se l'ente ha personale dirigente." }),
   isDistributionMode: z.boolean().optional(),
   personaleServizioAttuale: z.array(AnnualEmployeeCountSchema),
-  rispettoEquilibrioBilancioPrecedente: z.boolean({ required_error: "Questo campo è obbligatorio per il calcolo PNRR3." }),
-  rispettoDebitoCommercialePrecedente: z.boolean({ required_error: "Questo campo è obbligatorio per il calcolo PNRR3." }),
-  incidenzaSalarioAccessorioUltimoRendiconto: numberOrUndefined.refine(v => v !== undefined, { message: "Questo campo è obbligatorio per il calcolo PNRR3." }),
-  approvazioneRendicontoPrecedente: z.boolean({ required_error: "Questo campo è obbligatorio per il calcolo PNRR3." }),
+  rispettoEquilibrioBilancioPrecedente: z.boolean().optional(),
+  rispettoDebitoCommercialePrecedente: z.boolean().optional(),
+  incidenzaSalarioAccessorioUltimoRendiconto: numberOrUndefined,
+  approvazioneRendicontoPrecedente: z.boolean().optional(),
   proventiSpecifici: z.array(ProventoSpecificoSchema),
   incentiviPNRROpMisureStraordinarie: numberOrUndefined,
   condizioniVirtuositaFinanziariaSoddisfatte: z.boolean().optional(),
@@ -132,12 +147,18 @@ export const AnnualDataSchema = z.object({
   personaleAnnoRifPerArt23: z.array(Art23EmployeeDetailSchema),
   simulatoreInput: SimulatoreIncrementoInputSchema,
   simulatoreRisultati: SimulatoreIncrementoRisultatiSchema.optional(),
-  fondoStabile2016PNRR: numberOrUndefined.refine(v => v !== undefined, { message: "Questo campo è obbligatorio per il calcolo PNRR3." }),
+  fondoStabile2016PNRR: numberOrUndefined,
   calcolatoIncrementoPNRR3: numberOrUndefined,
   fondoLavoroStraordinario: numberOrUndefined,
 }).refine(data => data.tipologiaEnte !== 'Altro' || (data.altroTipologiaEnte && data.altroTipologiaEnte.length > 0), {
     message: "Specificare la tipologia di ente",
     path: ["altroTipologiaEnte"],
+}).refine(data => !(data.tipologiaEnte === TipologiaEnteSchema.enum.Comune || data.tipologiaEnte === TipologiaEnteSchema.enum.Provincia) || data.simulatoreInput.simStipendiTabellari2023 !== undefined, {
+    message: "Campo obbligatorio per Comuni e Province.",
+    path: ["simulatoreInput", "simStipendiTabellari2023"],
+}).refine(data => !(data.tipologiaEnte === TipologiaEnteSchema.enum.Comune || data.tipologiaEnte === TipologiaEnteSchema.enum.Provincia) || (data.historicalData?.fondoPersonaleNonDirEQ2018_Art23 !== undefined), {
+    message: "Campo obbligatorio per Comuni e Province.",
+    path: ["historicalData", "fondoPersonaleNonDirEQ2018_Art23"],
 });
 
 export const FondoDataBaseSchema = z.object({
@@ -276,6 +297,19 @@ export const DistribuzioneRisorseDataSchema = z.object({
     criteri_percPerfIndividuale: numberOrUndefined,
     criteri_percMaggiorazionePremio: numberOrUndefined,
     criteri_percDipendentiBonus: numberOrUndefined,
+});
+
+export const PersonaleServizioDettaglioSchema = z.object({
+    id: z.string(),
+    matricola: z.string().optional(),
+    partTimePercentage: numberOrUndefined,
+    fullYearService: z.boolean(),
+    assunzioneDate: z.string().optional(),
+    cessazioneDate: z.string().optional(),
+    livelloPeoStoriche: LivelloPeoSchema.optional(),
+    numeroDifferenziali: numberOrUndefined,
+    tipoMaggiorazione: TipoMaggiorazioneSchema.optional(),
+    areaQualifica: AreaQualificaSchema.optional(),
 });
 
 export const FundDataSchema = z.object({

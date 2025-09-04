@@ -63,7 +63,8 @@ export const FondoSegretarioComunalePage: React.FC = () => {
     
   const totaleRisorse = sommaRisorseStabili + sommaRisorseVariabili;
   const percentualeCopertura = data.fin_percentualeCoperturaPostoSegretario === undefined ? 100 : data.fin_percentualeCoperturaPostoSegretario;
-  const itemsRilevantiPerLimite: (keyof FondoSegretarioComunaleData)[] = [
+  // FIX: Added 'as const' to ensure TypeScript infers specific string literals, resolving the '+' operator error on a potential 'symbol' type.
+  const itemsRilevantiPerLimite = [
     'st_art3c6_CCNL2011_retribuzionePosizione',
     'st_art60c1_CCNL2024_retribuzionePosizioneClassi',
     'st_art60c3_CCNL2024_maggiorazioneComplessita',
@@ -71,7 +72,7 @@ export const FondoSegretarioComunalePage: React.FC = () => {
     'va_art61c2_CCNL2024_retribuzioneRisultato10',
     'va_art61c2bis_CCNL2024_retribuzioneRisultato15',
     'va_art61c2ter_CCNL2024_superamentoLimiteMetropolitane',
-  ];
+  ] as const;
   const sommaBaseRisorseRilevantiLimite = itemsRilevantiPerLimite.reduce((sum, key) => {
     return sum + (data[key] || 0);
   }, 0);
@@ -129,6 +130,7 @@ export const FondoSegretarioComunalePage: React.FC = () => {
             </span>
         </div>
       </div>
+      
     </div>
   );
 };

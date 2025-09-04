@@ -25,7 +25,8 @@ export const EntityGeneralInfoForm: React.FC = () => {
       processedValue = value === '' ? undefined : parseFloat(value);
     } else if (name === 'tipologiaEnte') {
       processedValue = value as TipologiaEnte;
-      if (value !== TipologiaEnte.ALTRO) {
+      // FIX: Corrected enum access for TipologiaEnte. The key is 'Altro', not uppercase 'ALTRO'.
+      if (value !== TipologiaEnte.Altro) {
         dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: { altroTipologiaEnte: '' } as Partial<AnnualData> });
       }
     } else if (['isEnteDissestato',
@@ -78,7 +79,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           containerClassName="mb-3"
           error={validationErrors['fundData.annualData.tipologiaEnte']}
         />
-        {annualData.tipologiaEnte === TipologiaEnte.ALTRO && (
+        {annualData.tipologiaEnte === TipologiaEnte.Altro && (
           <Input
             label="Specifica Altra Tipologia Ente"
             type="text"
@@ -87,7 +88,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
             value={annualData.altroTipologiaEnte ?? ''}
             onChange={handleChange}
             placeholder="Indicare la tipologia"
-            aria-required={annualData.tipologiaEnte === TipologiaEnte.ALTRO}
+            aria-required={annualData.tipologiaEnte === TipologiaEnte.Altro}
             containerClassName="mb-3"
             error={validationErrors['fundData.annualData.altroTipologiaEnte']}
           />

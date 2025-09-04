@@ -48,13 +48,8 @@ export const AnnualDataForm: React.FC = () => {
     fondoStabile2016PNRR
   } = annualData;
   
-  const incidenzaError = validationErrors['fundData.annualData.incidenzaSalarioAccessorioUltimoRendiconto'] || (incidenzaSalarioAccessorioUltimoRendiconto !== undefined && incidenzaSalarioAccessorioUltimoRendiconto < 0 
-    ? "Il valore non può essere negativo." 
-    : undefined);
-  
-  const fondoStabileError = validationErrors['fundData.annualData.fondoStabile2016PNRR'] || (fondoStabile2016PNRR !== undefined && fondoStabile2016PNRR < 0 
-    ? "Il valore non può essere negativo." 
-    : undefined);
+  const incidenzaError = validationErrors['fundData.annualData.incidenzaSalarioAccessorioUltimoRendiconto'];
+  const fondoStabileError = validationErrors['fundData.annualData.fondoStabile2016PNRR'];
 
   const isEquilibrioOk = rispettoEquilibrioBilancioPrecedente === true;
   const isDebitoOk = rispettoDebitoCommercialePrecedente === true;

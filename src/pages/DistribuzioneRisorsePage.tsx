@@ -17,9 +17,10 @@ const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) =>
   return `€ ${value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+// FIX: Corrected type definition to only consider string keys, resolving 'symbol cannot be used as an index type' error.
 type RisorsaVariabileKey = {
-  [K in keyof DistribuzioneRisorseData]: DistribuzioneRisorseData[K] extends RisorsaVariabileDetail | undefined ? K : never
-}[keyof DistribuzioneRisorseData];
+  [K in string & keyof DistribuzioneRisorseData]: DistribuzioneRisorseData[K] extends RisorsaVariabileDetail | undefined ? K : never
+}[string & keyof DistribuzioneRisorseData];
 
 const DisplayField: React.FC<{ label: string; value: string | number; info?: string }> = ({ label, value, info }) => (
   <div className="mb-0">
@@ -327,8 +328,9 @@ export const DistribuzioneRisorsePage: React.FC = () => {
   
   const utilizziParteVariabile = useMemo(() => {
     const data = distribuzioneRisorseData || {};
+    // FIX: Convert key to string to safely use .startsWith() and prevent type errors.
     return Object.keys(data)
-      .filter(key => key.startsWith('p_'))
+      .filter(key => String(key).startsWith('p_'))
       .reduce((sum, key) => {
           const value = data[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail | undefined;
           return sum + (value?.stanziate || 0);
@@ -347,9 +349,10 @@ export const DistribuzioneRisorsePage: React.FC = () => {
   
   const otherVariableUtilizations = useMemo(() => {
     const data = distribuzioneRisorseData || {};
+    // FIX: Convert key to string to safely use .startsWith() and prevent type errors.
     return Object.keys(data)
       .filter(key => 
-          key.startsWith('p_') && 
+          String(key).startsWith('p_') && 
           key !== 'p_performanceOrganizzativa' && 
           key !== 'p_performanceIndividuale' &&
           key !== 'p_maggiorazionePerformanceIndividuale'
@@ -632,7 +635,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
             const isAutoCalculated = def.key === 'u_diffProgressioniStoriche' || def.key === 'u_indennitaComparto';
             const value = distribuzioneRisorseData[def.key];
             
-            if (def.key.startsWith('u_')) {
+            if (String(def.key).startsWith('u_')) {
               if (multiInputStableKeys.includes(def.key as any)) {
                 return (
                     <VariableFundingItem
@@ -660,7 +663,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
                     />
                 );
               }
-            } else if (def.key.startsWith('p_')) {
+            } else if (String(def.key).startsWith('p_')) {
               return (
                 <VariableFundingItem
                   key={String(def.key)}

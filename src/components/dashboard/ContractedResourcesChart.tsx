@@ -28,9 +28,11 @@ export const ContractedResourcesChart: React.FC = () => {
     return variableUses
       .map(def => {
         const stanziateValue = (distribuzioneRisorseData[def.key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
+        // FIX: Casted description to string before using substring to avoid type errors, as it could be a ReactNode.
+        const descriptionString = String(def.description);
         return {
           // Shorten long names for better display in legend
-          name: typeof def.description === 'string' && def.description.length > 35 ? def.description.substring(0, 32) + '...' : String(def.description),
+          name: descriptionString.length > 35 ? descriptionString.substring(0, 32) + '...' : descriptionString,
           value: stanziateValue,
         };
       })

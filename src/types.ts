@@ -24,6 +24,7 @@ import {
   FundDataSchema,
   UserRoleSchema,
   NormativeDataSchema,
+  PersonaleServizioDettaglioSchema
 } from './schemas/fundDataSchemas';
 
 // Re-export enums and export derived types
@@ -62,8 +63,6 @@ export type AreaQualifica = z.infer<typeof AreaQualificaSchema>;
 export const TipoMaggiorazione = TipoMaggiorazioneSchema.enum;
 export type TipoMaggiorazione = z.infer<typeof TipoMaggiorazioneSchema>;
 
-// FIX: This schema was being imported and defined locally. Now it's defined in schemas/fundDataSchemas.ts and imported.
-import { PersonaleServizioDettaglioSchema } from './schemas/fundDataSchemas';
 export type PersonaleServizioDettaglio = z.infer<typeof PersonaleServizioDettaglioSchema>;
 
 export type AnnualEmployeeCount = z.infer<typeof AnnualEmployeeCountSchema>;
@@ -142,7 +141,6 @@ export interface AppState {
   isNormativeDataLoading: boolean;
   normativeData?: NormativeData;
   error?: string;
-  // FIX: Added validationErrors to AppState
   validationErrors: { [key: string]: string };
   activeTab: string;
 }
@@ -162,7 +160,6 @@ export type AppAction =
   | { type: 'SET_NORMATIVE_DATA_LOADING'; payload: boolean }
   | { type: 'SET_NORMATIVE_DATA'; payload: NormativeData }
   | { type: 'SET_ERROR'; payload: string | undefined }
-  // FIX: Added SET_VALIDATION_ERRORS action
   | { type: 'SET_VALIDATION_ERRORS'; payload: { [key: string]: string } }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'ADD_ART23_EMPLOYEE_DETAIL'; payload: { yearType: '2018' | 'annoRif'; detail: Art23EmployeeDetail } }

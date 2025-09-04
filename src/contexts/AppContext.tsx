@@ -447,7 +447,6 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
         isLoading: false,
         calculatedFund: action.payload.fund,
         complianceChecks: action.payload.checks,
-        validationErrors: {},
       };
     case 'CALCULATE_FUND_ERROR':
       return {
@@ -465,7 +464,6 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, normativeData: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload };
-    // FIX: Added SET_VALIDATION_ERRORS case
     case 'SET_VALIDATION_ERRORS':
       return { ...state, validationErrors: action.payload };
     case 'SET_ACTIVE_TAB':
@@ -521,19 +519,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [state]);
 
   const performFundCalculation = useCallback(async () => {
-    dispatch({ type: 'SET_VALIDATION_ERRORS', payload: {} });
     dispatch({ type: 'SET_ERROR', payload: undefined });
 
+    // Run validation to show errors on fields, but don't block calculation.
     const validationErrors = validateFundData(state.fundData);
-    if (Object.keys(validationErrors).length > 0) {
-      dispatch({ type: 'SET_VALIDATION_ERRORS', payload: validationErrors });
-      dispatch({
-        type: 'CALCULATE_FUND_ERROR',
-        payload:
-          'Sono presenti errori di validazione. Correggere i campi evidenziati prima di procedere.',
-      });
-      return;
-    }
+    dispatch({ type: 'SET_VALIDATION_ERRORS', payload: validationErrors });
 
     if (!state.normativeData) {
       dispatch({

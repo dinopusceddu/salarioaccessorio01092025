@@ -46,7 +46,8 @@ export const SimulatoreIncrementoForm: React.FC = () => {
   const si = simulatoreInput || {};
   const risultati = simulatoreRisultati;
 
-  const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.PROVINCIA ? "Province" : "Comuni";
+  // FIX: Corrected enum access for TipologiaEnte. The key is 'Provincia', not uppercase 'PROVINCIA'.
+  const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.Provincia ? "Province" : "Comuni";
 
   return (
     <Card title="Simulatore Incremento Potenziale Fondo Salario Accessorio" className="mt-8 mb-8" isCollapsible={true} defaultCollapsed={true}>

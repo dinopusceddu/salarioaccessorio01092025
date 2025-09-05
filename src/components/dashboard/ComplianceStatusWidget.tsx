@@ -56,7 +56,7 @@ export const ComplianceStatusWidget: React.FC<ComplianceStatusWidgetProps> = ({ 
         {warnings > 0 && <p className={`font-semibold ${getStylesForGravita('warning').title}`}>{warnings} Avvisi da Verificare</p>}
         {criticalIssues === 0 && warnings === 0 && <p className="font-semibold text-green-700">Nessuna criticità o avviso rilevante.</p>}
       </div>
-      <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-2"> {/* Added pr-2 for scrollbar space */}
         {complianceChecks.map(check => {
           const styles = getStylesForGravita(check.gravita);
           return (

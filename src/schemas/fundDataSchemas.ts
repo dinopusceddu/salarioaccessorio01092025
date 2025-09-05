@@ -69,7 +69,7 @@ export const NormativeDataSchema = z.object({
 });
 
 export const HistoricalDataSchema = z.object({
-  fondoSalarioAccessorioPersonaleNonDirEQ2016: numberOrUndefined.refine(v => v !== undefined, { message: "Questo campo è obbligatorio." }),
+  fondoSalarioAccessorioPersonaleNonDirEQ2016: numberOrUndefined,
   fondoElevateQualificazioni2016: numberOrUndefined,
   fondoDirigenza2016: numberOrUndefined,
   risorseSegretarioComunale2016: numberOrUndefined,
@@ -126,14 +126,14 @@ export const AnnualEmployeeCountSchema = z.object({
 
 export const AnnualDataSchema = z.object({
   annoRiferimento: z.number(),
-  denominazioneEnte: z.string({ required_error: "La denominazione dell'ente è obbligatoria." }).min(1, "La denominazione dell'ente è obbligatoria."),
+  denominazioneEnte: z.string().optional(),
   tipologiaEnte: TipologiaEnteSchema.optional(),
   altroTipologiaEnte: z.string().optional(),
-  numeroAbitanti: numberOrUndefined.refine(v => v !== undefined, { message: "Il numero di abitanti è obbligatorio." }),
+  numeroAbitanti: numberOrUndefined,
   isEnteDissestato: z.boolean().optional(),
   isEnteStrutturalmenteDeficitario: z.boolean().optional(),
   isEnteRiequilibrioFinanziario: z.boolean().optional(),
-  hasDirigenza: z.boolean({ required_error: "Specificare se l'ente ha personale dirigente." }),
+  hasDirigenza: z.boolean().optional(),
   isDistributionMode: z.boolean().optional(),
   personaleServizioAttuale: z.array(AnnualEmployeeCountSchema),
   rispettoEquilibrioBilancioPrecedente: z.boolean().optional(),
@@ -153,12 +153,6 @@ export const AnnualDataSchema = z.object({
 }).refine(data => data.tipologiaEnte !== 'Altro' || (data.altroTipologiaEnte && data.altroTipologiaEnte.length > 0), {
     message: "Specificare la tipologia di ente",
     path: ["altroTipologiaEnte"],
-}).refine(data => !(data.tipologiaEnte === TipologiaEnteSchema.enum.Comune || data.tipologiaEnte === TipologiaEnteSchema.enum.Provincia) || data.simulatoreInput.simStipendiTabellari2023 !== undefined, {
-    message: "Campo obbligatorio per Comuni e Province.",
-    path: ["simulatoreInput", "simStipendiTabellari2023"],
-}).refine(data => !(data.tipologiaEnte === TipologiaEnteSchema.enum.Comune || data.tipologiaEnte === TipologiaEnteSchema.enum.Provincia) || (data.historicalData?.fondoPersonaleNonDirEQ2018_Art23 !== undefined), {
-    message: "Campo obbligatorio per Comuni e Province.",
-    path: ["historicalData", "fondoPersonaleNonDirEQ2018_Art23"],
 });
 
 export const FondoDataBaseSchema = z.object({

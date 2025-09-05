@@ -1,6 +1,9 @@
 // services/reportService.ts
 import jsPDF from 'jspdf'; 
 import autoTable, { CellHookData, FontStyle } from 'jspdf-autotable';
+import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../constants.ts';
+import { calculateFadTotals, getFadEffectiveValueHelper } from '../logic/fundEngine.ts';
+import { getFadFieldDefinitions } from '../pages/FondoAccessorioDipendentePageHelpers.ts';
 import { 
     CalculatedFund, 
     FundData, 
@@ -13,12 +16,7 @@ import {
     NormativeData,
     DistribuzioneRisorseData,
     RisorsaVariabileDetail
-} from '../types';
-import { 
-    getFadFieldDefinitions, 
-} from '../pages/FondoAccessorioDipendentePageHelpers';
-import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../constants'; 
-import { getFadEffectiveValueHelper, calculateFadTotals } from '../logic/fundEngine';
+} from '../types.ts';
 
 
 // --- PDF Helper Functions ---
@@ -132,7 +130,7 @@ export const generateFullSummaryPDF = (
     const tipologiaEnteLabel = ALL_TIPOLOGIE_ENTE.find(t => t.value === annualData.tipologiaEnte)?.label || annualData.tipologiaEnte || TEXTS_UI.notApplicable;
     const infoGeneraliData = [
         { label: 'Denominazione Ente', value: annualData.denominazioneEnte },
-        { label: 'Tipologia Ente', value: annualData.tipologiaEnte === TipologiaEnte.ALTRO ? `${tipologiaEnteLabel}: ${annualData.altroTipologiaEnte}` : tipologiaEnteLabel },
+        { label: 'Tipologia Ente', value: annualData.tipologiaEnte === TipologiaEnte.Altro ? `${tipologiaEnteLabel}: ${annualData.altroTipologiaEnte}` : tipologiaEnteLabel },
         { label: 'Numero Abitanti (31.12 anno prec.)', value: formatNumber(annualData.numeroAbitanti, 0) },
         { label: 'Ente con Personale Dirigente?', value: formatBoolean(annualData.hasDirigenza) },
         { label: 'Ente in Dissesto Finanziario?', value: formatBoolean(annualData.isEnteDissestato) },
@@ -362,9 +360,11 @@ export const generateDeterminazioneTXT = (
 
     const enteHeader = () => {
         switch (annualData.tipologiaEnte) {
-            case TipologiaEnte.COMUNE:
+            // FIX: Corrected enum access to use mixed-case keys as defined in the enum.
+            case TipologiaEnte.Comune:
                 return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
-            case TipologiaEnte.PROVINCIA:
+            // FIX: Corrected enum access to use mixed-case keys as defined in the enum.
+            case TipologiaEnte.Provincia:
                 return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
             default:
                 return `${annualData.denominazioneEnte || '……………'}`;

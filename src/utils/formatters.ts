@@ -1,5 +1,5 @@
 // src/utils/formatters.ts
-import { TEXTS_UI } from '../constants';
+import { TEXTS_UI } from '../constants.ts';
 
 export const formatCurrency = (value?: number, notApplicableText = TEXTS_UI.notApplicable): string => {
   if (value === undefined || value === null || isNaN(value)) return notApplicableText;
@@ -17,7 +17,7 @@ export const formatBoolean = (value?: boolean, notApplicableText = TEXTS_UI.notA
 };
 
 export const formatPercentage = (value?: number): string => {
-  if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
+  if (value === undefined || value === null || isNaN(value)) return notApplicableText;
   return `${formatNumber(value)}%`;
 };
 

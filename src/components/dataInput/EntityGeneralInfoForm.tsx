@@ -25,7 +25,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
       processedValue = value === '' ? undefined : parseFloat(value);
     } else if (name === 'tipologiaEnte') {
       processedValue = value as TipologiaEnte;
-      // FIX: Corrected enum access for TipologiaEnte. The key is 'Altro', not uppercase 'ALTRO'.
       if (value !== TipologiaEnte.Altro) {
         dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: { altroTipologiaEnte: '' } as Partial<AnnualData> });
       }
@@ -41,7 +40,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
   };
 
   return (
-    <Card title="Informazioni Generali Ente e Anno di Riferimento" className="mb-8">
+    <Card title="Informazioni Generali Ente e Anno di Riferimento" className="mb-8"> {/* Increased mb */}
        <Input
           label="Anno di Riferimento per la Costituzione del Fondo"
           type="number"
@@ -51,10 +50,10 @@ export const EntityGeneralInfoForm: React.FC = () => {
           onChange={(e) => dispatch({ type: 'SET_CURRENT_YEAR', payload: parseInt(e.target.value) || new Date().getFullYear() })}
           min="2000"
           max="2099"
-          containerClassName="mb-6"
+          containerClassName="mb-6" // Aggiunge spazio sotto
           aria-required="true"
         />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0"> {/* Reduced gap-y */}
         <Input
           label="Denominazione Ente"
           type="text"
@@ -108,7 +107,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           error={validationErrors['fundData.annualData.numeroAbitanti']}
         />
       </div>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0">
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0"> {/* Reduced gap-y */}
          <Select
           label="Ente in dissesto finanziario (art. 244 TUEL)?"
           id="isEnteDissestato"
@@ -118,7 +117,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
           onChange={handleChange}
           placeholder="Seleziona..."
           aria-required="true"
-          containerClassName="mb-3"
         />
          <Select
           label="Ente strutturalmente deficitario (art. 242 TUEL)?"
@@ -129,7 +127,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
           onChange={handleChange}
           placeholder="Seleziona..."
           aria-required="true"
-          containerClassName="mb-3"
         />
         <Select
           label="Ente in piano di riequilibrio finanziario pluriennale (art. 243-bis TUEL)?"
@@ -140,7 +137,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
           onChange={handleChange}
           placeholder="Seleziona..."
           aria-required="true"
-          containerClassName="mb-3"
         />
         <Select
           label="È un ente con personale dirigente?"

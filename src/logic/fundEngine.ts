@@ -1,30 +1,30 @@
 // logic/fundEngine.ts
-import { 
-    SimulatoreIncrementoInput, 
-    SimulatoreIncrementoRisultati, 
-    TipologiaEnte,
-    FondoAccessorioDipendenteData,
-    FundData,
-    CalculatedFund,
-    FundComponent,
-    EmployeeCategory,
-    ComplianceCheck,
-    FondoElevateQualificazioniData,
-    FondoSegretarioComunaleData,
-    FondoDirigenzaData,
-    DistribuzioneRisorseData,
-    RisorsaVariabileDetail,
-    NormativeData
-} from '../types';
-
-import { getFadFieldDefinitions } from '../pages/FondoAccessorioDipendentePageHelpers';
+import { getFadFieldDefinitions } from '../pages/FondoAccessorioDipendentePageHelpers.ts';
+import {
+  CalculatedFund,
+  ComplianceCheck,
+  DistribuzioneRisorseData,
+  EmployeeCategory,
+  FondoAccessorioDipendenteData,
+  FondoDirigenzaData,
+  FondoElevateQualificazioniData,
+  FondoSegretarioComunaleData,
+  FundComponent,
+  FundData,
+  NormativeData,
+  RisorsaVariabileDetail,
+  SimulatoreIncrementoInput,
+  SimulatoreIncrementoRisultati,
+  TipologiaEnte,
+} from '../types.ts';
 
 // --- FROM hooks/useSimulatoreCalculations.ts ---
 
 export const getSogliaSpesaPersonale = (numeroAbitanti?: number, tipologiaEnte?: TipologiaEnte): number => {
   if (numeroAbitanti === undefined || tipologiaEnte === undefined) return 0;
 
-  if (tipologiaEnte === TipologiaEnte.COMUNE) {
+  // FIX: Corrected enum access to use mixed-case keys as defined in the enum, resolving property access errors.
+  if (tipologiaEnte === TipologiaEnte.Comune) {
     if (numeroAbitanti <= 999) return 29.50;
     if (numeroAbitanti <= 1999) return 28.60;
     if (numeroAbitanti <= 2999) return 27.60;
@@ -34,7 +34,8 @@ export const getSogliaSpesaPersonale = (numeroAbitanti?: number, tipologiaEnte?:
     if (numeroAbitanti <= 249999) return 27.60;
     if (numeroAbitanti <= 1499999) return 28.80;
     return 25.30; // Oltre 1.500.000
-  } else if (tipologiaEnte === TipologiaEnte.PROVINCIA) {
+  // FIX: Corrected enum access to use mixed-case keys as defined in the enum, resolving property access errors.
+  } else if (tipologiaEnte === TipologiaEnte.Provincia) {
     if (numeroAbitanti <= 250000) return 20.80;
     if (numeroAbitanti <= 349999) return 19.10;
     if (numeroAbitanti <= 449999) return 19.10; 
@@ -233,7 +234,7 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
     fondoDirigenzaData 
   } = fundData;
 
-  const { riferimenti_normativi } = normativeData;
+  const { valori_pro_capite, limiti, riferimenti_normativi } = normativeData;
 
   const fondoBase2016_originale = 
     (historicalData.fondoSalarioAccessorioPersonaleNonDirEQ2016 || 0) +
@@ -274,10 +275,31 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
   const incrementoDeterminatoArt23C2: FundComponent | undefined = importoEffettivoAdeguamentoArt23C2 > 0 ? {
     descrizione: `Adeguamento fondo per variazione personale (Art. 23 c.2 D.Lgs. 75/2017, base 2018)`,
     importo: importoEffettivoAdeguamentoArt23C2,
-    riferimento: riferimenti_normativi.art23_dlgs75_2017,
+    // FIX: Cast 'unknown' to 'string' to resolve type mismatch.
+    riferimento: riferimenti_normativi.art23_dlgs75_2017 as string,
     tipo: 'stabile',
     esclusoDalLimite2016: false, 
   } : undefined;
+  
+  const personale2018_perArt33 = historicalData.personaleServizio2018 || 0;
+  const spesaStipendiTabellari2023_perArt14 = historicalData.spesaStipendiTabellari2023 || 0;
+  // FIX: Corrected enum access to use full string literals as defined in the Zod schema, resolving property access errors.
+  const personaleNonDirigenteEQAttuale_perArt33 = annualData.personaleServizioAttuale.filter(p => p.category === EmployeeCategory["Personale Dipendente non Dirigente"] || p.category === EmployeeCategory["Titolari di Incarichi di Elevata Qualificazione (EQ)"]).reduce((sum, p) => sum + (p.count || 0), 0);
+  const personaleTotaleAttuale_perArt33 = annualData.personaleServizioAttuale.reduce((sum, p) => sum + (p.count || 0), 0);
+  const incrementiStabiliCCNL: FundComponent[] = [];
+  if (personale2018_perArt33 > 0) { const importoArt67 = personale2018_perArt33 * valori_pro_capite.art67_ccnl_2018; incrementiStabiliCCNL.push({descrizione: `Incremento stabile CCNL (${valori_pro_capite.art67_ccnl_2018}€ pro-capite su personale 2018 per Art.33)`, importo: importoArt67, riferimento: riferimenti_normativi.art67_ccnl2018 as string, tipo: 'stabile', esclusoDalLimite2016: false, });}
+  if (personaleNonDirigenteEQAttuale_perArt33 > 0) { const importoArt79b = personaleNonDirigenteEQAttuale_perArt33 * valori_pro_capite.art79_ccnl_2022_b; incrementiStabiliCCNL.push({descrizione: `Incremento stabile CCNL (${valori_pro_capite.art79_ccnl_2022_b}€ pro-capite personale non Dir/EQ per Art.33)`, importo: importoArt79b, riferimento: `${riferimenti_normativi.art79_ccnl2022} lett. b)`, tipo: 'stabile', esclusoDalLimite2016: false, });}
+  let importoAdeguamentoProCapiteArt33 = 0;
+  const valoreMedioProCapite2018_Art33 = (personale2018_perArt33 > 0 && fondoBase2016_originale > 0) ? fondoBase2016_originale / personale2018_perArt33 : 0;
+  if (valoreMedioProCapite2018_Art33 > 0) { importoAdeguamentoProCapiteArt33 = (personaleTotaleAttuale_perArt33 - personale2018_perArt33) * valoreMedioProCapite2018_Art33;}
+  const adeguamentoProCapite: FundComponent = { descrizione: "Adeguamento invarianza valore medio pro-capite 2018 (Art. 33 DL 34/2019)", importo: importoAdeguamentoProCapiteArt33, riferimento: riferimenti_normativi.art33_dl34_2019 as string, tipo: 'stabile', esclusoDalLimite2016: false, };
+  let incrementoOpzionaleVirtuosi: FundComponent | undefined = undefined;
+  if (annualData.condizioniVirtuositaFinanziariaSoddisfatte && spesaStipendiTabellari2023_perArt14 > 0) { const importoMaxIncremento48 = spesaStipendiTabellari2023_perArt14 * limiti.incremento_virtuosi_dl25_2025; incrementoOpzionaleVirtuosi = {descrizione: "Incremento facoltativo enti virtuosi (max 48% stip. tab. non dir. 2023)", importo: importoMaxIncremento48, riferimento: riferimenti_normativi.art14_dl25_2025 as string, tipo: 'stabile', esclusoDalLimite2016: false, }; }
+  const risorseVariabili: FundComponent[] = [];
+  const proventiArt45 = annualData.proventiSpecifici.find(p => p.riferimentoNormativo === riferimenti_normativi.art45_dlgs36_2023); if (proventiArt45 && proventiArt45.importo && proventiArt45.importo > 0) {risorseVariabili.push({descrizione: "Incentivi funzioni tecniche", importo: proventiArt45.importo, riferimento: riferimenti_normativi.art45_dlgs36_2023 as string, tipo: 'variabile', esclusoDalLimite2016: true, }); }
+  const proventiArt208 = annualData.proventiSpecifici.find(p => p.riferimentoNormativo === riferimenti_normativi.art208_cds); if (proventiArt208 && proventiArt208.importo && proventiArt208.importo > 0) {risorseVariabili.push({descrizione: "Proventi Codice della Strada (quota destinata)", importo: proventiArt208.importo, riferimento: riferimenti_normativi.art208_cds as string, tipo: 'variabile', esclusoDalLimite2016: false, });}
+  annualData.proventiSpecifici.filter(p => p.riferimentoNormativo !== riferimenti_normativi.art45_dlgs36_2023 && p.riferimentoNormativo !== riferimenti_normativi.art208_cds).forEach(p => { if (p.importo && p.importo > 0) {risorseVariabili.push({descrizione: p.descrizione, importo: p.importo, riferimento: p.riferimentoNormativo, tipo: 'variabile', esclusoDalLimite2016: false });}});
+  if (annualData.condizioniVirtuositaFinanziariaSoddisfatte && annualData.incentiviPNRROpMisureStraordinarie && annualData.incentiviPNRROpMisureStraordinarie > 0) { const limitePNRR = fondoBase2016_originale * limiti.incremento_pnrr_dl13_2023; const importoEffettivoPNRR = Math.min(annualData.incentiviPNRROpMisureStraordinarie, limitePNRR); risorseVariabili.push({descrizione: "Incremento variabile PNRR/Misure Straordinarie (fino a 5% del fondo stabile 2016 originale)", importo: importoEffettivoPNRR, riferimento: riferimenti_normativi.art8_dl13_2023 as string, tipo: 'variabile', esclusoDalLimite2016: true, });}
   
   const limiteArt23C2Modificato = fondoBase2016_originale + (incrementoDeterminatoArt23C2?.importo || 0);
   
@@ -312,7 +334,7 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
   const fad_stabile = fadTotals.sommaStabili_Dipendenti;
   const fad_variabile = fadTotals.sommaVariabiliSoggette_Dipendenti 
                       + fadTotals.sommaVariabiliNonSoggette_Dipendenti 
-                      + fadTotals.altreRisorseDecurtazioniFinali_Dipendenti 
+                      - fadTotals.altreRisorseDecurtazioniFinali_Dipendenti 
                       - fadTotals.decurtazioniLimiteSalarioAccessorio_Dipendenti;
   const fad_totale = fad_stabile + fad_variabile;
 
@@ -354,6 +376,8 @@ export const calculateFundCompletely = (fundData: FundData, normativeData: Norma
   const totaleComponenteStabile = fad_stabile + eq_stabile + seg_stabile + dir_stabile;
   const totaleComponenteVariabile = fad_variabile + eq_variabile + seg_variabile + dir_variabile;
   const totaleFondoRisorseDecentrate = totaleComponenteStabile + totaleComponenteVariabile;
+
+  const ammontareSoggettoLimite2016_legacy_calculation_part = (incrementiStabiliCCNL.filter(c => !c.esclusoDalLimite2016).reduce((s,c)=>s+c.importo,0) - (fondoAccessorioDipendenteData?.st_art79c1c_incrementoStabileConsistenzaPers || 0));
 
   return {
     fondoBase2016: fondoBase2016_originale,
@@ -463,7 +487,7 @@ const verificaCorrispondenzaRisorseVincolate = (fundData: FundData): ComplianceC
         isCompliant: true, // Technically compliant, but worth a warning
         valoreAttuale,
         limite: `Uso <= Fonte`,
-        messaggio: `Non tutte le risorse della fonte (${fonteImporto.toFixed(2)}€) sono state allocate. Verificare la corretta allocazione di ${ (fonteImporto - usoImporto).toFixed(2) }€ in "Distribuzione Risorse".`,
+        messaggio: `Non tutte le risorse della fonte (${fonteImporto.toFixed(2)}€) sono state allocate per questa finalità. Si suggerisce di verificare la corretta allocazione di ${ (fonteImporto - usoImporto).toFixed(2) }€.`,
         riferimentoNormativo: mapping.riferimento,
         gravita: 'warning',
         relatedPage: 'distribuzioneRisorse'
@@ -504,7 +528,8 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
       valoreAttuale: `€ ${ammontareSoggettoAlLimite.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       limite: `€ ${limite2016.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       messaggio: `Rilevato superamento di € ${superamento.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Applicare una riduzione di pari importo in uno dei fondi (es. Fondo Personale).`,
-      riferimentoNormativo: riferimenti_normativi.art23_dlgs75_2017,
+      // FIX: Cast 'unknown' to 'string' to resolve type mismatch.
+      riferimentoNormativo: riferimenti_normativi.art23_dlgs75_2017 as string,
       gravita: 'error',
       relatedPage: 'fondoAccessorioDipendente'
     });
@@ -516,7 +541,8 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
       valoreAttuale: `€ ${ammontareSoggettoAlLimite.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       limite: `€ ${limite2016.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       messaggio: "Il totale delle risorse soggette al limite dei fondi specifici rispetta il tetto storico del 2016 (come modificato).",
-      riferimentoNormativo: riferimenti_normativi.art23_dlgs75_2017,
+      // FIX: Cast 'unknown' to 'string' to resolve type mismatch.
+      riferimentoNormativo: riferimenti_normativi.art23_dlgs75_2017 as string,
       gravita: 'info',
     });
   }
@@ -587,7 +613,8 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
           messaggio: isCompliant15Percent
               ? "La quota per la retribuzione di risultato EQ rispetta il minimo del 15%."
               : "La quota per la retribuzione di risultato EQ è inferiore al minimo del 15%. Correggere nella pagina 'Distribuzione Risorse'.",
-          riferimentoNormativo: `${riferimenti_normativi.art17_ccnl2022} c.4`,
+          // FIX: Cast 'unknown' to 'string' to resolve type mismatch.
+          riferimentoNormativo: `${riferimenti_normativi.art17_ccnl2022 as string} c.4`,
           gravita: isCompliant15Percent ? 'info' : 'error',
           relatedPage: 'distribuzioneRisorse'
       });
@@ -641,7 +668,8 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
               valoreAttuale: `€ ${incrementoInserito.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
               limite: `€ ${maxIncrementoSimulatore.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
               messaggio: "L'incremento Decreto PA inserito supera il valore massimo calcolato dal simulatore. Correggere nel 'Fondo Accessorio Personale'.",
-              riferimentoNormativo: riferimenti_normativi.art14_dl25_2025,
+              // FIX: Cast 'unknown' to 'string' to resolve type mismatch.
+              riferimentoNormativo: riferimenti_normativi.art14_dl25_2025 as string,
               gravita: 'warning',
               relatedPage: 'fondoAccessorioDipendente'
           });

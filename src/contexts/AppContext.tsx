@@ -8,23 +8,23 @@ import React, {
   useReducer,
 } from 'react';
 
-import {
-  INITIAL_ANNUAL_DATA,
-  INITIAL_DISTRIBUZIONE_RISORSE_DATA,
-  INITIAL_FONDO_ACCESSORIO_DIPENDENTE_DATA,
-  INITIAL_FONDO_DIRIGENZA_DATA,
-  INITIAL_FONDO_ELEVATE_QUALIFICAZIONI_DATA,
-  INITIAL_FONDO_SEGRETARIO_COMUNALE_DATA,
-  INITIAL_HISTORICAL_DATA,
-  DEFAULT_CURRENT_YEAR,
-  DEFAULT_USER,
-} from '../constants';
-import {
+import { 
+    INITIAL_ANNUAL_DATA, 
+    DEFAULT_CURRENT_YEAR, 
+    DEFAULT_USER, 
+    INITIAL_DISTRIBUZIONE_RISORSE_DATA, 
+    INITIAL_FONDO_ACCESSORIO_DIPENDENTE_DATA, 
+    INITIAL_FONDO_DIRIGENZA_DATA, 
+    INITIAL_FONDO_ELEVATE_QUALIFICAZIONI_DATA, 
+    INITIAL_FONDO_SEGRETARIO_COMUNALE_DATA, 
+    INITIAL_HISTORICAL_DATA 
+} from '../constants.ts';
+import { 
   calculateFundCompletely,
   runAllComplianceChecks,
-} from '../logic/fundEngine';
-import { validateFundData } from '../logic/validation';
-import {
+} from '../logic/fundEngine.ts';
+import { validateFundData } from '../logic/validation.ts';
+import { 
   AppAction,
   AppState,
   Art23EmployeeDetail,
@@ -37,7 +37,7 @@ import {
   PersonaleServizioDettaglio,
   SimulatoreIncrementoInput,
   TipoMaggiorazione,
-} from '../types';
+} from '../types.ts';
 
 const LOCAL_STORAGE_KEY = 'salario-accessorio-app-state';
 
@@ -521,9 +521,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   const performFundCalculation = useCallback(async () => {
     dispatch({ type: 'SET_ERROR', payload: undefined });
 
-    // Run validation to show errors on fields, but don't block calculation.
     const validationErrors = validateFundData(state.fundData);
     dispatch({ type: 'SET_VALIDATION_ERRORS', payload: validationErrors });
+
+    if (Object.keys(validationErrors).length > 0) {
+      dispatch({ type: 'CALCULATE_FUND_ERROR', payload: 'Sono presenti errori di validazione nei dati inseriti. Si prega di correggerli.' });
+      return;
+    }
 
     if (!state.normativeData) {
       dispatch({

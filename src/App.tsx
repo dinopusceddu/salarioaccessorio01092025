@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 
 import { MainLayout } from './components/layout/MainLayout.tsx';
 import { LoadingSpinner } from './components/shared/LoadingSpinner.tsx';
-// Importazioni aggiornate per puntare alle directory corrette e con estensione corretta
 import { AppProvider, useAppContext } from './contexts/AppContext.tsx';
 import { ChecklistPage } from './pages/ChecklistPage.tsx';
 import { CompliancePage } from './pages/CompliancePage.tsx';
@@ -60,7 +59,6 @@ const allPageModules: PageModule[] = [
 
 const AppContent: React.FC = () => {
   const { state, dispatch } = useAppContext();
-  // FIX: Destructure new state properties for handling normative data loading
   const {
     activeTab,
     fundData,
@@ -70,7 +68,6 @@ const AppContent: React.FC = () => {
     error,
   } = state;
 
-  // FIX: Add loading and error states for essential normative data
   if (isNormativeDataLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -112,7 +109,6 @@ const AppContent: React.FC = () => {
 
   return (
     <MainLayout modules={visibleModules}>
-      {/* FIX: Use a simpler loading check for calculations */}
       {isLoading ? (
         <div className="flex h-full items-center justify-center">
           <LoadingSpinner text="Elaborazione in corso..." />

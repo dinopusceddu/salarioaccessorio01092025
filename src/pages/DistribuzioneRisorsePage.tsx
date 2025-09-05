@@ -17,7 +17,6 @@ const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) =>
   return `€ ${value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-// FIX: Corrected type definition to only consider string keys, resolving 'symbol cannot be used as an index type' error.
 type RisorsaVariabileKey = {
   [K in string & keyof DistribuzioneRisorseData]: DistribuzioneRisorseData[K] extends RisorsaVariabileDetail | undefined ? K : never
 }[string & keyof DistribuzioneRisorseData];
@@ -328,7 +327,6 @@ export const DistribuzioneRisorsePage: React.FC = () => {
   
   const utilizziParteVariabile = useMemo(() => {
     const data = distribuzioneRisorseData || {};
-    // FIX: Convert key to string to safely use .startsWith() and prevent type errors.
     return Object.keys(data)
       .filter(key => String(key).startsWith('p_'))
       .reduce((sum, key) => {
@@ -349,7 +347,6 @@ export const DistribuzioneRisorsePage: React.FC = () => {
   
   const otherVariableUtilizations = useMemo(() => {
     const data = distribuzioneRisorseData || {};
-    // FIX: Convert key to string to safely use .startsWith() and prevent type errors.
     return Object.keys(data)
       .filter(key => 
           String(key).startsWith('p_') && 
@@ -635,7 +632,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
             const isAutoCalculated = def.key === 'u_diffProgressioniStoriche' || def.key === 'u_indennitaComparto';
             const value = distribuzioneRisorseData[def.key];
             
-            if (String(def.key).startsWith('u_')) {
+            if (def.key.startsWith('u_')) {
               if (multiInputStableKeys.includes(def.key as any)) {
                 return (
                     <VariableFundingItem
@@ -663,7 +660,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
                     />
                 );
               }
-            } else if (String(def.key).startsWith('p_')) {
+            } else if (def.key.startsWith('p_')) {
               return (
                 <VariableFundingItem
                   key={String(def.key)}
@@ -685,12 +682,12 @@ export const DistribuzioneRisorsePage: React.FC = () => {
 
       <Card title="Distribuzione del fondo EQ" className="mb-6" isCollapsible={true} defaultCollapsed={true}>
         <h4 className="text-base font-bold text-[#1b0e0e] mb-2 py-3 border-b border-[#f3e7e8]">Retribuzione di Posizione (Art. 17 CCNL)</h4>
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c2_retribuzionePosizione" description="L’importo della retribuzione di posizione varia da un minimo di € 5.000 ad un massimo di € 18.000 lordi per tredici mensilità, sulla base della graduazione di ciascuna posizione..." riferimentoNormativo={norme.art17_ccnl2022 + " c.2"} value={eqData.st_art17c2_retribuzionePosizione} onChange={handleEQChange} />
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c3_retribuzionePosizioneArt16c4" description="Nelle ipotesi considerate nell’art. 16, comma 4, l’importo della retribuzione di posizione varia da un minimo di € 3.000 ad un massimo di € 9.500 annui lordi per tredici mensilità." riferimentoNormativo={norme.art17_ccnl2022 + " c.3"} value={eqData.st_art17c3_retribuzionePosizioneArt16c4} onChange={handleEQChange} />
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c5_interimEQ" description="Nell’ipotesi di conferimento ad interim... ulteriore importo la cui misura può variare dal 15% al 25% del valore economico della retribuzione di posizione..." riferimentoNormativo={norme.art17_ccnl2022 + " c.5"} value={eqData.st_art17c5_interimEQ} onChange={handleEQChange} />
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art23c5_maggiorazioneSedi" description="Maggiorazione della retribuzione di posizione per servizio in diverse sedi (fino al 30%)..." riferimentoNormativo={norme.art23_c5_ccnl2022} value={eqData.st_art23c5_maggiorazioneSedi} onChange={handleEQChange} />
+        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c2_retribuzionePosizione" description="L’importo della retribuzione di posizione varia da un minimo di € 5.000 ad un massimo di € 18.000 lordi per tredici mensilità, sulla base della graduazione di ciascuna posizione..." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.2"} value={eqData.st_art17c2_retribuzionePosizione} onChange={handleEQChange} />
+        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c3_retribuzionePosizioneArt16c4" description="Nelle ipotesi considerate nell’art. 16, comma 4, l’importo della retribuzione di posizione varia da un minimo di € 3.000 ad un massimo di € 9.500 annui lordi per tredici mensilità." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.3"} value={eqData.st_art17c3_retribuzionePosizioneArt16c4} onChange={handleEQChange} />
+        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c5_interimEQ" description="Nell’ipotesi di conferimento ad interim... ulteriore importo la cui misura può variare dal 15% al 25% del valore economico della retribuzione di posizione..." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.5"} value={eqData.st_art17c5_interimEQ} onChange={handleEQChange} />
+        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art23c5_maggiorazioneSedi" description="Maggiorazione della retribuzione di posizione per servizio in diverse sedi (fino al 30%)..." riferimentoNormativo={norme.art23_c5_ccnl2022 as string} value={eqData.st_art23c5_maggiorazioneSedi} onChange={handleEQChange} />
         <h4 className="text-base font-bold text-[#1b0e0e] mb-2 mt-6 py-3 border-b border-t border-[#f3e7e8]">Retribuzione di Risultato (Art. 17 CCNL)</h4>
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="va_art17c4_retribuzioneRisultato" description="Gli enti definiscono i criteri per la determinazione e per l’erogazione annuale della retribuzione di risultato degli incarichi di EQ, destinando a tale particolare voce retributiva una quota non inferiore al 15% delle risorse complessivamente finalizzate alla erogazione della retribuzione di posizione e di risultato di tutti gli incarichi previsti dal proprio ordinamento." riferimentoNormativo={norme.art17_ccnl2022 + " c.4"} value={eqData.va_art17c4_retribuzioneRisultato} onChange={handleEQChange} inputInfo={retribuzioneRisultatoInfoEQ} />
+        <SimpleFundingItem<FondoElevateQualificazioniData> id="va_art17c4_retribuzioneRisultato" description="Gli enti definiscono i criteri per la determinazione e per l’erogazione annuale della retribuzione di risultato degli incarichi di EQ, destinando a tale particolare voce retributiva una quota non inferiore al 15% delle risorse complessivamente finalizzate alla erogazione della retribuzione di posizione e di risultato di tutti gli incarichi previsti dal proprio ordinamento." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.4"} value={eqData.va_art17c4_retribuzioneRisultato} onChange={handleEQChange} inputInfo={retribuzioneRisultatoInfoEQ} />
         <SectionTotal label="SOMMA DISTRIBUZIONE FONDO EQ" total={sommaDistribuzioneFondoEQ} className="border-t-2 border-[#d1c0c1]" />
         <CalculatedDisplayItem label="Somme non utilizzate" value={sommeNonUtilizzateEQ} infoText="Calcolato come: (Somma Risorse per le Elevate Qualificazioni) - (Somma Distribuzione Fondo EQ)" isWarning={sommeNonUtilizzateEQ < 0} isBold={true}/>
       </Card>

@@ -1,5 +1,5 @@
 // constants.ts
-import { EmployeeCategory, UserRole, TipologiaEnte, SimulatoreIncrementoInput, FondoAccessorioDipendenteData, FondoElevateQualificazioniData, FondoSegretarioComunaleData, FondoDirigenzaData, LivelloPeo, TipoMaggiorazione, AreaQualifica, DistribuzioneRisorseData } from './types';
+import { EmployeeCategory, UserRole, TipologiaEnte, SimulatoreIncrementoInput, FondoAccessorioDipendenteData, FondoElevateQualificazioniData, FondoSegretarioComunaleData, FondoDirigenzaData, LivelloPeo, TipoMaggiorazione, AreaQualifica, DistribuzioneRisorseData } from './types.ts';
 
 export const APP_NAME = "Salario accessorio Funzioni Locali";
 
@@ -58,7 +58,6 @@ export const INITIAL_HISTORICAL_DATA = {
   totaleFondoAnnoPrecedente: undefined,
 };
 
-// FIX: Explicitly cast enum value to string for label property to satisfy TypeScript type checking.
 export const ALL_TIPOLOGIE_ENTE: { value: TipologiaEnte; label: string }[] = Object.values(TipologiaEnte).map(value => ({ value, label: value as string }));
 
 export const INITIAL_SIMULATORE_INPUT: SimulatoreIncrementoInput = {

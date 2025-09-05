@@ -2,30 +2,30 @@
 import React from 'react';
 import { z } from 'zod';
 import {
-  UserSchema,
-  HistoricalDataSchema,
+  AnnualDataSchema,
+  AnnualEmployeeCountSchema,
+  AreaQualificaSchema,
   Art23EmployeeDetailSchema,
+  DistribuzioneRisorseDataSchema,
   EmployeeCategorySchema,
-  TipologiaEnteSchema,
-  ProventoSpecificoSchema,
-  SimulatoreIncrementoInputSchema,
-  SimulatoreIncrementoRisultatiSchema,
   FondoDataBaseSchema,
+  FondoDirigenzaDataSchema,
   FondoElevateQualificazioniDataSchema,
   FondoSegretarioComunaleDataSchema,
-  FondoDirigenzaDataSchema,
-  LivelloPeoSchema,
-  AreaQualificaSchema,
-  TipoMaggiorazioneSchema,
-  AnnualEmployeeCountSchema,
-  AnnualDataSchema,
-  RisorsaVariabileDetailSchema,
-  DistribuzioneRisorseDataSchema,
   FundDataSchema,
-  UserRoleSchema,
+  HistoricalDataSchema,
+  LivelloPeoSchema,
   NormativeDataSchema,
-  PersonaleServizioDettaglioSchema
-} from './schemas/fundDataSchemas';
+  PersonaleServizioDettaglioSchema,
+  ProventoSpecificoSchema,
+  RisorsaVariabileDetailSchema,
+  SimulatoreIncrementoInputSchema,
+  SimulatoreIncrementoRisultatiSchema,
+  TipologiaEnteSchema,
+  TipoMaggiorazioneSchema,
+  UserRoleSchema,
+  UserSchema,
+} from './schemas/fundDataSchemas.ts';
 
 // Re-export enums and export derived types
 export const UserRole = UserRoleSchema.enum;

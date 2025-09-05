@@ -1,11 +1,11 @@
 // pages/ReportsPage.tsx
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext';
-import { Card } from '../components/shared/Card';
-import { Button } from '../components/shared/Button';
-import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from '../reportService';
-import { TEXTS_UI } from '../constants';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { useAppContext } from '../contexts/AppContext.tsx';
+import { Card } from '../components/shared/Card.tsx';
+import { Button } from '../components/shared/Button.tsx';
+import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from '../services/reportService.ts';
+import { TEXTS_UI } from '../constants.ts';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
 
 
 export const ReportsPage: React.FC = () => {

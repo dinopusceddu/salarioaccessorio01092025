@@ -1,37 +1,47 @@
 // pages/DataEntryPage.tsx
 import React from 'react';
-import { HistoricalDataForm } from '../components/dataInput/HistoricalDataForm.tsx';
-import { AnnualDataForm } from '../components/dataInput/AnnualDataForm.tsx'; 
-import { EntityGeneralInfoForm } from '../components/dataInput/EntityGeneralInfoForm.tsx';
 import { Art23EmployeeAndIncrementForm } from '../components/dataInput/Art23EmployeeAndIncrementForm.tsx';
+import { AnnualDataForm } from '../components/dataInput/AnnualDataForm.tsx';
+import { EntityGeneralInfoForm } from '../components/dataInput/EntityGeneralInfoForm.tsx';
+import { HistoricalDataForm } from '../components/dataInput/HistoricalDataForm.tsx';
 import { SimulatoreIncrementoForm } from '../components/dataInput/SimulatoreIncrementoForm.tsx';
 import { Button } from '../components/shared/Button.tsx';
-import { useAppContext } from '../contexts/AppContext.tsx';
 import { TEXTS_UI } from '../constants.ts';
+import { useAppContext } from '../contexts/AppContext.tsx';
 import { TipologiaEnte } from '../types.ts';
 
 export const DataEntryPage: React.FC = () => {
   const { state, performFundCalculation } = useAppContext();
-  const { isLoading, fundData } = state;
+  // FIX: Retrieve `error` and `validationErrors` from `useAppContext` to display form validation messages and general calculation errors correctly.
+  const { isLoading, fundData, error, validationErrors } = state;
   const { tipologiaEnte } = fundData.annualData;
   
   const handleSubmit = async () => {
     await performFundCalculation();
   };
 
-  // FIX: Corrected enum access for TipologiaEnte. The keys are 'Comune' and 'Provincia', not uppercase 'COMUNE' and 'PROVINCIA'.
+  const hasValidationErrors = Object.keys(validationErrors).length > 0;
+
   const showSimulatoreAndArt23Form = tipologiaEnte === TipologiaEnte.Comune || tipologiaEnte === TipologiaEnte.Provincia;
 
   return (
     <div className="space-y-8">
       <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight">Inserimento Dati per Costituzione Fondo</h2>
       
-      {state.error && (
-        <div className="p-4 bg-[#fdd0d2] border border-[#ea2832] text-[#5c1114] rounded-lg" role="alert"> {/* Adjusted error alert style */}
+      {error && (
+        <div className="p-4 bg-[#fdd0d2] border border-[#ea2832] text-[#5c1114] rounded-lg" role="alert">
           <strong className="font-bold">Errore: </strong>
-          <span className="block sm:inline">{state.error}</span>
+          <span className="block sm:inline">{error}</span>
         </div>
       )}
+
+      {hasValidationErrors && !error && (
+         <div className="p-4 bg-[#fffbeb] border border-[#fde68a] text-[#92400e] rounded-lg" role="alert">
+          <strong className="font-bold">Attenzione: </strong>
+          <span className="block sm:inline">Sono presenti errori nei dati inseriti. Correggi i campi evidenziati in rosso prima di procedere.</span>
+        </div>
+      )}
+
 
       <EntityGeneralInfoForm /> 
       <HistoricalDataForm />

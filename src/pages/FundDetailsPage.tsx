@@ -6,6 +6,7 @@ import { FondoAccessorioDipendenteData } from '../types.ts';
 import { TEXTS_UI } from '../constants.ts';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
 import { FundingItem } from '../components/shared/FundingItem.tsx';
+// FIX: Changed import to get the getFadFieldDefinitions function from the correct helper file.
 import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {

@@ -4,6 +4,7 @@ import { useAppContext } from '../contexts/AppContext.tsx';
 import { FondoAccessorioDipendenteData, NormativeData } from '../types.ts';
 import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI } from '../constants.ts'; 
+// FIX: Changed import to get the getFadFieldDefinitions function from the constant.
 import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
 import { calculateFadTotals } from '../logic/fundEngine.ts';
 import { FundingItem } from '../components/shared/FundingItem.tsx';
@@ -142,6 +143,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
       }
     } else if (field === 'vn_dl13_art8c3_incrementoPNRR_max5stabile2016') {
       setPnrr3UserModified(true); 
+      // FIX: Corrected typo from `isEnteInCondizioni` to `isEnteInCondizioniSpeciali`.
       if (arePNRR3ConditionsMet && !isEnteInCondizioniSpeciali) {
         const maxAllowedPNRR3 = valoreMassimoPNRR3;
         processedValue = (value !== undefined) ? Math.min(Math.max(0, value), maxAllowedPNRR3) : undefined;
@@ -289,7 +291,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
             description="Totale parziale risorse disponibili per il fondo (CALCOLATO) ai fini del confronto con il tetto complessivo del salario accessorio dell'anno 2016." 
             value={data.cl_totaleParzialeRisorsePerConfrontoTetto2016} 
             onChange={() => {}} 
-            riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017} 
+            riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017 as string} 
             disabled={true} 
             inputInfo="Valore calcolato automaticamente"
         />
@@ -298,7 +300,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
             description="Art. 23 c. 2 dlgs 75/2017 Eventuale decurtazione annuale rispetto il tetto complessivo del salario accessorio dell'anno 2016." 
             value={data.cl_art23c2_decurtazioneIncrementoAnnualeTetto2016} 
             onChange={handleChange} 
-            riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017} 
+            riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017 as string} 
             isSubtractor={true} 
         />
       </Card>

@@ -19,7 +19,6 @@ const formatPercentageForDisplay = (value?: number) => {
 
 export const SimulatoreIncrementoForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
-  // FIX: Get normativeData from context
   const { simulatoreInput, numeroAbitanti, tipologiaEnte, simulatoreRisultati } = state.fundData.annualData;
   const { normativeData } = state;
 
@@ -46,7 +45,6 @@ export const SimulatoreIncrementoForm: React.FC = () => {
   const si = simulatoreInput || {};
   const risultati = simulatoreRisultati;
 
-  // FIX: Corrected enum access for TipologiaEnte. The key is 'Provincia', not uppercase 'PROVINCIA'.
   const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.Provincia ? "Province" : "Comuni";
 
   return (

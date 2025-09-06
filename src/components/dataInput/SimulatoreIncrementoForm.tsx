@@ -1,11 +1,11 @@
 // components/dataInput/SimulatoreIncrementoForm.tsx
 import React, { useEffect, useCallback } from 'react';
-import { useAppContext } from '../../contexts/AppContext';
-import { SimulatoreIncrementoInput, TipologiaEnte } from '../../types';
-import { Input } from '../shared/Input';
-import { Card } from '../shared/Card';
-import { TEXTS_UI } from '../../constants';
-import { calculateSimulazione } from '../../logic/fundEngine';
+import { useAppContext } from '../../contexts/AppContext.tsx';
+import { SimulatoreIncrementoInput, TipologiaEnte } from '../../types.ts';
+import { Input } from '../shared/Input.tsx';
+import { Card } from '../shared/Card.tsx';
+import { TEXTS_UI } from '../../constants.ts';
+import { calculateSimulazione } from '../../logic/fundEngine.ts';
 
 const formatCurrencyForDisplay = (value?: number) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -45,6 +45,7 @@ export const SimulatoreIncrementoForm: React.FC = () => {
   const si = simulatoreInput || {};
   const risultati = simulatoreRisultati;
 
+  // FIX: Corrected enum access for TipologiaEnte.Provincia. The key is 'Provincia', not uppercase 'PROVINCIA', resolving a property access error during table header generation.
   const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.Provincia ? "Province" : "Comuni";
 
   return (

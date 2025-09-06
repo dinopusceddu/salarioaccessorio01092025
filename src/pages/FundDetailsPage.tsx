@@ -1,13 +1,12 @@
 // pages/FundDetailsPage.tsx
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext.tsx';
-import { Card } from '../components/shared/Card.tsx';
-import { FondoAccessorioDipendenteData } from '../types.ts';
-import { TEXTS_UI } from '../constants.ts';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
-import { FundingItem } from '../components/shared/FundingItem.tsx';
-// FIX: Changed import to get the getFadFieldDefinitions function from the correct helper file.
-import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
+import { useAppContext } from '../contexts/AppContext';
+import { Card } from '../components/shared/Card';
+import { FondoAccessorioDipendenteData } from '../types';
+import { TEXTS_UI } from '../constants';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { FundingItem } from '../components/shared/FundingItem';
+import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
   if (value === undefined || value === null || isNaN(value)) return defaultText;
@@ -123,7 +122,7 @@ export const FundDetailsPage: React.FC = () => {
                       key={String(def.key)} 
                       id={def.key} 
                       description={def.description}
-                      value={fadData[def.key]} 
+                      value={(fadData as any)[def.key]} 
                       onChange={()=>{}} 
                       riferimentoNormativo={def.riferimento}
                       isSubtractor={def.isSubtractor}

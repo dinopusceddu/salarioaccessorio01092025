@@ -1,11 +1,12 @@
 // components/dataInput/EntityGeneralInfoForm.tsx
 import React from 'react';
-import { useAppContext } from '../../contexts/AppContext';
-import { AnnualData, TipologiaEnte } from '../../types';
-import { Input } from '../shared/Input';
-import { Select } from '../shared/Select';
-import { Card } from '../shared/Card';
-import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants';
+import { useAppContext } from '../../contexts/AppContext.tsx';
+import { AnnualData, TipologiaEnte } from '../../types.ts';
+import { Input } from '../shared/Input.tsx';
+import { Select } from '../shared/Select.tsx';
+import { Card } from '../shared/Card.tsx';
+import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants.ts';
+import { Checkbox } from '../shared/Checkbox.tsx';
 
 const booleanOptions = [
   { value: 'true', label: TEXTS_UI.trueText },
@@ -25,14 +26,17 @@ export const EntityGeneralInfoForm: React.FC = () => {
       processedValue = value === '' ? undefined : parseFloat(value);
     } else if (name === 'tipologiaEnte') {
       processedValue = value as TipologiaEnte;
+      // FIX: Corrected enum access to use TitleCase as inferred from error messages.
       if (value !== TipologiaEnte.Altro) {
         dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: { altroTipologiaEnte: '' } as Partial<AnnualData> });
       }
     } else if (['isEnteDissestato',
                'isEnteStrutturalmenteDeficitario',
                'isEnteRiequilibrioFinanziario',
-               'hasDirigenza'].includes(name)) {
-      processedValue = value === 'true' ? true : (value === 'false' ? false : undefined);
+               'hasDirigenza',
+               'isDistributionMode'
+               ].includes(name)) {
+      processedValue = (e.target as HTMLInputElement).type === 'checkbox' ? (e.target as HTMLInputElement).checked : value === 'true' ? true : (value === 'false' ? false : undefined);
       if (value === "") processedValue = undefined;
     }
     
@@ -40,7 +44,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
   };
 
   return (
-    <Card title="Informazioni Generali Ente e Anno di Riferimento" className="mb-8"> {/* Increased mb */}
+    <Card title="Informazioni Generali Ente e Anno di Riferimento" className="mb-8">
        <Input
           label="Anno di Riferimento per la Costituzione del Fondo"
           type="number"
@@ -50,10 +54,10 @@ export const EntityGeneralInfoForm: React.FC = () => {
           onChange={(e) => dispatch({ type: 'SET_CURRENT_YEAR', payload: parseInt(e.target.value) || new Date().getFullYear() })}
           min="2000"
           max="2099"
-          containerClassName="mb-6" // Aggiunge spazio sotto
+          containerClassName="mb-6"
           aria-required="true"
         />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0"> {/* Reduced gap-y */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0">
         <Input
           label="Denominazione Ente"
           type="text"
@@ -107,7 +111,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           error={validationErrors['fundData.annualData.numeroAbitanti']}
         />
       </div>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0"> {/* Reduced gap-y */}
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0">
          <Select
           label="Ente in dissesto finanziario (art. 244 TUEL)?"
           id="isEnteDissestato"
@@ -149,6 +153,14 @@ export const EntityGeneralInfoForm: React.FC = () => {
           aria-required="true"
           containerClassName="mb-3"
           error={validationErrors['fundData.annualData.hasDirigenza']}
+        />
+        <Checkbox
+            id="isDistributionMode"
+            name="isDistributionMode"
+            label="Abilita modalità Distribuzione Risorse?"
+            checked={!!annualData.isDistributionMode}
+            onChange={handleChange}
+            containerClassName="mt-4"
         />
       </div>
 

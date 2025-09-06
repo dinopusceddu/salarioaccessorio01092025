@@ -1,13 +1,13 @@
 // pages/HomePage.tsx
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext.tsx';
-import { Button } from '../components/shared/Button.tsx';
-import { TEXTS_UI } from '../constants.ts';
-import { DashboardSummary } from '../components/dashboard/DashboardSummary.tsx';
-import { FundAllocationChart } from '../components/dashboard/FundAllocationChart.tsx';
-import { ContractedResourcesChart } from '../components/dashboard/ContractedResourcesChart.tsx';
-import { ComplianceStatusWidget } from '../components/dashboard/ComplianceStatusWidget.tsx';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
+import { useAppContext } from '../contexts/AppContext';
+import { Button } from '../components/shared/Button';
+import { TEXTS_UI } from '../constants';
+import { DashboardSummary } from '../components/dashboard/DashboardSummary';
+import { FundAllocationChart } from '../components/dashboard/FundAllocationChart';
+import { ContractedResourcesChart } from '../components/dashboard/ContractedResourcesChart';
+import { ComplianceStatusWidget } from '../components/dashboard/ComplianceStatusWidget';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 
 export const HomePage: React.FC = () => {
   const { state, dispatch, performFundCalculation } = useAppContext();

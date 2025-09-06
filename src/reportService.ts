@@ -280,9 +280,11 @@ export const generateDeterminazioneTXT = (
 
     const enteHeader = () => {
         switch (annualData.tipologiaEnte) {
-            case TipologiaEnte.COMUNE:
+            // FIX: Corrected enum access from uppercase to title case.
+            case TipologiaEnte.Comune:
                 return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
-            case TipologiaEnte.PROVINCIA:
+            // FIX: Corrected enum access from uppercase to title case.
+            case TipologiaEnte.Provincia:
                 return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
             default:
                 return `${annualData.denominazioneEnte || '……………'}`;
@@ -494,9 +496,10 @@ export const generateFADXLS = (
         if (sectionFields.length > 0) {
             html += `<tr><td colspan="4" class="section-header">${section.title.toUpperCase()}</td></tr>`;
             sectionFields.forEach(def => {
+                // FIX: `getFadEffectiveValueHelper` expects 6 arguments. This call has been updated to pass `incrementoEQconRiduzioneDipendenti` to align with the function signature and ensure correct calculations for all fields.
                 const effectiveValue = getFadEffectiveValueHelper(
                     def.key,
-                    fadData[def.key as keyof FondoAccessorioDipendenteData],
+                    (fadData as any)[def.key],
                     def.isDisabledByCondizioniSpeciali,
                     isEnteInCondizioniSpeciali,
                     simulatoreRisultati,

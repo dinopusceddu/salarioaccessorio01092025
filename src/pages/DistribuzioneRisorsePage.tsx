@@ -7,10 +7,8 @@ import { DistribuzioneRisorseData, RisorsaVariabileDetail, FondoElevateQualifica
 import { Button } from '../components/shared/Button.tsx';
 import { Input } from '../components/shared/Input.tsx';
 import { Checkbox } from '../components/shared/Checkbox.tsx';
-import { calculateFadTotals } from '../logic/fundEngine.ts';
-// FIX: import getDistribuzioneFieldDefinitions function from the correct helper file
+import { calculateFadTotals } from '../logic/fundCalculations.ts';
 import { getDistribuzioneFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
-import { FundingItem } from '../components/shared/FundingItem.tsx';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
   if (value === undefined || value === null || isNaN(value)) return defaultText;
@@ -18,8 +16,8 @@ const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) =>
 };
 
 type RisorsaVariabileKey = {
-  [K in string & keyof DistribuzioneRisorseData]: DistribuzioneRisorseData[K] extends RisorsaVariabileDetail | undefined ? K : never
-}[string & keyof DistribuzioneRisorseData];
+  [K in keyof DistribuzioneRisorseData]: DistribuzioneRisorseData[K] extends RisorsaVariabileDetail | undefined ? K : never
+}[keyof DistribuzioneRisorseData];
 
 const DisplayField: React.FC<{ label: string; value: string | number; info?: string }> = ({ label, value, info }) => (
   <div className="mb-0">
@@ -206,20 +204,6 @@ const CalculatedDisplayItem: React.FC<{ label: string; value?: number; infoText?
     </div>
   );
 
-const SectionTotal: React.FC<{ label: string; total?: number, className?: string }> = ({ label, total, className = "" }) => {
-    return (
-      <div className={`mt-4 pt-4 border-t-2 border-[#d1c0c1] ${className}`}>
-        <div className="flex justify-between items-center">
-          <span className="text-base font-bold text-[#1b0e0e]">{label}</span>
-          <span className="text-lg font-bold text-[#ea2832]">
-            {formatCurrency(total)}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-
 export const DistribuzioneRisorsePage: React.FC = () => {
   const { state, dispatch, saveState } = useAppContext();
   const { fundData, calculatedFund, normativeData } = state;
@@ -297,9 +281,9 @@ export const DistribuzioneRisorsePage: React.FC = () => {
     if (field === 'p_performanceIndividuale' && subField === 'stanziate') {
       setIsIndividualeUserEdited(true);
     }
-    const currentItem = distribuzioneRisorseData[field] as RisorsaVariabileDetail | undefined;
+    const currentItem = (distribuzioneRisorseData as any)[field] as RisorsaVariabileDetail | undefined;
     const newItem = {
-      ...currentItem,
+      ...(currentItem || {}),
       [subField]: value
     };
     dispatch({ type: 'UPDATE_DISTRIBUZIONE_RISORSE_DATA', payload: { [field]: newItem } });
@@ -328,9 +312,9 @@ export const DistribuzioneRisorsePage: React.FC = () => {
   const utilizziParteVariabile = useMemo(() => {
     const data = distribuzioneRisorseData || {};
     return Object.keys(data)
-      .filter(key => String(key).startsWith('p_'))
+      .filter(key => key.startsWith('p_'))
       .reduce((sum, key) => {
-          const value = data[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail | undefined;
+          const value = (data as any)[key] as RisorsaVariabileDetail | undefined;
           return sum + (value?.stanziate || 0);
       }, 0);
   }, [distribuzioneRisorseData]);
@@ -349,13 +333,13 @@ export const DistribuzioneRisorsePage: React.FC = () => {
     const data = distribuzioneRisorseData || {};
     return Object.keys(data)
       .filter(key => 
-          String(key).startsWith('p_') && 
+          key.startsWith('p_') && 
           key !== 'p_performanceOrganizzativa' && 
           key !== 'p_performanceIndividuale' &&
           key !== 'p_maggiorazionePerformanceIndividuale'
       )
       .reduce((sum, key) => {
-          const value = data[key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail | undefined;
+          const value = (data as any)[key] as RisorsaVariabileDetail | undefined;
           return sum + (value?.stanziate || 0);
       }, 0);
   }, [distribuzioneRisorseData]);
@@ -377,7 +361,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
         const currentIndividuale = data.p_performanceIndividuale?.stanziate;
         
         if (currentIndividuale !== roundedIndividuale && isFinite(roundedIndividuale)) {
-            updates.p_performanceIndividuale = { ...data.p_performanceIndividuale, stanziate: roundedIndividuale };
+            updates.p_performanceIndividuale = { ...(data.p_performanceIndividuale || {}), stanziate: roundedIndividuale };
         }
     }
 
@@ -387,7 +371,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
         const currentOrganizzativa = data.p_performanceOrganizzativa?.stanziate;
 
         if (currentOrganizzativa !== roundedOrganizzativa && isFinite(roundedOrganizzativa)) {
-            updates.p_performanceOrganizzativa = { ...data.p_performanceOrganizzativa, stanziate: roundedOrganizzativa };
+            updates.p_performanceOrganizzativa = { ...(data.p_performanceOrganizzativa || {}), stanziate: roundedOrganizzativa };
         }
     }
     
@@ -410,7 +394,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
 
   const sections = useMemo(() => 
     distribuzioneFieldDefinitions.reduce((acc, field) => {
-      (acc[field.section] = acc[field.section] || []).push(field);
+      (acc[field.section] = (acc as any)[field.section] || []).push(field);
       return acc;
     }, {} as Record<string, typeof distribuzioneFieldDefinitions>)
   , [distribuzioneFieldDefinitions]);
@@ -439,9 +423,9 @@ export const DistribuzioneRisorsePage: React.FC = () => {
         if (!isMaggiorazioneUserEdited) {
             const currentValue = distribuzioneRisorseData.p_maggiorazionePerformanceIndividuale?.stanziate;
             if (currentValue !== roundedValue) {
-                const currentItem = distribuzioneRisorseData.p_maggiorazionePerformanceIndividuale as RisorsaVariabileDetail | undefined;
+                const currentItem = distribuzioneRisorseData.p_maggiorazionePerformanceIndividuale;
                 const newItem = {
-                    ...currentItem,
+                    ...(currentItem || {}),
                     stanziate: roundedValue
                 };
                 dispatch({ type: 'UPDATE_DISTRIBUZIONE_RISORSE_DATA', payload: { p_maggiorazionePerformanceIndividuale: newItem } });
@@ -450,57 +434,14 @@ export const DistribuzioneRisorsePage: React.FC = () => {
     }
   }, [maggiorazioneProCapite, numDipendentiBonus, isMaggiorazioneUserEdited, dispatch, distribuzioneRisorseData.p_maggiorazionePerformanceIndividuale]);
 
-  // EQ Card Logic
-  const eqData = fondoElevateQualificazioniData || {} as FondoElevateQualificazioniData;
-  const handleEQChange = (field: keyof FondoElevateQualificazioniData, value?: number) => {
-      dispatch({ type: 'UPDATE_FONDO_ELEVATE_QUALIFICAZIONI_DATA', payload: { [field]: value } });
-  };
-  const sommaRisorseSpecificheEQ = 
-    (eqData.ris_fondoPO2017 || 0) +
-    (eqData.ris_incrementoConRiduzioneFondoDipendenti || 0) +
-    (eqData.ris_incrementoLimiteArt23c2_DL34 || 0) +
-    (eqData.ris_incremento022MonteSalari2018 || 0) -
-    (eqData.fin_art23c2_adeguamentoTetto2016 || 0);
-
-  const sommaDistribuzioneFondoEQ = 
-    (eqData.st_art17c2_retribuzionePosizione || 0) +
-    (eqData.st_art17c3_retribuzionePosizioneArt16c4 || 0) +
-    (eqData.st_art17c5_interimEQ || 0) +
-    (eqData.st_art23c5_maggiorazioneSedi || 0) +
-    (eqData.va_art17c4_retribuzioneRisultato || 0);
-    
-  const sommeNonUtilizzateEQ = sommaRisorseSpecificheEQ - sommaDistribuzioneFondoEQ;
-  const minRetribuzioneRisultatoEQ = sommaRisorseSpecificheEQ * 0.15;
-  
-  let retribuzioneRisultatoInfoEQ: string | React.ReactNode = `Minimo atteso: ${formatCurrency(minRetribuzioneRisultatoEQ)}.`;
-  if (eqData.va_art17c4_retribuzioneRisultato !== undefined && eqData.va_art17c4_retribuzioneRisultato < minRetribuzioneRisultatoEQ && minRetribuzioneRisultatoEQ > 0) {
-      retribuzioneRisultatoInfoEQ = (
-          <>
-              Minimo atteso: {formatCurrency(minRetribuzioneRisultatoEQ)}.<br/>
-              <strong className="text-[#c02128]">Attenzione: l'importo è inferiore al 15% delle Risorse Specifiche EQ.</strong>
-          </>
-      );
-  } else if (minRetribuzioneRisultatoEQ <= 0 && sommaRisorseSpecificheEQ > 0) {
-      retribuzioneRisultatoInfoEQ = "Calcolare prima le Risorse per le Elevate Qualificazioni per determinare il minimo.";
-  } else if (sommaRisorseSpecificheEQ <= 0) {
-      retribuzioneRisultatoInfoEQ = "Nessuna risorsa specifica EQ definita.";
-  }
-  
-  const multiInputStableKeys: Array<keyof DistribuzioneRisorseData> = [
-    'u_incrIndennitaEducatori',
-    'u_incrIndennitaScolastico',
-    'u_indennitaEx8QF'
-  ];
-
   const { criteri_isConsuntivoMode } = distribuzioneRisorseData;
   const isPreventivoMode = !criteri_isConsuntivoMode;
 
   useEffect(() => {
     if (criteri_isConsuntivoMode === false) {
-      // When switching to preventivo mode, clear risparmi and aBilancio
       const allVariableFields = distribuzioneFieldDefinitions
         .filter(def => {
-            const val = distribuzioneRisorseData[def.key];
+            const val = (distribuzioneRisorseData as any)[def.key];
             return typeof val === 'object' && val !== null;
         })
         .map(def => def.key) as RisorsaVariabileKey[];
@@ -509,9 +450,9 @@ export const DistribuzioneRisorsePage: React.FC = () => {
       let needsUpdate = false;
 
       allVariableFields.forEach(key => {
-        const currentItem = distribuzioneRisorseData[key];
+        const currentItem = (distribuzioneRisorseData as any)[key];
         if (currentItem && (currentItem.risparmi !== undefined || currentItem.aBilancio !== undefined)) {
-          updates[key] = {
+          (updates as any)[key] = {
             ...currentItem,
             risparmi: undefined,
             aBilancio: undefined,
@@ -559,7 +500,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
             <p className="text-xs text-[#5f5252] mt-1">(Totale da Distribuire - Totale Allocato)</p>
           </div>
         </div>
-        {importoRimanente < 0 && (
+        {importoRimanente < -0.005 && (
           <p className="text-center text-sm text-red-600 font-semibold mt-3 p-2 bg-red-50 rounded-md">
             Attenzione: l'importo allocato supera le risorse disponibili.
           </p>
@@ -628,12 +569,12 @@ export const DistribuzioneRisorsePage: React.FC = () => {
       
       {Object.entries(sections).map(([sectionName, fields]) => (
         <Card key={sectionName} title={sectionName} isCollapsible defaultCollapsed={sectionName.startsWith('Utilizzi Parte Variabile')}>
-          {fields.map(def => {
+          {(fields as any[]).map(def => {
             const isAutoCalculated = def.key === 'u_diffProgressioniStoriche' || def.key === 'u_indennitaComparto';
-            const value = distribuzioneRisorseData[def.key];
+            const value = (distribuzioneRisorseData as any)[def.key];
             
             if (def.key.startsWith('u_')) {
-              if (multiInputStableKeys.includes(def.key as any)) {
+              if (['u_incrIndennitaEducatori', 'u_incrIndennitaScolastico', 'u_indennitaEx8QF'].includes(def.key)) {
                 return (
                     <VariableFundingItem
                       key={String(def.key)}
@@ -653,7 +594,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
                       id={def.key}
                       description={def.description}
                       value={value as number | undefined}
-                      onChange={(field, val) => handleChange(field, val as number)}
+                      onChange={(field, val) => handleChange(field as keyof DistribuzioneRisorseData, val as number)}
                       riferimentoNormativo={def.riferimento}
                       disabled={isAutoCalculated}
                       inputInfo={isAutoCalculated ? "Valore calcolato automaticamente dalla pagina Personale in Servizio" : undefined}
@@ -669,8 +610,8 @@ export const DistribuzioneRisorsePage: React.FC = () => {
                   value={value as RisorsaVariabileDetail | undefined}
                   onChange={handleVariableChange}
                   riferimentoNormativo={def.riferimento}
-                  showPercentage={true}
-                  budgetBaseForPercentage={importoDisponibileContrattazione}
+                  showPercentage={def.key === 'p_performanceIndividuale' || def.key === 'p_performanceOrganizzativa'}
+                  budgetBaseForPercentage={Math.max(0, importoDisponibileContrattazione - otherVariableUtilizations - (distribuzioneRisorseData.p_maggiorazionePerformanceIndividuale?.stanziate || 0))}
                   disableSavingsAndBudgetFields={isPreventivoMode}
                 />
               );
@@ -679,19 +620,6 @@ export const DistribuzioneRisorsePage: React.FC = () => {
           })}
         </Card>
       ))}
-
-      <Card title="Distribuzione del fondo EQ" className="mb-6" isCollapsible={true} defaultCollapsed={true}>
-        <h4 className="text-base font-bold text-[#1b0e0e] mb-2 py-3 border-b border-[#f3e7e8]">Retribuzione di Posizione (Art. 17 CCNL)</h4>
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c2_retribuzionePosizione" description="L’importo della retribuzione di posizione varia da un minimo di € 5.000 ad un massimo di € 18.000 lordi per tredici mensilità, sulla base della graduazione di ciascuna posizione..." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.2"} value={eqData.st_art17c2_retribuzionePosizione} onChange={handleEQChange} />
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c3_retribuzionePosizioneArt16c4" description="Nelle ipotesi considerate nell’art. 16, comma 4, l’importo della retribuzione di posizione varia da un minimo di € 3.000 ad un massimo di € 9.500 annui lordi per tredici mensilità." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.3"} value={eqData.st_art17c3_retribuzionePosizioneArt16c4} onChange={handleEQChange} />
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art17c5_interimEQ" description="Nell’ipotesi di conferimento ad interim... ulteriore importo la cui misura può variare dal 15% al 25% del valore economico della retribuzione di posizione..." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.5"} value={eqData.st_art17c5_interimEQ} onChange={handleEQChange} />
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="st_art23c5_maggiorazioneSedi" description="Maggiorazione della retribuzione di posizione per servizio in diverse sedi (fino al 30%)..." riferimentoNormativo={norme.art23_c5_ccnl2022 as string} value={eqData.st_art23c5_maggiorazioneSedi} onChange={handleEQChange} />
-        <h4 className="text-base font-bold text-[#1b0e0e] mb-2 mt-6 py-3 border-b border-t border-[#f3e7e8]">Retribuzione di Risultato (Art. 17 CCNL)</h4>
-        <SimpleFundingItem<FondoElevateQualificazioniData> id="va_art17c4_retribuzioneRisultato" description="Gli enti definiscono i criteri per la determinazione e per l’erogazione annuale della retribuzione di risultato degli incarichi di EQ, destinando a tale particolare voce retributiva una quota non inferiore al 15% delle risorse complessivamente finalizzate alla erogazione della retribuzione di posizione e di risultato di tutti gli incarichi previsti dal proprio ordinamento." riferimentoNormativo={(norme.art17_ccnl2022 as string) + " c.4"} value={eqData.va_art17c4_retribuzioneRisultato} onChange={handleEQChange} inputInfo={retribuzioneRisultatoInfoEQ} />
-        <SectionTotal label="SOMMA DISTRIBUZIONE FONDO EQ" total={sommaDistribuzioneFondoEQ} className="border-t-2 border-[#d1c0c1]" />
-        <CalculatedDisplayItem label="Somme non utilizzate" value={sommeNonUtilizzateEQ} infoText="Calcolato come: (Somma Risorse per le Elevate Qualificazioni) - (Somma Distribuzione Fondo EQ)" isWarning={sommeNonUtilizzateEQ < 0} isBold={true}/>
-      </Card>
-
 
       <div className="mt-10 flex justify-end">
         <Button 

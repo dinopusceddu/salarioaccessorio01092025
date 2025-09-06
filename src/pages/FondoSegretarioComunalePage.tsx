@@ -63,7 +63,7 @@ export const FondoSegretarioComunalePage: React.FC = () => {
     
   const totaleRisorse = sommaRisorseStabili + sommaRisorseVariabili;
   const percentualeCopertura = data.fin_percentualeCoperturaPostoSegretario === undefined ? 100 : data.fin_percentualeCoperturaPostoSegretario;
-  const itemsRilevantiPerLimite = [
+  const itemsRilevantiPerLimite: (keyof FondoSegretarioComunaleData)[] = [
     'st_art3c6_CCNL2011_retribuzionePosizione',
     'st_art60c1_CCNL2024_retribuzionePosizioneClassi',
     'st_art60c3_CCNL2024_maggiorazioneComplessita',
@@ -71,9 +71,9 @@ export const FondoSegretarioComunalePage: React.FC = () => {
     'va_art61c2_CCNL2024_retribuzioneRisultato10',
     'va_art61c2bis_CCNL2024_retribuzioneRisultato15',
     'va_art61c2ter_CCNL2024_superamentoLimiteMetropolitane',
-  ] as const;
+  ];
   const sommaBaseRisorseRilevantiLimite = itemsRilevantiPerLimite.reduce((sum, key) => {
-    return sum + (data[key] || 0);
+    return sum + ((data as any)[key] || 0);
   }, 0);
   const totaleRisorseRilevantiLimiteCalcolato = sommaBaseRisorseRilevantiLimite * (percentualeCopertura / 100);
   

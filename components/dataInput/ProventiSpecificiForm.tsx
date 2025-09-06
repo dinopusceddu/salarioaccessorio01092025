@@ -55,7 +55,8 @@ export const ProventiSpecificiForm: React.FC = () => {
                     onChange={(e) => handleChange(index, 'riferimentoNormativo', e.target.value)}
                     className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm"
                  >
-                    {predefinedRefs.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                    {/* FIX: Casted key value to string to resolve TypeScript error in map function. */}
+                    {predefinedRefs.map(r => <option key={String(r.value)} value={r.value}>{r.label}</option>)}
                  </select>
 
                 {(provento.riferimentoNormativo === "ALTRO" || !predefinedRefs.find(r => r.value === provento.riferimentoNormativo)) && (

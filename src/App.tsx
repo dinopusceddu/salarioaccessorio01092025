@@ -92,6 +92,9 @@ const AppContent: React.FC = () => {
     if (module.id === 'fondoDirigenza' && !fundData.annualData.hasDirigenza) {
       return false;
     }
+    if (module.id === 'distribuzioneRisorse' && !fundData.annualData.isDistributionMode) {
+      return false;
+    }
     return true;
   });
 

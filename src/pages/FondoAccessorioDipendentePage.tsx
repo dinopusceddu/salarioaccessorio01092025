@@ -4,9 +4,8 @@ import { useAppContext } from '../contexts/AppContext.tsx';
 import { FondoAccessorioDipendenteData, NormativeData } from '../types.ts';
 import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI } from '../constants.ts'; 
-// FIX: Changed import to get the getFadFieldDefinitions function from the constant.
 import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
-import { calculateFadTotals } from '../logic/fundEngine.ts';
+import { calculateFadTotals } from '../logic/fundCalculations.ts';
 import { FundingItem } from '../components/shared/FundingItem.tsx';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
@@ -171,13 +170,13 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
       const fieldsToReset: Partial<FondoAccessorioDipendenteData> = {};
       fadFieldDefinitions.forEach(def => {
         if (def.isDisabledByCondizioniSpeciali) {
-            fieldsToReset[def.key] = def.key === 'vn_dl13_art8c3_incrementoPNRR_max5stabile2016' ? 0 : undefined;
+            (fieldsToReset as any)[def.key] = def.key === 'vn_dl13_art8c3_incrementoPNRR_max5stabile2016' ? 0 : undefined;
         }
       });
       
       let needsUpdate = false;
       for (const key in fieldsToReset) {
-          if (data[key as keyof FondoAccessorioDipendenteData] !== fieldsToReset[key as keyof FondoAccessorioDipendenteData]) {
+          if ((data as any)[key] !== (fieldsToReset as any)[key]) {
               needsUpdate = true;
               break;
           }
@@ -263,7 +262,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
                     key={String(def.key)}
                     id={def.key} 
                     description={currentDescription} 
-                    value={data[def.key]} 
+                    value={(data as any)[def.key]} 
                     onChange={handleChange} 
                     riferimentoNormativo={def.riferimento}
                     isSubtractor={def.isSubtractor}
@@ -291,6 +290,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
             description="Totale parziale risorse disponibili per il fondo (CALCOLATO) ai fini del confronto con il tetto complessivo del salario accessorio dell'anno 2016." 
             value={data.cl_totaleParzialeRisorsePerConfrontoTetto2016} 
             onChange={() => {}} 
+            // FIX: Casted norma value to string to fix type error.
             riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017 as string} 
             disabled={true} 
             inputInfo="Valore calcolato automaticamente"
@@ -300,6 +300,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
             description="Art. 23 c. 2 dlgs 75/2017 Eventuale decurtazione annuale rispetto il tetto complessivo del salario accessorio dell'anno 2016." 
             value={data.cl_art23c2_decurtazioneIncrementoAnnualeTetto2016} 
             onChange={handleChange} 
+            // FIX: Casted norma value to string to fix type error.
             riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017 as string} 
             isSubtractor={true} 
         />

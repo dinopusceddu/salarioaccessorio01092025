@@ -64,8 +64,10 @@ export const NormativeDataSchema = z.object({
     incremento_pnrr_dl13_2023: z.number(),
   }),
   riferimenti_normativi: z.record(z.string()),
-  progression_economic_values: z.record(z.record(z.number())),
-  indennita_comparto_values: z.record(z.number()),
+  // FIX: Corrected z.record to include key schema (z.string())
+  progression_economic_values: z.record(z.string(), z.record(z.string(), z.number())),
+  // FIX: Corrected z.record to include key schema (z.string())
+  indennita_comparto_values: z.record(z.string(), z.number()),
 });
 
 export const HistoricalDataSchema = z.object({

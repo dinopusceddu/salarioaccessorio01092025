@@ -16,7 +16,8 @@ export const formatBoolean = (value?: boolean, notApplicableText = TEXTS_UI.notA
     return value ? TEXTS_UI.trueText : TEXTS_UI.falseText;
 };
 
-export const formatPercentage = (value?: number): string => {
+// FIX: Added notApplicableText parameter to handle undefined values correctly.
+export const formatPercentage = (value?: number, notApplicableText = TEXTS_UI.notApplicable): string => {
   if (value === undefined || value === null || isNaN(value)) return notApplicableText;
   return `${formatNumber(value)}%`;
 };

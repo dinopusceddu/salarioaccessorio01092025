@@ -1,12 +1,12 @@
 // pages/ChecklistPage.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { useAppContext } from '../contexts/AppContext.tsx';
-import { Card } from '../components/shared/Card.tsx';
-import { Button } from '../components/shared/Button.tsx';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
-import { FundData, CalculatedFund } from '../types.ts';
-import { TEXTS_UI } from '../constants.ts';
+import { useAppContext } from '../contexts/AppContext';
+import { Card } from '../components/shared/Card';
+import { Button } from '../components/shared/Button';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { FundData, CalculatedFund } from '../types';
+import { TEXTS_UI } from '../constants';
 
 interface Message {
   id: string;
@@ -189,7 +189,7 @@ Risposta dell'assistente:`;
               disabled={isLoading}
             />
             <Button onClick={handleSendMessage} disabled={isLoading || !userInput.trim()} variant="primary" size="md">
-              {isLoading ? TEXTS_UI.calculating.substring(0, TEXTS_UI.calculating.length-3) + "..." : "Invia"} {/* Shortened loading text */}
+              {isLoading ? TEXTS_UI.calculating.substring(0, TEXTS_UI.calculating.length-3) + "..." : "Invia"}
             </Button>
           </div>
         </div>

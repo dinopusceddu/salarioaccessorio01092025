@@ -141,6 +141,7 @@ export interface AppState {
   isNormativeDataLoading: boolean;
   normativeData?: NormativeData;
   error?: string;
+  // FIX: Added 'validationErrors' to the AppState interface to resolve missing property error.
   validationErrors: { [key: string]: string };
   activeTab: string;
 }

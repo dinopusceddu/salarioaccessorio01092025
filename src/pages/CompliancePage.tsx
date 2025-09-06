@@ -1,11 +1,11 @@
 // pages/CompliancePage.tsx
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext.tsx';
-import { Card } from '../components/shared/Card.tsx';
-import { TEXTS_UI } from '../constants.ts';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
-import { Button } from '../components/shared/Button.tsx';
-import { ComplianceCheck } from '../types.ts';
+import { useAppContext } from '../contexts/AppContext';
+import { Card } from '../components/shared/Card';
+import { TEXTS_UI } from '../constants';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
+import { Button } from '../components/shared/Button';
+import { ComplianceCheck } from '../types';
 
 const getIconForGravita = (gravita: 'info' | 'warning' | 'error'): string => {
   if (gravita === 'error') return '❌';
@@ -94,28 +94,4 @@ export const CompliancePage: React.FC = () => {
 
       {(warnings.length > 0) && (
         <Card title="Avvisi da Verificare" className="border-l-4 border-amber-500">
-            {warnings.map(renderCheck)}
-        </Card>
-      )}
-
-      <Card title="Controlli Positivi e Informativi">
-        {infos.length > 0 ? (
-          infos.map(renderCheck)
-        ) : (
-          <p className="text-[#5f5252] text-sm">Nessun controllo puramente informativo da mostrare.</p>
-        )}
-      </Card>
-      
-      <Card title="Guida al Piano di Recupero (Indicazioni Generali)" className="mt-6">
-        <p className="text-sm text-[#1b0e0e]">In caso di superamento dei limiti di spesa (es. Art. 23, c.2, D.Lgs. 75/2017), l'ente è tenuto ad adottare un piano di recupero formale ai sensi dell'Art. 40, comma 3-quinquies, D.Lgs. 165/2001.</p>
-        <ul className="list-disc list-inside text-sm text-[#1b0e0e] mt-2 space-y-1">
-            <li>Il recupero avviene sulle risorse destinate al trattamento accessorio.</li>
-            <li>Può essere effettuato con quote annuali (massimo 25% dell'eccedenza) o con proroga fino a cinque anni in casi specifici.</li>
-            <li>È necessaria una formale deliberazione dell'ente.</li>
-            <li>La mancata adozione del piano di recupero può configurare danno erariale.</li>
-        </ul>
-        <p className="text-xs text-[#5f5252] mt-3">Questa è una guida generica. Consultare la normativa e il proprio Organo di Revisione per l'applicazione specifica.</p>
-      </Card>
-    </div>
-  );
-};
+            {warnings.map(

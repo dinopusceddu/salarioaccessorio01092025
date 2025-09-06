@@ -43,7 +43,6 @@ export const ReportsPage: React.FC = () => {
     if (fondoAccessorioDipendenteData && normativeData) {
       try {
         const isEnteInCondizioniSpeciali = !!annualData.isEnteDissestato || !!annualData.isEnteStrutturalmenteDeficitario || !!annualData.isEnteRiequilibrioFinanziario;
-        // FIX: Pass normativeData as the 6th argument to match the function signature.
         generateFADXLS(
           fondoAccessorioDipendenteData, 
           annualData.annoRiferimento,
@@ -77,7 +76,7 @@ export const ReportsPage: React.FC = () => {
       )}
 
       {calculatedFund && (
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-6"> {/* Changed to 1 column for primary report */}
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <Card title="Riepilogo Generale Calcoli e Risultanze" className="bg-[#fffbea] border-[#fde68a]">
                 <p className="text-sm text-[#1b0e0e] mb-4">
                     Genera un report PDF completo che include tutti i dati di input, i calcoli dettagliati per ciascun fondo,
@@ -91,7 +90,7 @@ export const ReportsPage: React.FC = () => {
       )}
 
       {calculatedFund && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"> {/* Secondary reports below */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             <Card title="Atto di Costituzione del Fondo (Testuale)">
             <p className="text-sm text-[#1b0e0e] mb-4">
                 Genera una bozza formale della "Determinazione Dirigenziale di Costituzione del Fondo" per l'anno in corso in formato TXT.

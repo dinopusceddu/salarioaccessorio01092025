@@ -1,10 +1,10 @@
 // components/dashboard/FundAllocationChart.tsx
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useAppContext } from '../../contexts/AppContext.tsx';
-import { Card } from '../shared/Card.tsx';
-import { TEXTS_UI } from '../../constants.ts';
-import { CustomChartTooltip } from './CustomChartTooltip.tsx';
+import { useAppContext } from '../../contexts/AppContext';
+import { Card } from '../shared/Card';
+import { TEXTS_UI } from '../../constants';
+import { CustomChartTooltip } from './CustomChartTooltip';
 
 export const FundAllocationChart: React.FC = () => {
   const { state } = useAppContext();

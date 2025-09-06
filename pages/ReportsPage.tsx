@@ -1,11 +1,13 @@
 // pages/ReportsPage.tsx
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext.js';
-import { Card } from '../components/shared/Card.js';
-import { Button } from '../components/shared/Button.js';
-import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from '../services/reportService.js';
-import { TEXTS_UI } from '../constants.js';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner.js';
+// FIX: Corrected import paths to use .tsx extension.
+import { useAppContext } from '../contexts/AppContext.tsx';
+import { Card } from '../components/shared/Card.tsx';
+import { Button } from '../components/shared/Button.tsx';
+// FIX: Corrected import paths to use .ts extension.
+import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from '../services/reportService.ts';
+import { TEXTS_UI } from '../constants.ts';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
 
 
 export const ReportsPage: React.FC = () => {

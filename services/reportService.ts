@@ -16,7 +16,8 @@ import {
     getFadFieldDefinitions, 
 } from '../pages/FondoAccessorioDipendentePageHelpers';
 import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../constants'; 
-import { getFadEffectiveValueHelper, calculateFadTotals } from '../logic/fundEngine';
+// FIX: Corrected import path for fundEngine
+import { getFadEffectiveValueHelper, calculateFadTotals } from '../logic/fundCalculations.ts';
 
 
 // --- PDF Helper Functions ---
@@ -87,11 +88,6 @@ const formatBoolean = (value?: boolean, notApplicableText = TEXTS_UI.notApplicab
     return value ? TEXTS_UI.trueText : TEXTS_UI.falseText;
 };
 
-const formatPercentage = (value?: number): string => {
-  if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
-  return `${formatNumber(value)}%`;
-};
-
 const formatDate = (date: Date): string => {
     return date.toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' });
 };
@@ -106,7 +102,7 @@ export const generateFullSummaryPDF = (
 ): void => {
     const doc = new jsPDF();
     CURRENT_Y = MARGIN;
-    const { annualData, historicalData } = fundData;
+    const { annualData } = fundData;
 
     // Report Header
     doc.setFontSize(18);
@@ -280,9 +276,11 @@ export const generateDeterminazioneTXT = (
 
     const enteHeader = () => {
         switch (annualData.tipologiaEnte) {
-            case TipologiaEnte.COMUNE:
+            // FIX: Corrected enum access from uppercase to camelCase.
+            case TipologiaEnte.Comune:
                 return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
-            case TipologiaEnte.PROVINCIA:
+            // FIX: Corrected enum access from uppercase to camelCase.
+            case TipologiaEnte.Provincia:
                 return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
             default:
                 return `${annualData.denominazioneEnte || '……………'}`;

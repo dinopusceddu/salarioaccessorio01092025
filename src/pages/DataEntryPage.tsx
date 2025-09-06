@@ -12,7 +12,6 @@ import { TipologiaEnte } from '../types.ts';
 
 export const DataEntryPage: React.FC = () => {
   const { state, performFundCalculation } = useAppContext();
-  // FIX: Retrieve `error` and `validationErrors` from `useAppContext` to display form validation messages and general calculation errors correctly.
   const { isLoading, fundData, error, validationErrors } = state;
   const { tipologiaEnte } = fundData.annualData;
   
@@ -22,6 +21,7 @@ export const DataEntryPage: React.FC = () => {
 
   const hasValidationErrors = Object.keys(validationErrors).length > 0;
 
+  // FIX: Corrected enum access from uppercase to title case to align with the Zod schema definition.
   const showSimulatoreAndArt23Form = tipologiaEnte === TipologiaEnte.Comune || tipologiaEnte === TipologiaEnte.Provincia;
 
   return (
@@ -38,7 +38,7 @@ export const DataEntryPage: React.FC = () => {
       {hasValidationErrors && !error && (
          <div className="p-4 bg-[#fffbeb] border border-[#fde68a] text-[#92400e] rounded-lg" role="alert">
           <strong className="font-bold">Attenzione: </strong>
-          <span className="block sm:inline">Sono presenti errori nei dati inseriti. Correggi i campi evidenziati in rosso prima di procedere.</span>
+          <span className="block sm:inline">Sono presenti errori nei dati inseriti. Correggi i campi evidenziati prima di procedere.</span>
         </div>
       )}
 

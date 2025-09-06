@@ -1,12 +1,12 @@
 // components/dataInput/Art23EmployeeAndIncrementForm.tsx
 import React, { useState } from 'react';
-import { useAppContext } from '../../contexts/AppContext';
-import { HistoricalData } from '../../types';
-import { Input } from '../shared/Input';
-import { Button } from '../shared/Button';
-import { Card } from '../shared/Card';
-import { TEXTS_UI } from '../../constants';
-import { Art23EmployeeEntryPage } from '../../pages/Art23EmployeeEntryPage';
+import { useAppContext } from '../../contexts/AppContext.tsx';
+import { HistoricalData } from '../../types.ts';
+import { Input } from '../shared/Input.tsx';
+import { Button } from '../shared/Button.tsx';
+import { Card } from '../shared/Card.tsx';
+import { TEXTS_UI } from '../../constants.ts';
+import { Art23EmployeeEntryPage } from '../../pages/Art23EmployeeEntryPage.tsx';
 
 const formatNumberForDisplay = (value?: number, digits = 2) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -21,8 +21,8 @@ const formatCurrency = (value?: number) => {
 export const Art23EmployeeAndIncrementForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { historicalData, annualData } = state.fundData;
-  const { validationErrors } = state;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { validationErrors } = state;
 
   const handleHistoricalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -34,13 +34,13 @@ export const Art23EmployeeAndIncrementForm: React.FC = () => {
   const fondoEQ2018Art23 = historicalData.fondoEQ2018_Art23 || 0;
   const fondoBase2018Complessivo = fondoPersonale2018Art23 + fondoEQ2018Art23;
 
-  const dipendentiEquivalenti2018 = annualData.personale2018PerArt23.reduce((sum, emp) => {
-    return sum + ((emp.partTimePercentage || 0) / 100);
+  const dipendentiEquivalenti2018 = (annualData.personale2018PerArt23 || []).reduce((sum, emp) => {
+    return sum + ((emp.partTimePercentage ?? 100) / 100);
   }, 0);
 
-  const dipendentiEquivalentiAnnoRif = annualData.personaleAnnoRifPerArt23.reduce((sum, emp) => {
-    const ptPerc = (emp.partTimePercentage || 0) / 100;
-    const cedoliniRatio = emp.cedoliniEmessi !== undefined && emp.cedoliniEmessi > 0 && emp.cedoliniEmessi <=12 ? emp.cedoliniEmessi / 12 : 0;
+  const dipendentiEquivalentiAnnoRif = (annualData.personaleAnnoRifPerArt23 || []).reduce((sum, emp) => {
+    const ptPerc = (emp.partTimePercentage ?? 100) / 100;
+    const cedoliniRatio = emp.cedoliniEmessi !== undefined && emp.cedoliniEmessi > 0 && emp.cedoliniEmessi <=12 ? emp.cedoliniEmessi / 12 : 1;
     return sum + (ptPerc * cedoliniRatio);
   }, 0);
 

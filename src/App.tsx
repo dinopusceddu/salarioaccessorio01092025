@@ -1,6 +1,8 @@
 // src/App.tsx
-import React, { useEffect } from 'react';
-
+import React, { Suspense } from 'react';
+// FIX: Changed import from '@tanstack/react-query' to a namespace import to resolve potential module export issues with QueryClient.
+import * as TanstackQuery from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { MainLayout } from './components/layout/MainLayout.tsx';
 import { LoadingSpinner } from './components/shared/LoadingSpinner.tsx';
 import { AppProvider, useAppContext } from './contexts/AppContext.tsx';
@@ -17,6 +19,14 @@ import { HomePage } from './pages/HomePage.tsx';
 import { PersonaleServizioPage } from './pages/PersonaleServizioPage.tsx';
 import { ReportsPage } from './pages/ReportsPage.tsx';
 import { PageModule } from './types.ts';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+
+// FIX: Removed deprecated `suspense: true` option. Suspense is now handled by `useSuspenseQuery`.
+const queryClient = new TanstackQuery.QueryClient({
+  defaultOptions: {
+    queries: {},
+  },
+});
 
 const allPageModules: PageModule[] = [
   { id: 'benvenuto', name: 'Benvenuto!', component: HomePage },
@@ -59,34 +69,7 @@ const allPageModules: PageModule[] = [
 
 const AppContent: React.FC = () => {
   const { state, dispatch } = useAppContext();
-  const {
-    activeTab,
-    fundData,
-    isLoading,
-    isNormativeDataLoading,
-    normativeData,
-    error,
-  } = state;
-
-  if (isNormativeDataLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <LoadingSpinner text="Caricamento dati normativi..." />
-      </div>
-    );
-  }
-
-  if (!normativeData) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center p-4 text-center">
-        <h2 className="mb-4 text-2xl font-bold text-[#c02128]">Errore Critico</h2>
-        <p className="text-[#1b0e0e]">
-          {error ||
-            "Impossibile caricare i dati normativi essenziali per il funzionamento dell'applicazione. Controlla la console per maggiori dettagli e prova a ricaricare la pagina."}
-        </p>
-      </div>
-    );
-  }
+  const { activeTab, fundData } = state;
 
   const visibleModules = allPageModules.filter((module) => {
     if (module.id === 'fondoDirigenza' && !fundData.annualData.hasDirigenza) {
@@ -98,7 +81,7 @@ const AppContent: React.FC = () => {
     return true;
   });
 
-  useEffect(() => {
+  React.useEffect(() => {
     const activeModuleIsVisible = visibleModules.some(
       (mod) => mod.id === activeTab
     );
@@ -112,22 +95,25 @@ const AppContent: React.FC = () => {
 
   return (
     <MainLayout modules={visibleModules}>
-      {isLoading ? (
-        <div className="flex h-full items-center justify-center">
-          <LoadingSpinner text="Elaborazione in corso..." />
-        </div>
-      ) : (
-        <ActiveComponent />
-      )}
+      <ErrorBoundary resetKey={activeTab}>
+          <ActiveComponent />
+      </ErrorBoundary>
     </MainLayout>
   );
 };
 
 const App: React.FC = () => {
   return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
+    <ErrorBoundary>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center"><LoadingSpinner text="Caricamento applicazione..." /></div>}>
+        <TanstackQuery.QueryClientProvider client={queryClient}>
+          <AppProvider>
+            <AppContent />
+          </AppProvider>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </TanstackQuery.QueryClientProvider>
+      </Suspense>
+    </ErrorBoundary>
   );
 };
 

@@ -16,7 +16,8 @@ import {
     getFadFieldDefinitions, 
 } from '../pages/FondoAccessorioDipendentePageHelpers.ts';
 import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../constants.ts'; 
-import { getFadEffectiveValueHelper, calculateFadTotals } from '../logic/fundCalculations.ts';
+// FIX: Changed import from fundCalculations to fundEngine to resolve module export errors.
+import { getFadEffectiveValueHelper, calculateFadTotals } from '../logic/fundEngine.ts';
 
 
 // --- PDF Helper Functions ---
@@ -198,6 +199,7 @@ export const generateFullSummaryPDF = (
     });
     CURRENT_Y = (doc as any).lastAutoTable.finalY + SECTION_SPACING;
 
+    // Save the PDF
     doc.save(`Riepilogo_Generale_${annualData.denominazioneEnte || 'Ente'}_${annualData.annoRiferimento}.pdf`);
 };
 
@@ -274,17 +276,18 @@ export const generateDeterminazioneTXT = (
 
     const enteHeader = () => {
         switch (annualData.tipologiaEnte) {
-            // FIX: Corrected enum access from uppercase to title case.
-            case TipologiaEnte.Comune:
+            // FIX: Corrected enum access from TitleCase to UPPERCASE.
+            case TipologiaEnte.COMUNE:
                 return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
-            // FIX: Corrected enum access from uppercase to title case.
-            case TipologiaEnte.Provincia:
+            // FIX: Corrected enum access from TitleCase to UPPERCASE.
+            case TipologiaEnte.PROVINCIA:
                 return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
             default:
                 return `${annualData.denominazioneEnte || '……………'}`;
         }
     };
     
+    // --- Calculations for the conditional text ---
     const dipendentiEquivalenti2018 = (annualData.personale2018PerArt23 || []).reduce((sum, emp) => {
         return sum + ((emp.partTimePercentage ?? 100) / 100);
     }, 0);
@@ -303,7 +306,8 @@ export const generateDeterminazioneTXT = (
         (historicalData.fondoEQ2018_Art23 !== undefined && historicalData.fondoEQ2018_Art23 !== null);
 
     const showDatoAttoVariazionePersonale = isArt23Compiled && dipendentiEquivalentiAnnoRif > 0 && (annualData.personale2018PerArt23 || []).length > 0;
-    
+    // --- End of calculations ---
+
     const taglioFondoDL78 = fondoAccessorioDipendenteData?.st_taglioFondoDL78_2010;
     const incrementoDecretoPA = fondoAccessorioDipendenteData?.st_incrementoDecretoPA;
 
@@ -314,8 +318,11 @@ export const generateDeterminazioneTXT = (
     content += `OGGETTO: COSTITUZIONE DEL FONDO PER LE RISORSE DECENTRATE DEL PERSONALE NON DIRIGENTE PER L'ANNO ${annoRiferimento} AI SENSI DELL'ART. 79 DEL CCNL FUNZIONI LOCALI 16.11.2022 E ADEGUAMENTO PER INCREMENTO DEL PERSONALE.\n\n`;
 
     content += `IL DIRIGENTE/RESPONSABILE\n\n`;
+
     content += `PREMESSO CHE:\n\n`;
+
     content += `L'articolo 79 del Contratto Collettivo Nazionale di Lavoro (CCNL) del comparto Funzioni Locali, sottoscritto il 16 novembre 2022, disciplina le fonti e le modalità di costituzione del "Fondo risorse decentrate" per il personale non dirigente, distinguendo tra risorse di parte stabile e di parte variabile.\n\n`;
+
     content += `La Giunta Comunale, con propria deliberazione n. …… del ……………, ha definito gli indirizzi per la contrattazione integrativa per l'annualità in corso, stanziando le risorse variabili e aggiuntive da destinare al predetto fondo in applicazione delle facoltà previste dal CCNL.\n\n`;
 
     if (incrementoDecretoPA && incrementoDecretoPA > 0) {
@@ -327,29 +334,49 @@ export const generateDeterminazioneTXT = (
     }
     
     content += `RICHIAMATI i seguenti vincoli e disposizioni normative in materia di trattamento accessorio:\n\n`;
+
     content += `L’art. 23, comma 2, del D.Lgs. n. 75/2017, il quale stabilisce che l'ammontare complessivo delle risorse destinate annualmente al trattamento accessorio del personale non può superare il corrispondente importo determinato per l'anno 2016.\n\n`;
+    
     content += `L’art. 33, comma 2, del D.L. n. 34/2019, convertito con modificazioni dalla L. n. 58/2019, che prevede un meccanismo di adeguamento del suddetto limite per garantire l'invarianza del valore medio pro-capite del fondo riferito al personale in servizio al 31 dicembre 2018.\n\n`;
+
     content += `L’art. 1, comma 456, della L. n. 147/2013, che ha reso permanente la riduzione dei fondi per la contrattazione integrativa applicata per effetto dell'art. 9, comma 2-bis, del D.L. n. 78/2010.\n\n`;
+
     content += `CONSIDERATO CHE:\n\n`;
+
     content += `L'incremento delle risorse derivante dall'applicazione dell'art. 14 del D.L. n. 25/2025, come chiarito in modo inequivocabile dalla citata Circolare RGS, opera in esplicita deroga al limite di cui all’art. 23, comma 2, del D.Lgs. n. 75/2017, fornendo uno strumento per rendere il fondo più dinamico e genuinamente legato ai risultati, senza impattare sul tetto di spesa storico.\n\n`;
+
     content += `L'art. 79, comma 1, lett. c) del CCNL 16.11.2022 prevede la possibilità di incrementare la parte stabile del fondo con "risorse stanziate dagli enti in caso di incremento stabile della consistenza di personale, in coerenza con il piano dei fabbisogni, al fine di sostenere gli oneri dei maggiori trattamenti economici del personale".\n\n`;
+
     content += `L'incremento del fondo derivante dall'aumento del personale deve essere calcolato nel rispetto del meccanismo di adeguamento del limite di spesa previsto dal citato art. 33, comma 2, del D.L. n. 34/2019. Tale adeguamento si ottiene moltiplicando il valore medio pro-capite del trattamento accessorio dell'anno 2018 per il numero di unità di personale aggiuntive, garantendo così l'invarianza della spesa media per dipendente e la sostenibilità finanziaria dell'operazione.\n\n`;
+
     content += `Questo Ente ha rispettato gli obiettivi di finanza pubblica e il vincolo di contenimento della spesa di personale per l'esercizio precedente (art. 1, commi 557 o 562, L. 296/2006).\n\n`;
+
     content += `Il Collegio dei Revisori dei Conti ha rilasciato, in data …………, la certificazione attestante la corretta quantificazione della riduzione permanente del fondo ai sensi della L. n. 147/2013, per un importo pari a Euro ${formatNumberOnly(taglioFondoDL78, '……………….')}.\n\n`;
+    
     content += `La quantificazione del fondo per l'anno in corso, dettagliata nell'Allegato A, e la verifica del rispetto dei limiti di spesa, dettagliata nell'Allegato B, sono state effettuate nel rigoroso rispetto delle clausole contrattuali e delle disposizioni di legge richiamate.\n\n`;
+
     content += `VISTI:\n\n`;
     content += `Il D.Lgs. n. 165/2001 e s.m.i.\n`;
     content += `Il D.Lgs. n. 118/2011 in materia di armonizzazione dei sistemi contabili.\n`;
     content += `Lo Statuto dell'Ente e il vigente Regolamento di Contabilità.\n`;
     content += `Il bilancio di previsione per l'esercizio finanziario in corso.\n\n`;
+    
     content += `D E T E R M I N A\n\n`;
+
     content += `1. DI COSTITUIRE, per le motivazioni analiticamente esposte in premessa, il fondo per le risorse decentrate del personale non dirigente per l’anno ${annoRiferimento}, ai sensi e per gli effetti dell’art. 79 del CCNL 16/11/2022, quantificato nell’importo complessivo di Euro ${formatNumberOnly(calculatedFund.totaleFondoRisorseDecentrate)} (Euro ${fullNumberToWords(calculatedFund.totaleFondoRisorseDecentrate)}), come risulta dall’Allegato A), che costituisce parte integrante e sostanziale del presente atto.\n\n`;
+
     content += `2. DI ATTESTARE che la costituzione del fondo, come analiticamente dimostrato nell'Allegato B), avviene nel pieno rispetto del limite di cui all'art. 23, comma 2, del D.Lgs. n. 75/2017, tenuto conto dei meccanismi di adeguamento per l'incremento del personale (art. 33, co. 2, D.L. 34/2019) e delle specifiche deroghe (art. 14, D.L. 25/2025) applicabili.\n\n`;
+
     content += `3. DI DARE ATTO che le risorse complessive del fondo, come sopra determinate, saranno destinate agli utilizzi previsti dall’art. 80 del CCNL 16/11/2022, secondo i criteri che verranno definiti in sede di contrattazione collettiva integrativa.\n\n`;
+
     content += `4. DI IMPEGNARE la spesa complessiva risultante dagli allegati sui pertinenti capitoli del bilancio di previsione per l'esercizio in corso, attestandone la relativa copertura finanziaria nel rispetto dei principi contabili e dei vincoli di contenimento della spesa di personale.\n\n`;
+    
     content += `5. DI DARE ATTO che, in ossequio al principio della competenza finanziaria potenziata, si procederà a fine esercizio alla verifica definitiva dell'ammontare del fondo e del relativo limite, sulla base delle movimentazioni di personale (cessazioni e assunzioni) effettivamente intervenute nel corso dell'anno.\n\n`;
+
     content += `6. DI DISPORRE la trasmissione del presente provvedimento, comprensivo dei relativi allegati, alla Rappresentanza Sindacale Unitaria (RSU) e alla delegazione trattante di parte datoriale, per opportuna conoscenza.\n\n`;
+
     content += `IL DIRIGENTE/RESPONSABILE\n(${currentUser.name || '…………………………'})\n`;
+
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const link = document.createElement("a");
@@ -370,6 +397,7 @@ export const generateFADXLS = (
     incrementoEQconRiduzioneDipendenti: number | undefined,
     normativeData: NormativeData
 ): void => {
+    // 1. Calculate totals first
     const fadTotals = calculateFadTotals(
         fadData,
         simulatoreRisultati,
@@ -380,6 +408,7 @@ export const generateFADXLS = (
 
     const fadFieldDefinitions = getFadFieldDefinitions(normativeData);
 
+    // 2. Start building the HTML string
     let html = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
     <head>
@@ -439,6 +468,7 @@ export const generateFADXLS = (
             </tr>
     `;
 
+    // Helper to format currency and handle subtractors
     const formatCellCurrency = (value: number, isSubtractor: boolean = false) => {
         const numValue = isSubtractor ? -Math.abs(value) : value;
         return `<td class="currency ${isSubtractor ? 'subtractor' : ''}">${numValue.toFixed(2)}</td>`;
@@ -462,6 +492,7 @@ export const generateFADXLS = (
         if (sectionFields.length > 0) {
             html += `<tr><td colspan="4" class="section-header">${section.title.toUpperCase()}</td></tr>`;
             sectionFields.forEach(def => {
+                // FIX: `getFadEffectiveValueHelper` expects 6 arguments. This call has been updated to pass `incrementoEQconRiduzioneDipendenti` to align with the function signature and ensure correct calculations for all fields.
                 const effectiveValue = getFadEffectiveValueHelper(
                     def.key,
                     (fadData as any)[def.key],
@@ -480,6 +511,7 @@ export const generateFADXLS = (
                     </tr>
                 `;
             });
+            // Section total
             html += `
                 <tr class="total-row">
                     <td colspan="3" style="text-align: right;">${section.totalLabel}</td>
@@ -489,6 +521,7 @@ export const generateFADXLS = (
         }
     });
 
+    // Grand Total
     html += `
         <tr class="grand-total-row">
             <td colspan="3" style="text-align: right;">TOTALE RISORSE DISPONIBILI (FONDO PERSONALE DIPENDENTE)</td>
@@ -496,6 +529,7 @@ export const generateFADXLS = (
         </tr>
     `;
 
+    // Close HTML
     html += `
         </table>
     </body>

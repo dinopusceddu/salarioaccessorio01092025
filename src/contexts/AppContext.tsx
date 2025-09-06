@@ -1,10 +1,11 @@
 // contexts/AppContext.tsx
-import React, { createContext, useReducer, Dispatch, useContext, useCallback, useEffect } from 'react';
+import React, { createContext, useReducer, Dispatch, useContext, useCallback } from 'react';
 import { AppState, AppAction, FundData, CalculatedFund, ComplianceCheck, ProventoSpecifico, Art23EmployeeDetail, SimulatoreIncrementoInput, FondoAccessorioDipendenteData, FondoElevateQualificazioniData, FondoSegretarioComunaleData, FondoDirigenzaData, SimulatoreIncrementoRisultati, PersonaleServizioDettaglio, TipoMaggiorazione, DistribuzioneRisorseData, NormativeData, User } from '../types.ts';
 import { DEFAULT_CURRENT_YEAR, INITIAL_HISTORICAL_DATA, INITIAL_ANNUAL_DATA, DEFAULT_USER, INITIAL_FONDO_ACCESSORIO_DIPENDENTE_DATA, INITIAL_FONDO_ELEVATE_QUALIFICAZIONI_DATA, INITIAL_FONDO_SEGRETARIO_COMUNALE_DATA, INITIAL_FONDO_DIRIGENZA_DATA, INITIAL_DISTRIBUZIONE_RISORSE_DATA } from '../constants.ts';
 import { calculateFundCompletely } from '../logic/fundCalculations.ts'; 
 import { runAllComplianceChecks } from '../logic/complianceChecks.ts';
 import { validateFundData } from '../logic/validation.ts';
+import { useNormativeData } from '../hooks/useNormativeData.ts';
 
 const LOCAL_STORAGE_KEY = 'salario-accessorio-app-state';
 
@@ -26,8 +27,6 @@ const defaultInitialState: AppState = {
   calculatedFund: undefined,
   complianceChecks: [],
   isLoading: false,
-  isNormativeDataLoading: true,
-  normativeData: undefined,
   error: undefined,
   validationErrors: {},
   activeTab: 'benvenuto', 
@@ -39,7 +38,6 @@ const loadInitialState = (): AppState => {
     if (savedState) {
       const parsedState = JSON.parse(savedState);
       
-      // Migration for the refactored state: move personaleServizioDettagli to top-level personaleServizio
       if (parsedState.fundData?.annualData?.personaleServizioDettagli) {
           if(!parsedState.personaleServizio) {
             parsedState.personaleServizio = { dettagli: [] };
@@ -48,7 +46,6 @@ const loadInitialState = (): AppState => {
           delete parsedState.fundData.annualData.personaleServizioDettagli;
       }
 
-      // Deep merge for critical nested structures to ensure forward compatibility
       const mergedState = {
         ...defaultInitialState,
         ...parsedState,
@@ -90,12 +87,10 @@ const loadInitialState = (): AppState => {
           dettagli: parsedState.personaleServizio?.dettagli || defaultInitialState.personaleServizio.dettagli,
         },
         isLoading: false,
-        isNormativeDataLoading: true,
         error: undefined,
         validationErrors: {},
       };
 
-      // Deeper merge for simulatoreInput which is nested inside annualData
       if (parsedState.fundData?.annualData?.simulatoreInput) {
         mergedState.fundData.annualData.simulatoreInput = {
           ...defaultInitialState.fundData.annualData.simulatoreInput,
@@ -375,10 +370,6 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return { ...state, isLoading: false, error: action.payload, calculatedFund: undefined, complianceChecks: [] };
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
-    case 'SET_NORMATIVE_DATA_LOADING':
-      return { ...state, isNormativeDataLoading: action.payload };
-    case 'SET_NORMATIVE_DATA':
-      return { ...state, normativeData: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload };
     case 'SET_VALIDATION_ERRORS':
@@ -392,39 +383,20 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, loadInitialState());
-
-  useEffect(() => {
-    const fetchNormativeData = async () => {
-        dispatch({ type: 'SET_NORMATIVE_DATA_LOADING', payload: true });
-        try {
-            const response = await fetch('/normativa.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data: NormativeData = await response.json();
-            dispatch({ type: 'SET_NORMATIVE_DATA', payload: data });
-        } catch (error) {
-            console.error("Failed to fetch normative data:", error);
-            dispatch({ type: 'SET_ERROR', payload: 'Impossibile caricare i dati normativi. L\'applicazione potrebbe non funzionare correttamente.' });
-        } finally {
-            dispatch({ type: 'SET_NORMATIVE_DATA_LOADING', payload: false });
-        }
-    };
-    fetchNormativeData();
-  }, []);
+  const { data: normativeData } = useNormativeData();
 
   const saveState = useCallback(() => {
     try {
-      const stateToSave = { ...state, isLoading: undefined, error: undefined, isNormativeDataLoading: undefined, normativeData: undefined, validationErrors: undefined };
+      const stateToSave = { ...state, isLoading: undefined, error: undefined, validationErrors: undefined };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (error) {
       console.error("Could not save state to localStorage.", error);
     }
   }, [state]);
 
-
+  // FIX: Changed performFundCalculation to take no arguments and use normativeData from the hook.
   const performFundCalculation = useCallback(async () => {
-    if (!state.normativeData) {
+    if (!normativeData) {
         dispatch({ type: 'CALCULATE_FUND_ERROR', payload: 'Dati normativi non caricati. Impossibile eseguire il calcolo.' });
         return;
     }
@@ -438,8 +410,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     dispatch({ type: 'CALCULATE_FUND_START' });
     try {
-      const calculatedFund = calculateFundCompletely(state.fundData, state.normativeData);
-      const complianceChecks = runAllComplianceChecks(calculatedFund, state.fundData, state.normativeData);
+      const calculatedFund = calculateFundCompletely(state.fundData, normativeData);
+      const complianceChecks = runAllComplianceChecks(calculatedFund, state.fundData, normativeData);
       dispatch({ type: 'CALCULATE_FUND_SUCCESS', payload: { fund: calculatedFund, checks: complianceChecks } });
       saveState();
     } catch (e) {
@@ -447,10 +419,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       dispatch({ type: 'CALCULATE_FUND_ERROR', payload: `Errore nel calcolo: ${error}` });
       console.error("Calculation error:", e);
     }
-  }, [state.fundData, state.normativeData, saveState]);
+  }, [state.fundData, saveState, normativeData]);
+
+  const contextValue = {
+    state,
+    dispatch,
+    performFundCalculation,
+    saveState,
+  };
 
   return (
-    <AppContext.Provider value={{ state, dispatch, performFundCalculation, saveState }}>
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

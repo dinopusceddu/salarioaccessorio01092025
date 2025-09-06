@@ -1,11 +1,11 @@
 // components/dataInput/AnnualDataForm.tsx
 import React, { useEffect } from 'react';
-import { useAppContext } from '../../contexts/AppContext';
-import { AnnualData } from '../../types';
-import { Input } from '../shared/Input';
-import { Select } from '../shared/Select';
-import { Card } from '../shared/Card';
-import { TEXTS_UI } from '../../constants'; 
+import { useAppContext } from '../../contexts/AppContext.tsx';
+import { AnnualData } from '../../types.ts';
+import { Input } from '../shared/Input.tsx';
+import { Select } from '../shared/Select.tsx';
+import { Card } from '../shared/Card.tsx';
+import { TEXTS_UI } from '../../constants.ts'; 
 
 const booleanOptions = [
   { value: 'true', label: TEXTS_UI.trueText },
@@ -20,7 +20,6 @@ const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) =>
 export const AnnualDataForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { annualData } = state.fundData;
-  const { validationErrors } = state;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -47,9 +46,6 @@ export const AnnualDataForm: React.FC = () => {
     incidenzaSalarioAccessorioUltimoRendiconto,
     fondoStabile2016PNRR
   } = annualData;
-  
-  const incidenzaError = validationErrors['fundData.annualData.incidenzaSalarioAccessorioUltimoRendiconto'];
-  const fondoStabileError = validationErrors['fundData.annualData.fondoStabile2016PNRR'];
 
   const isEquilibrioOk = rispettoEquilibrioBilancioPrecedente === true;
   const isDebitoOk = rispettoDebitoCommercialePrecedente === true;
@@ -105,7 +101,6 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
-            error={validationErrors['fundData.annualData.rispettoEquilibrioBilancioPrecedente']}
           />
           <Select
             label="Rispetto Parametri Debito Commerciale Anno Precedente?"
@@ -117,7 +112,6 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
-            error={validationErrors['fundData.annualData.rispettoDebitoCommercialePrecedente']}
           />
           <Input
             label="Incidenza Salario Accessorio su Spesa Personale (Ultimo Rendiconto Approvato %)"
@@ -128,11 +122,9 @@ export const AnnualDataForm: React.FC = () => {
             onChange={handleChange}
             placeholder="Es. 7.5"
             step="0.01"
-            min="0"
             max="100"
             aria-required="true"
             containerClassName="mb-3"
-            error={incidenzaError}
           />
           <Select
             label="Approvazione Rendiconto Anno Precedente nei Termini?"
@@ -144,7 +136,6 @@ export const AnnualDataForm: React.FC = () => {
             placeholder="Seleziona..."
             aria-required="true"
             containerClassName="mb-3"
-            error={validationErrors['fundData.annualData.approvazioneRendicontoPrecedente']}
           />
         </div>
         
@@ -157,10 +148,8 @@ export const AnnualDataForm: React.FC = () => {
             onChange={handleChange}
             placeholder="Es. 100000.00"
             step="0.01"
-            min="0"
             containerClassName="mt-4 mb-3"
             aria-required="true"
-            error={fondoStabileError}
         />
 
         <div className="mt-6 p-4 bg-[#f3e7e8] border border-[#f3e7e8] rounded-lg">

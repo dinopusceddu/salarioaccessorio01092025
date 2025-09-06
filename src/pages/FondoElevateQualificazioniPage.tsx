@@ -5,6 +5,7 @@ import { FondoElevateQualificazioniData } from '../types.ts';
 import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI, RIF_DELIBERA_ENTE } from '../constants.ts';
 import { FundingItem } from '../components/shared/FundingItem.tsx';
+import { useNormativeData } from '../hooks/useNormativeData.ts';
 
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
@@ -27,12 +28,9 @@ const SectionTotal: React.FC<{ label: string; total?: number, className?: string
 
 export const FondoElevateQualificazioniPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
   const data = state.fundData.fondoElevateQualificazioniData || {} as FondoElevateQualificazioniData;
-  const { normativeData } = state;
 
-  if (!normativeData) {
-    return <div>Caricamento...</div>
-  }
   const { riferimenti_normativi: norme } = normativeData;
 
   const handleChange = (field: keyof FondoElevateQualificazioniData, value?: number) => {
@@ -58,7 +56,6 @@ export const FondoElevateQualificazioniPage: React.FC = () => {
         <FundingItem<FondoElevateQualificazioniData> id="ris_incrementoConRiduzioneFondoDipendenti" description="Incremento del Fondo Elevate Qualificazioni con contestuale riduzione del fondo del personale dipendente" riferimentoNormativo={RIF_DELIBERA_ENTE} value={data.ris_incrementoConRiduzioneFondoDipendenti} onChange={handleChange} />
         <FundingItem<FondoElevateQualificazioniData> id="ris_incrementoLimiteArt23c2_DL34" description="Incremento del Fondo Elevate Qualificazioni nel limite dell'art. 23 c. 2 del D.Lgs. n. 75/2017 (compreso art. 33 DL 34/2019)" riferimentoNormativo={`${norme.art23_dlgs75_2017} e ${norme.art33_dl34_2019}`} value={data.ris_incrementoLimiteArt23c2_DL34} onChange={handleChange} />
         <FundingItem<FondoElevateQualificazioniData> id="ris_incremento022MonteSalari2018" description="0,22% del monte salari anno 2018 con decorrenza dal 01.01.2022, quota d'incremento del fondo proporzionale (non rileva ai fini del limite)." riferimentoNormativo={norme.art79_ccnl2022 + " c.3"} value={data.ris_incremento022MonteSalari2018} onChange={handleChange} />
-        {/* FIX: Casted norma value to string to fix type error. */}
         <FundingItem<FondoElevateQualificazioniData> id="fin_art23c2_adeguamentoTetto2016" description="Eventuale decurtazione annuale per il rispetto del tetto complessivo del salario accessorio dell'anno 2016." riferimentoNormativo={norme.art23_dlgs75_2017 as string} value={data.fin_art23c2_adeguamentoTetto2016} onChange={handleChange} isSubtractor={true}/>
         <SectionTotal label="SOMMA RISORSE PER LE ELEVATE QUALIFICAZIONI (Totale Fondo EQ)" total={sommaRisorseSpecificheEQ} />
       </Card>

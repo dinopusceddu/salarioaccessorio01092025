@@ -1,5 +1,6 @@
 // constants.ts
-import { EmployeeCategory, UserRole, TipologiaEnte, SimulatoreIncrementoInput, FondoAccessorioDipendenteData, FondoElevateQualificazioniData, FondoSegretarioComunaleData, FondoDirigenzaData, LivelloPeo, TipoMaggiorazione, AreaQualifica, DistribuzioneRisorseData } from './types.ts';
+import { EmployeeCategory, UserRole, TipologiaEnte, LivelloPeo, TipoMaggiorazione, AreaQualifica } from './enums.ts';
+import { SimulatoreIncrementoInput, FondoAccessorioDipendenteData, FondoElevateQualificazioniData, FondoSegretarioComunaleData, FondoDirigenzaData, DistribuzioneRisorseData } from './types.ts';
 
 export const APP_NAME = "Salario accessorio Funzioni Locali";
 
@@ -229,7 +230,6 @@ export const INITIAL_ANNUAL_DATA = {
   simulatoreRisultati: undefined, 
   fondoStabile2016PNRR: undefined,
   calcolatoIncrementoPNRR3: undefined,
-  // FIX: Added missing property 'fondoLavoroStraordinario' to the initial state object.
   fondoLavoroStraordinario: undefined, 
 };
 

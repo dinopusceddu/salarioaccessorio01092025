@@ -1,17 +1,16 @@
 // components/dataInput/ProventiSpecificiForm.tsx
-import React from 'react'; // Removed useState as it's not used
+import React from 'react'; 
 import { useAppContext } from '../../contexts/AppContext.tsx';
 import { ProventoSpecifico } from '../../types.ts';
 import { Input } from '../shared/Input.tsx';
 import { Button } from '../shared/Button.tsx';
 import { TEXTS_UI } from '../../constants.ts';
+import { useNormativeData } from '../../hooks/useNormativeData.ts';
 
 export const ProventiSpecificiForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
   const { proventiSpecifici } = state.fundData.annualData;
-  const { normativeData } = state;
-
-  if (!normativeData) return null; // Should not happen if App.tsx handles loading state
 
   const { riferimenti_normativi } = normativeData;
 
@@ -55,7 +54,6 @@ export const ProventiSpecificiForm: React.FC = () => {
                     onChange={(e) => handleChange(index, 'riferimentoNormativo', e.target.value)}
                     className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm"
                  >
-                    {/* FIX: Casted key value to string to resolve TypeScript error in map function. */}
                     {predefinedRefs.map(r => <option key={String(r.value)} value={r.value}>{r.label}</option>)}
                  </select>
 

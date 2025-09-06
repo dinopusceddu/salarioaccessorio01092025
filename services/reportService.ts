@@ -276,11 +276,11 @@ export const generateDeterminazioneTXT = (
 
     const enteHeader = () => {
         switch (annualData.tipologiaEnte) {
-            // FIX: Corrected enum access from uppercase to camelCase.
-            case TipologiaEnte.Comune:
+            // FIX: Corrected enum access from TitleCase to UPPERCASE.
+            case TipologiaEnte.COMUNE:
                 return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
-            // FIX: Corrected enum access from uppercase to camelCase.
-            case TipologiaEnte.Provincia:
+            // FIX: Corrected enum access from TitleCase to UPPERCASE.
+            case TipologiaEnte.PROVINCIA:
                 return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
             default:
                 return `${annualData.denominazioneEnte || '……………'}`;

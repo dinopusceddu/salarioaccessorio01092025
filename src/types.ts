@@ -4,31 +4,28 @@ import { z } from 'zod';
 import {
   AnnualDataSchema,
   AnnualEmployeeCountSchema,
-  AreaQualificaSchema,
   Art23EmployeeDetailSchema,
   DistribuzioneRisorseDataSchema,
-  EmployeeCategorySchema,
   FondoDataBaseSchema,
   FondoDirigenzaDataSchema,
   FondoElevateQualificazioniDataSchema,
   FondoSegretarioComunaleDataSchema,
   FundDataSchema,
   HistoricalDataSchema,
-  LivelloPeoSchema,
   NormativeDataSchema,
   PersonaleServizioDettaglioSchema,
   ProventoSpecificoSchema,
   RisorsaVariabileDetailSchema,
   SimulatoreIncrementoInputSchema,
   SimulatoreIncrementoRisultatiSchema,
-  TipologiaEnteSchema,
-  TipoMaggiorazioneSchema,
-  UserRoleSchema,
   UserSchema,
 } from './schemas/fundDataSchemas.ts';
+import { AreaQualifica, EmployeeCategory, LivelloPeo, TipologiaEnte, TipoMaggiorazione, UserRole } from './enums.ts';
 
-// Re-export enums and export derived types
-export const UserRole = UserRoleSchema.enum;
+// Re-export enums for use in the app
+export { UserRole, EmployeeCategory, TipologiaEnte, LivelloPeo, AreaQualifica, TipoMaggiorazione };
+
+// Derive types from Zod schemas
 export type User = z.infer<typeof UserSchema>;
 
 export type NormativeData = z.infer<typeof NormativeDataSchema>;
@@ -37,12 +34,7 @@ export type HistoricalData = z.infer<typeof HistoricalDataSchema>;
 
 export type Art23EmployeeDetail = z.infer<typeof Art23EmployeeDetailSchema>;
 
-export const EmployeeCategory = EmployeeCategorySchema.enum;
-export type EmployeeCategory = z.infer<typeof EmployeeCategorySchema>;
 export const ALL_EMPLOYEE_CATEGORIES: EmployeeCategory[] = Object.values(EmployeeCategory);
-
-export const TipologiaEnte = TipologiaEnteSchema.enum;
-export type TipologiaEnte = z.infer<typeof TipologiaEnteSchema>;
 
 export type ProventoSpecifico = z.infer<typeof ProventoSpecificoSchema>;
 
@@ -53,15 +45,6 @@ export type FondoAccessorioDipendenteData = z.infer<typeof FondoDataBaseSchema>;
 export type FondoElevateQualificazioniData = z.infer<typeof FondoElevateQualificazioniDataSchema>;
 export type FondoSegretarioComunaleData = z.infer<typeof FondoSegretarioComunaleDataSchema>;
 export type FondoDirigenzaData = z.infer<typeof FondoDirigenzaDataSchema>;
-
-export const LivelloPeo = LivelloPeoSchema.enum;
-export type LivelloPeo = z.infer<typeof LivelloPeoSchema>;
-
-export const AreaQualifica = AreaQualificaSchema.enum;
-export type AreaQualifica = z.infer<typeof AreaQualificaSchema>;
-
-export const TipoMaggiorazione = TipoMaggiorazioneSchema.enum;
-export type TipoMaggiorazione = z.infer<typeof TipoMaggiorazioneSchema>;
 
 export type PersonaleServizioDettaglio = z.infer<typeof PersonaleServizioDettaglioSchema>;
 
@@ -138,10 +121,7 @@ export interface AppState {
   calculatedFund?: CalculatedFund;
   complianceChecks: ComplianceCheck[];
   isLoading: boolean;
-  isNormativeDataLoading: boolean;
-  normativeData?: NormativeData;
   error?: string;
-  // FIX: Added 'validationErrors' to the AppState interface to resolve missing property error.
   validationErrors: { [key: string]: string };
   activeTab: string;
 }
@@ -158,8 +138,6 @@ export type AppAction =
   | { type: 'CALCULATE_FUND_SUCCESS'; payload: { fund: CalculatedFund; checks: ComplianceCheck[] } }
   | { type: 'CALCULATE_FUND_ERROR'; payload: string }
   | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_NORMATIVE_DATA_LOADING'; payload: boolean }
-  | { type: 'SET_NORMATIVE_DATA'; payload: NormativeData }
   | { type: 'SET_ERROR'; payload: string | undefined }
   | { type: 'SET_VALIDATION_ERRORS'; payload: { [key: string]: string } }
   | { type: 'SET_ACTIVE_TAB'; payload: string }

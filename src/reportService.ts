@@ -16,7 +16,8 @@ import {
     getFadFieldDefinitions, 
 } from './pages/FondoAccessorioDipendentePageHelpers';
 import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from './constants'; 
-import { getFadEffectiveValueHelper, calculateFadTotals } from './logic/fundEngine';
+// FIX: Changed import from fundEngine to fundCalculations to resolve module export errors.
+import { getFadEffectiveValueHelper, calculateFadTotals } from './logic/fundCalculations';
 
 
 // --- PDF Helper Functions ---
@@ -280,11 +281,11 @@ export const generateDeterminazioneTXT = (
 
     const enteHeader = () => {
         switch (annualData.tipologiaEnte) {
-            // FIX: Corrected enum access from uppercase to title case.
-            case TipologiaEnte.Comune:
+            // FIX: Corrected enum access from TitleCase to UPPERCASE.
+            case TipologiaEnte.COMUNE:
                 return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
-            // FIX: Corrected enum access from uppercase to title case.
-            case TipologiaEnte.Provincia:
+            // FIX: Corrected enum access from TitleCase to UPPERCASE.
+            case TipologiaEnte.PROVINCIA:
                 return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
             default:
                 return `${annualData.denominazioneEnte || '……………'}`;

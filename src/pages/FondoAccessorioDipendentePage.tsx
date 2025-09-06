@@ -1,12 +1,13 @@
 // pages/FondoAccessorioDipendentePage.tsx
 import React, { useEffect, useState, useMemo } from 'react'; 
 import { useAppContext } from '../contexts/AppContext.tsx';
-import { FondoAccessorioDipendenteData, NormativeData } from '../types.ts';
+import { FondoAccessorioDipendenteData } from '../types.ts';
 import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI } from '../constants.ts'; 
 import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
 import { calculateFadTotals } from '../logic/fundCalculations.ts';
 import { FundingItem } from '../components/shared/FundingItem.tsx';
+import { useNormativeData } from '../hooks/useNormativeData.ts';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
   if (value === undefined || value === null || isNaN(value)) return defaultText;
@@ -28,7 +29,7 @@ const SectionTotal: React.FC<{ label: string; total?: number }> = ({ label, tota
 
 export const FondoAccessorioDipendentePage: React.FC = () => {
   const { state, dispatch } = useAppContext();
-  const { normativeData } = state;
+  const { data: normativeData } = useNormativeData();
   const data = state.fundData.fondoAccessorioDipendenteData || {} as FondoAccessorioDipendenteData;
   const { 
     simulatoreRisultati, 
@@ -290,7 +291,6 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
             description="Totale parziale risorse disponibili per il fondo (CALCOLATO) ai fini del confronto con il tetto complessivo del salario accessorio dell'anno 2016." 
             value={data.cl_totaleParzialeRisorsePerConfrontoTetto2016} 
             onChange={() => {}} 
-            // FIX: Casted norma value to string to fix type error.
             riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017 as string} 
             disabled={true} 
             inputInfo="Valore calcolato automaticamente"
@@ -300,7 +300,6 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
             description="Art. 23 c. 2 dlgs 75/2017 Eventuale decurtazione annuale rispetto il tetto complessivo del salario accessorio dell'anno 2016." 
             value={data.cl_art23c2_decurtazioneIncrementoAnnualeTetto2016} 
             onChange={handleChange} 
-            // FIX: Casted norma value to string to fix type error.
             riferimentoNormativo={normativeData.riferimenti_normativi.art23_dlgs75_2017 as string} 
             isSubtractor={true} 
         />

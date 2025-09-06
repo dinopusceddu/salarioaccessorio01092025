@@ -6,11 +6,14 @@ import { Button } from '../components/shared/Button.tsx';
 import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from '../services/reportService.ts';
 import { TEXTS_UI } from '../constants.ts';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
+import { useNormativeData } from '../hooks/useNormativeData.ts';
+import { EmptyState } from '../components/shared/EmptyState.tsx';
 
 
 export const ReportsPage: React.FC = () => {
-  const { state } = useAppContext();
-  const { calculatedFund, fundData, currentUser, isLoading, complianceChecks, normativeData } = state;
+  const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
+  const { calculatedFund, fundData, currentUser, isLoading, complianceChecks } = state;
 
   const handleGenerateFullSummary = () => {
     if (calculatedFund && complianceChecks) {
@@ -70,9 +73,12 @@ export const ReportsPage: React.FC = () => {
       <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight">Generazione Report e Documentazione</h2>
       
       {!calculatedFund && (
-         <Card title="Attenzione">
-            <p className="text-[#1b0e0e]">{TEXTS_UI.noDataAvailable} per la generazione dei report. Effettuare prima il calcolo del fondo dalla sezione "Dati Costituzione Fondo".</p>
-         </Card>
+         <EmptyState
+            title="Nessun report disponibile"
+            message="Per generare i report, esegui prima il calcolo del fondo dalla pagina 'Dati Costituzione Fondo'."
+            actionText="Vai ai Dati"
+            onAction={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'dataEntry' })}
+        />
       )}
 
       {calculatedFund && (

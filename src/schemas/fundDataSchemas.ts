@@ -1,5 +1,6 @@
 // src/schemas/fundDataSchemas.ts
 import { z } from 'zod';
+import { AreaQualifica, EmployeeCategory, LivelloPeo, TipologiaEnte, TipoMaggiorazione, UserRole } from '../enums.ts';
 
 const numberOrUndefined = z.preprocess(
   (val) => (val === '' || val === null ? undefined : Number(val)),
@@ -7,44 +8,12 @@ const numberOrUndefined = z.preprocess(
 );
 
 // Enums
-export const UserRoleSchema = z.enum([
-  'ADMIN',
-  'FINANCE',
-  'HR',
-  'AUDITOR',
-  'GUEST',
-]);
-export const EmployeeCategorySchema = z.enum([
-  'Personale Dipendente non Dirigente',
-  'Personale Dirigente',
-  'Titolari di Incarichi di Elevata Qualificazione (EQ)',
-  'Segretario Generale',
-]);
-export const TipologiaEnteSchema = z.enum([
-  "Comune",
-  "Provincia",
-  "Unione dei Comuni",
-  "Comunità Montana",
-  "Altro",
-]);
-export const LivelloPeoSchema = z.enum([
-  "A1", "A2", "A3", "A4", "A5", "A6",
-  "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8",
-  "C1", "C2", "C3", "C4", "C5", "C6",
-  "D1", "D2", "D3", "D4", "D5", "D6", "D7",
-]);
-export const AreaQualificaSchema = z.enum([
-  "OPERATORE",
-  "OPERATORE_ESPERTO",
-  "ISTRUTTORE",
-  "FUNZIONARIO_EQ",
-]);
-export const TipoMaggiorazioneSchema = z.enum([
-  "NESSUNA",
-  "EDUCATORE",
-  "POLIZIA_LOCALE",
-  "ISCRITTO_ALBI_ORDINI",
-]);
+export const UserRoleSchema = z.nativeEnum(UserRole);
+export const EmployeeCategorySchema = z.nativeEnum(EmployeeCategory);
+export const TipologiaEnteSchema = z.nativeEnum(TipologiaEnte);
+export const LivelloPeoSchema = z.nativeEnum(LivelloPeo);
+export const AreaQualificaSchema = z.nativeEnum(AreaQualifica);
+export const TipoMaggiorazioneSchema = z.nativeEnum(TipoMaggiorazione);
 
 // Schemas
 export const UserSchema = z.object({
@@ -63,10 +32,9 @@ export const NormativeDataSchema = z.object({
     incremento_virtuosi_dl25_2025: z.number(),
     incremento_pnrr_dl13_2023: z.number(),
   }),
-  riferimenti_normativi: z.record(z.string()),
-  // FIX: Corrected z.record to include key schema (z.string())
+  // FIX: Corrected z.record to have two arguments (key and value schema).
+  riferimenti_normativi: z.record(z.string(), z.string()),
   progression_economic_values: z.record(z.string(), z.record(z.string(), z.number())),
-  // FIX: Corrected z.record to include key schema (z.string())
   indennita_comparto_values: z.record(z.string(), z.number()),
 });
 
@@ -152,7 +120,7 @@ export const AnnualDataSchema = z.object({
   fondoStabile2016PNRR: numberOrUndefined,
   calcolatoIncrementoPNRR3: numberOrUndefined,
   fondoLavoroStraordinario: numberOrUndefined,
-}).refine(data => data.tipologiaEnte !== 'Altro' || (data.altroTipologiaEnte && data.altroTipologiaEnte.length > 0), {
+}).refine(data => data.tipologiaEnte !== TipologiaEnte.ALTRO || (data.altroTipologiaEnte && data.altroTipologiaEnte.length > 0), {
     message: "Specificare la tipologia di ente",
     path: ["altroTipologiaEnte"],
 });

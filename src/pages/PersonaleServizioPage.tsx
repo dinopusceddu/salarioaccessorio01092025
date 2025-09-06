@@ -1,13 +1,15 @@
 // pages/PersonaleServizioPage.tsx
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
-import { PersonaleServizioDettaglio, LivelloPeo, TipoMaggiorazione, AreaQualifica } from '../types';
+import { PersonaleServizioDettaglio } from '../types';
+import { LivelloPeo, TipoMaggiorazione, AreaQualifica } from '../enums';
 import { Card } from '../components/shared/Card';
 import { Input } from '../components/shared/Input';
 import { Select } from '../components/shared/Select';
 import { Button } from '../components/shared/Button';
 import { TEXTS_UI, ALL_AREE_QUALIFICA, ALL_TIPI_MAGGIORAZIONE } from '../constants';
 import { Checkbox } from '../components/shared/Checkbox';
+import { useNormativeData } from '../hooks/useNormativeData';
 
 const NESSUNA_PEO_VALUE = ""; // Sentinel value for "Nessuna PEO"
 
@@ -54,12 +56,12 @@ const getMaggiorazioniOptionsForArea = (area?: AreaQualifica): { value: string; 
 
 export const PersonaleServizioPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
   const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
   const [employeeIdToDelete, setEmployeeIdToDelete] = useState<string | null>(null);
 
   const { dettagli: employees } = state.personaleServizio;
   const { personaleAnnoRifPerArt23: art23SourceEmployees, annoRiferimento } = state.fundData.annualData;
-  const { normativeData } = state;
   const employeeList = employees || [];
   
   const handleOpenConfirmModal = (id: string) => {

@@ -21,8 +21,8 @@ const formatCurrency = (value?: number) => {
 export const Art23EmployeeAndIncrementForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { historicalData, annualData } = state.fundData;
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const { validationErrors } = state;
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleHistoricalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -89,6 +89,7 @@ export const Art23EmployeeAndIncrementForm: React.FC = () => {
           placeholder="Es. 10000.00"
           step="0.01"
           containerClassName="mb-3"
+          error={validationErrors['fundData.historicalData.fondoEQ2018_Art23']}
         />
       </div>
        <div className="mb-6 p-4 bg-[#f3e7e8] border border-[#f3e7e8] rounded-lg">

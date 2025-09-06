@@ -8,7 +8,10 @@ import { Button } from '../components/shared/Button.tsx';
 import { Input } from '../components/shared/Input.tsx';
 import { Checkbox } from '../components/shared/Checkbox.tsx';
 import { calculateFadTotals } from '../logic/fundCalculations.ts';
+// FIX: import getDistribuzioneFieldDefinitions function from the correct helper file
 import { getDistribuzioneFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
+import { FundingItem } from '../components/shared/FundingItem.tsx';
+import { useNormativeData } from '../hooks/useNormativeData.ts';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
   if (value === undefined || value === null || isNaN(value)) return defaultText;
@@ -204,9 +207,25 @@ const CalculatedDisplayItem: React.FC<{ label: string; value?: number; infoText?
     </div>
   );
 
+const SectionTotal: React.FC<{ label: string; total?: number, className?: string }> = ({ label, total, className = "" }) => {
+    return (
+      <div className={`mt-4 pt-4 border-t-2 border-[#d1c0c1] ${className}`}>
+        <div className="flex justify-between items-center">
+          <span className="text-base font-bold text-[#1b0e0e]">{label}</span>
+          <span className="text-lg font-bold text-[#ea2832]">
+            {formatCurrency(total)}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+
 export const DistribuzioneRisorsePage: React.FC = () => {
   const { state, dispatch, saveState } = useAppContext();
-  const { fundData, calculatedFund, normativeData } = state;
+  // FIX: Get normativeData from the useNormativeData hook instead of state.
+  const { data: normativeData } = useNormativeData();
+  const { fundData, calculatedFund } = state;
   const { dettagli: employees } = state.personaleServizio;
   const [isMaggiorazioneUserEdited, setIsMaggiorazioneUserEdited] = useState(false);
   const [isOrganizzativaUserEdited, setIsOrganizzativaUserEdited] = useState(false);
@@ -394,7 +413,8 @@ export const DistribuzioneRisorsePage: React.FC = () => {
 
   const sections = useMemo(() => 
     distribuzioneFieldDefinitions.reduce((acc, field) => {
-      (acc[field.section] = (acc as any)[field.section] || []).push(field);
+      (acc as any)[field.section] = (acc as any)[field.section] || [];
+      (acc as any)[field.section].push(field);
       return acc;
     }, {} as Record<string, typeof distribuzioneFieldDefinitions>)
   , [distribuzioneFieldDefinitions]);
@@ -569,7 +589,7 @@ export const DistribuzioneRisorsePage: React.FC = () => {
       
       {Object.entries(sections).map(([sectionName, fields]) => (
         <Card key={sectionName} title={sectionName} isCollapsible defaultCollapsed={sectionName.startsWith('Utilizzi Parte Variabile')}>
-          {(fields as any[]).map(def => {
+          {(fields as any[]).map((def: any) => {
             const isAutoCalculated = def.key === 'u_diffProgressioniStoriche' || def.key === 'u_indennitaComparto';
             const value = (distribuzioneRisorseData as any)[def.key];
             

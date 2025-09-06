@@ -1,7 +1,8 @@
 // components/dataInput/EmployeeCountsForm.tsx
 import React from 'react';
 import { useAppContext } from '../../contexts/AppContext.tsx';
-import { EmployeeCategory, ALL_EMPLOYEE_CATEGORIES } from '../../types.ts';
+import { ALL_EMPLOYEE_CATEGORIES } from '../../types.ts';
+import { EmployeeCategory } from '../../enums.ts';
 import { Input } from '../shared/Input.tsx';
 
 interface EmployeeCountsFormProps {

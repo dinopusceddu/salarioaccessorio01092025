@@ -6,6 +6,7 @@ import { Input } from '../shared/Input';
 import { Card } from '../shared/Card';
 import { TEXTS_UI } from '../../constants';
 import { calculateSimulazione } from '../../logic/fundEngine';
+import { useNormativeData } from '../../hooks/useNormativeData';
 
 const formatCurrencyForDisplay = (value?: number) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -19,8 +20,8 @@ const formatPercentageForDisplay = (value?: number) => {
 
 export const SimulatoreIncrementoForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
   const { simulatoreInput, numeroAbitanti, tipologiaEnte, simulatoreRisultati } = state.fundData.annualData;
-  const { normativeData } = state;
 
   const runAndDispatchSimulazione = useCallback(() => {
     const results = calculateSimulazione(simulatoreInput, numeroAbitanti, tipologiaEnte);
@@ -37,16 +38,13 @@ export const SimulatoreIncrementoForm: React.FC = () => {
     dispatch({ type: 'UPDATE_SIMULATORE_INPUT', payload: { [name]: processedValue } as Partial<SimulatoreIncrementoInput> });
   };
   
-  if (!normativeData) {
-    return <Card title="Simulatore Incremento Potenziale"><p>Caricamento dati normativi...</p></Card>;
-  }
   const { riferimenti_normativi } = normativeData;
 
   const si = simulatoreInput || {};
   const risultati = simulatoreRisultati;
 
-  // FIX: Corrected enum access for TipologiaEnte.Provincia. The key is 'Provincia', not uppercase 'PROVINCIA', resolving a property access error during table header generation.
-  const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.Provincia ? "Province" : "Comuni";
+  // FIX: Corrected enum access for TipologiaEnte.PROVINCIA to use uppercase key.
+  const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.PROVINCIA ? "Province" : "Comuni";
 
   return (
     <Card title="Simulatore Incremento Potenziale Fondo Salario Accessorio" className="mt-8 mb-8" isCollapsible={true} defaultCollapsed={true}>

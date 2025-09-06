@@ -7,6 +7,7 @@ import { TEXTS_UI } from '../../constants.ts';
 import { RisorsaVariabileDetail, DistribuzioneRisorseData, NormativeData } from '../../types.ts';
 import { getDistribuzioneFieldDefinitions } from '../../pages/FondoAccessorioDipendentePageHelpers.ts';
 import { CustomChartTooltip } from './CustomChartTooltip.tsx';
+import { useNormativeData } from '../../hooks/useNormativeData.ts';
 
 // A more varied color palette for multiple slices
 const COLORS = [
@@ -16,7 +17,8 @@ const COLORS = [
 
 export const ContractedResourcesChart: React.FC = () => {
   const { state } = useAppContext();
-  const { fundData, normativeData } = state;
+  const { data: normativeData } = useNormativeData();
+  const { fundData } = state;
   const { distribuzioneRisorseData } = fundData;
 
   const chartData = useMemo(() => {
@@ -28,16 +30,14 @@ export const ContractedResourcesChart: React.FC = () => {
     return variableUses
       .map(def => {
         const stanziateValue = (distribuzioneRisorseData[def.key as keyof DistribuzioneRisorseData] as RisorsaVariabileDetail)?.stanziate || 0;
-        // FIX: Ensure description is a string before accessing length property
         const descriptionString = typeof def.description === 'string' ? def.description : String(def.description);
         return {
-          // Shorten long names for better display in legend
           name: descriptionString.length > 35 ? descriptionString.substring(0, 32) + '...' : descriptionString,
           value: stanziateValue,
         };
       })
-      .filter(item => item.value > 0) // Only show items with a value
-      .sort((a, b) => b.value - a.value); // Sort descending for better color assignment
+      .filter(item => item.value > 0)
+      .sort((a, b) => b.value - a.value);
   }, [distribuzioneRisorseData, normativeData]);
 
   const totalValue = useMemo(() => chartData.reduce((sum, item) => sum + item.value, 0), [chartData]);
@@ -58,7 +58,7 @@ export const ContractedResourcesChart: React.FC = () => {
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-    if (percent < 0.05) return null; // Don't render label for very small slices
+    if (percent < 0.05) return null;
 
     return (
       <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" className="font-bold text-sm" style={{ textShadow: '0 0 3px black' }}>

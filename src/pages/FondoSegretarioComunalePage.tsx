@@ -5,6 +5,7 @@ import { FondoSegretarioComunaleData } from '../types.ts';
 import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI } from '../constants.ts';
 import { FundingItem } from '../components/shared/FundingItem.tsx';
+import { useNormativeData } from '../hooks/useNormativeData.ts';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
     if (value === undefined || value === null || isNaN(value)) return defaultText;
@@ -32,10 +33,8 @@ const SectionTotal: React.FC<{ label: string; total?: number, isPercentage?: boo
 
 export const FondoSegretarioComunalePage: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
   const data = state.fundData.fondoSegretarioComunaleData || {} as FondoSegretarioComunaleData;
-  const { normativeData } = state;
-
-  if (!normativeData) return null;
 
   const { riferimenti_normativi: norme } = normativeData;
 

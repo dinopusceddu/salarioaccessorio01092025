@@ -1,7 +1,8 @@
 // src/logic/validation.ts
 import { FundDataSchema } from '../schemas/fundDataSchemas.ts';
-import { FundData, TipologiaEnte } from '../types.ts';
-import { ZodIssue } from 'zod';
+import { FundData } from '../types.ts';
+import { TipologiaEnte } from '../enums.ts';
+import { z, ZodIssue } from 'zod';
 
 const getPath = (path: (string | number | symbol)[]): string => {
     return path.map(String).join('.');
@@ -9,28 +10,52 @@ const getPath = (path: (string | number | symbol)[]): string => {
 
 export const validateFundData = (fundData: FundData): Record<string, string> => {
     
-    // Create a contextual schema for validation
-    const refinedSchema = FundDataSchema.refine(data => {
-        const isSimulatoreApplicable = data.annualData.tipologiaEnte === TipologiaEnte.Comune || data.annualData.tipologiaEnte === TipologiaEnte.Provincia;
-        if (isSimulatoreApplicable) {
-            return data.historicalData.fondoPersonaleNonDirEQ2018_Art23 !== undefined;
+    const refinedSchema = FundDataSchema.superRefine((data, ctx) => {
+        const isComuneOrProvincia = data.annualData.tipologiaEnte === TipologiaEnte.COMUNE || data.annualData.tipologiaEnte === TipologiaEnte.PROVINCIA;
+
+        // --- General validations (always required) ---
+        if (!data.annualData.denominazioneEnte || data.annualData.denominazioneEnte.trim().length === 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "La denominazione dell'ente è obbligatoria.",
+                path: ["annualData", "denominazioneEnte"],
+            });
         }
-        return true;
-    }, {
-        message: "Campo obbligatorio per Comuni e Province.",
-        path: ["historicalData", "fondoPersonaleNonDirEQ2018_Art23"],
-    }).refine(data => data.annualData.denominazioneEnte && data.annualData.denominazioneEnte.length > 0, {
-        message: "La denominazione dell'ente è obbligatoria.",
-        path: ["annualData", "denominazioneEnte"],
-    }).refine(data => data.annualData.numeroAbitanti !== undefined, {
-        message: "Il numero di abitanti è obbligatorio.",
-        path: ["annualData", "numeroAbitanti"],
-    }).refine(data => data.annualData.hasDirigenza !== undefined, {
-        message: "Specificare se l'ente ha personale dirigente.",
-        path: ["annualData", "hasDirigenza"],
-    }).refine(data => data.annualData.tipologiaEnte !== undefined, {
-        message: "La tipologia di ente è obbligatoria.",
-        path: ["annualData", "tipologiaEnte"],
+        if (data.annualData.tipologiaEnte === undefined) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "La tipologia di ente è obbligatoria.",
+                path: ["annualData", "tipologiaEnte"],
+            });
+        }
+        if (data.annualData.hasDirigenza === undefined) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Specificare se l'ente ha personale dirigente.",
+                path: ["annualData", "hasDirigenza"],
+            });
+        }
+        if (data.historicalData.fondoSalarioAccessorioPersonaleNonDirEQ2016 === undefined) {
+             ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "Questo campo è obbligatorio per definire il limite storico.",
+                path: ["historicalData", "fondoSalarioAccessorioPersonaleNonDirEQ2016"],
+            });
+        }
+
+        // --- Conditional validations for Comune or Provincia ---
+        if (isComuneOrProvincia) {
+            // Rimosso controllo bloccante su numero abitanti su richiesta utente. Un avviso non bloccante è mostrato nell'interfaccia.
+
+            // Adeguamento Limite Fondo 2016 fields
+            if (data.historicalData.fondoPersonaleNonDirEQ2018_Art23 === undefined) {
+                 ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Campo obbligatorio per Comuni e Province per il calcolo dell'adeguamento.",
+                    path: ["historicalData", "fondoPersonaleNonDirEQ2018_Art23"],
+                });
+            }
+        }
     });
 
     const result = refinedSchema.safeParse(fundData);
@@ -39,8 +64,8 @@ export const validateFundData = (fundData: FundData): Record<string, string> => 
         return {};
     } else {
         return result.error.issues.reduce((acc: Record<string, string>, issue: ZodIssue) => {
-            const pathKey = getPath(issue.path);
-            if(pathKey) { // Ensure path is not empty
+            const pathKey = `fundData.${getPath(issue.path)}`;
+            if(pathKey) {
                 acc[pathKey] = issue.message;
             }
             return acc;

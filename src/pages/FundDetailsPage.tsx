@@ -1,12 +1,15 @@
 // pages/FundDetailsPage.tsx
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext';
-import { Card } from '../components/shared/Card';
-import { FondoAccessorioDipendenteData } from '../types';
-import { TEXTS_UI } from '../constants';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner';
-import { FundingItem } from '../components/shared/FundingItem';
-import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers';
+import { useAppContext } from '../contexts/AppContext.tsx';
+import { Card } from '../components/shared/Card.tsx';
+import { FondoAccessorioDipendenteData } from '../types.ts';
+import { TEXTS_UI } from '../constants.ts';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
+import { FundingItem } from '../components/shared/FundingItem.tsx';
+import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
+import { useNormativeData } from '../hooks/useNormativeData.ts';
+import { EmptyState } from '../components/shared/EmptyState.tsx';
+import { Button } from '../components/shared/Button.tsx';
 
 const formatCurrency = (value?: number, defaultText = TEXTS_UI.notApplicable) => {
   if (value === undefined || value === null || isNaN(value)) return defaultText;
@@ -22,8 +25,9 @@ const SummaryRow: React.FC<{ label: string; value?: number; isGrandTotal?: boole
 
 
 export const FundDetailsPage: React.FC = () => {
-  const { state } = useAppContext();
-  const { calculatedFund, fundData, isLoading, normativeData } = state;
+  const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
+  const { calculatedFund, fundData, isLoading } = state;
 
   if (isLoading && !calculatedFund) { 
     return <LoadingSpinner text="Caricamento dettagli fondo..." />;
@@ -31,9 +35,15 @@ export const FundDetailsPage: React.FC = () => {
 
   if (!calculatedFund || !normativeData) {
     return (
-      <Card title="Dettaglio Calcolo Fondo">
-        <p className="text-[#1b0e0e]">{TEXTS_UI.noDataAvailable} Effettuare prima il calcolo del fondo dalla sezione "Dati Costituzione Fondo".</p>
-      </Card>
+        <div>
+            <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight mb-8">Dettaglio Calcolo Fondo Risorse Decentrate</h2>
+            <EmptyState
+                title="Dettaglio non disponibile"
+                message="Per visualizzare i dettagli, esegui prima il calcolo del fondo dalla pagina 'Dati Costituzione Fondo'."
+                actionText="Vai ai Dati"
+                onAction={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'dataEntry' })}
+            />
+        </div>
     );
   }
   

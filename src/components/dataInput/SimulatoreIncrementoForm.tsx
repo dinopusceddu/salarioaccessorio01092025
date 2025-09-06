@@ -1,11 +1,13 @@
 // components/dataInput/SimulatoreIncrementoForm.tsx
 import React, { useEffect, useCallback } from 'react';
 import { useAppContext } from '../../contexts/AppContext.tsx';
-import { SimulatoreIncrementoInput, TipologiaEnte } from '../../types.ts';
+import { SimulatoreIncrementoInput } from '../../types.ts';
+import { TipologiaEnte } from '../../enums.ts';
 import { Input } from '../shared/Input.tsx';
 import { Card } from '../shared/Card.tsx';
 import { TEXTS_UI } from '../../constants.ts';
 import { calculateSimulazione } from '../../logic/fundEngine.ts';
+import { useNormativeData } from '../../hooks/useNormativeData.ts';
 
 const formatCurrencyForDisplay = (value?: number) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -19,8 +21,8 @@ const formatPercentageForDisplay = (value?: number) => {
 
 export const SimulatoreIncrementoForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
+  const { data: normativeData } = useNormativeData();
   const { simulatoreInput, numeroAbitanti, tipologiaEnte, simulatoreRisultati } = state.fundData.annualData;
-  const { normativeData } = state;
 
   const runAndDispatchSimulazione = useCallback(() => {
     const results = calculateSimulazione(simulatoreInput, numeroAbitanti, tipologiaEnte);
@@ -37,16 +39,12 @@ export const SimulatoreIncrementoForm: React.FC = () => {
     dispatch({ type: 'UPDATE_SIMULATORE_INPUT', payload: { [name]: processedValue } as Partial<SimulatoreIncrementoInput> });
   };
   
-  if (!normativeData) {
-    return <Card title="Simulatore Incremento Potenziale"><p>Caricamento dati normativi...</p></Card>;
-  }
   const { riferimenti_normativi } = normativeData;
 
   const si = simulatoreInput || {};
   const risultati = simulatoreRisultati;
 
-  // FIX: Corrected enum access for TipologiaEnte.Provincia. The key is 'Provincia', not uppercase 'PROVINCIA', resolving a property access error during table header generation.
-  const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.Provincia ? "Province" : "Comuni";
+  const tabellaSoglieUsata = tipologiaEnte === TipologiaEnte.PROVINCIA ? "Province" : "Comuni";
 
   return (
     <Card title="Simulatore Incremento Potenziale Fondo Salario Accessorio" className="mt-8 mb-8" isCollapsible={true} defaultCollapsed={true}>
@@ -140,8 +138,8 @@ interface PhaseCardProps {
 
 const PhaseCard: React.FC<PhaseCardProps> = ({ title, children, highlightValue, isFinalResult = false }) => {
     return (
-        <div className={`p-4 border rounded-lg shadow-sm ${isFinalResult ? 'bg-[#f0fff4] border-[#c6f6d5]' : 'bg-[#f0f9ff] border-[#e0f2fe]'}`}> {/* Light green / Light blue */}
-            <h5 className={`text-md font-bold mb-2 ${isFinalResult ? 'text-[#2f855a]' : 'text-[#2b6cb0]'}`}>{title}</h5> {/* Darker green / Darker blue */}
+        <div className={`p-4 border rounded-lg shadow-sm ${isFinalResult ? 'bg-[#f0fff4] border-[#c6f6d5]' : 'bg-[#f0f9ff] border-[#e0f2fe]'}`}>
+            <h5 className={`text-md font-bold mb-2 ${isFinalResult ? 'text-[#2f855a]' : 'text-[#2b6cb0]'}`}>{title}</h5>
             <div className="text-sm text-[#1b0e0e] space-y-1 mb-3">{children}</div>
             <div className={`mt-2 pt-2 border-t ${isFinalResult ? 'border-green-200' : 'border-sky-200'}`}>
                 <p className={`text-sm font-medium ${isFinalResult ? 'text-[#2f855a]' : 'text-[#2b6cb0]'}`}>

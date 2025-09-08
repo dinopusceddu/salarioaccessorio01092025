@@ -9,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
-export const Button: React.FC<ButtonProps> = ({
+export const Button: React.FC<ButtonProps> = React.memo(({
   children,
   variant = 'primary',
   size = 'md',
@@ -61,4 +61,4 @@ export const Button: React.FC<ButtonProps> = ({
       {rightIcon && !isLoading && <span className="ml-2">{rightIcon}</span>}
     </button>
   );
-};
+});

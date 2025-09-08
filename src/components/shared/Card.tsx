@@ -11,7 +11,7 @@ interface CardProps {
   defaultCollapsed?: boolean;
 }
 
-export const Card: React.FC<CardProps> = ({ 
+export const Card: React.FC<CardProps> = React.memo(({ 
   title, 
   children, 
   className = '', 
@@ -66,4 +66,4 @@ export const Card: React.FC<CardProps> = ({
       )}
     </div>
   );
-};
+});

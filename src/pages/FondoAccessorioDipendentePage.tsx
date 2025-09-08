@@ -1,7 +1,7 @@
 // pages/FondoAccessorioDipendentePage.tsx
-import React, { useEffect, useState, useMemo } from 'react'; 
+import React, { useEffect, useState, useMemo, useCallback } from 'react'; 
 import { useAppContext } from '../contexts/AppContext.tsx';
-import { FondoAccessorioDipendenteData } from '../types.ts';
+import { FondoAccessorioDipendenteData, NormativeData } from '../types.ts';
 import { Card } from '../components/shared/Card.tsx';
 import { TEXTS_UI } from '../constants.ts'; 
 import { getFadFieldDefinitions } from './FondoAccessorioDipendentePageHelpers.ts';
@@ -133,7 +133,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
   const maxIncrementoDecretoPA = simulatoreRisultati?.fase5_incrementoNettoEffettivoFondo ?? 0;
   const isIncrementoDecretoPAActive = maxIncrementoDecretoPA > 0;
 
-  const handleChange = (field: keyof FondoAccessorioDipendenteData, value?: number) => {
+  const handleChange = useCallback((field: keyof FondoAccessorioDipendenteData, value?: number) => {
     let processedValue = value;
     if (field === 'st_incrementoDecretoPA') {
       if (isIncrementoDecretoPAActive) { 
@@ -143,7 +143,6 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
       }
     } else if (field === 'vn_dl13_art8c3_incrementoPNRR_max5stabile2016') {
       setPnrr3UserModified(true); 
-      // FIX: Corrected typo from `isEnteInCondizioni` to `isEnteInCondizioniSpeciali`.
       if (arePNRR3ConditionsMet && !isEnteInCondizioniSpeciali) {
         const maxAllowedPNRR3 = valoreMassimoPNRR3;
         processedValue = (value !== undefined) ? Math.min(Math.max(0, value), maxAllowedPNRR3) : undefined;
@@ -157,7 +156,7 @@ export const FondoAccessorioDipendentePage: React.FC = () => {
         }
     }
     dispatch({ type: 'UPDATE_FONDO_ACCESSORIO_DIPENDENTE_DATA', payload: { [field]: processedValue } });
-  };
+  }, [dispatch, isIncrementoDecretoPAActive, maxIncrementoDecretoPA, arePNRR3ConditionsMet, isEnteInCondizioniSpeciali, valoreMassimoPNRR3, roundedIncrementoArt79c1c]);
   
   const fadFieldDefinitions = useMemo(() => {
     if (!normativeData) return [];

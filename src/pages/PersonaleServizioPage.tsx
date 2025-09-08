@@ -1,14 +1,12 @@
 // pages/PersonaleServizioPage.tsx
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '../contexts/AppContext';
-import { PersonaleServizioDettaglio } from '../types';
-import { LivelloPeo, TipoMaggiorazione, AreaQualifica } from '../enums';
+import { PersonaleServizioDettaglio, LivelloPeo, TipoMaggiorazione, AreaQualifica } from '../types';
 import { Card } from '../components/shared/Card';
 import { Input } from '../components/shared/Input';
 import { Select } from '../components/shared/Select';
 import { Button } from '../components/shared/Button';
 import { TEXTS_UI, ALL_AREE_QUALIFICA, ALL_TIPI_MAGGIORAZIONE } from '../constants';
-import { Checkbox } from '../components/shared/Checkbox';
 import { useNormativeData } from '../hooks/useNormativeData';
 
 const NESSUNA_PEO_VALUE = ""; // Sentinel value for "Nessuna PEO"
@@ -64,25 +62,25 @@ export const PersonaleServizioPage: React.FC = () => {
   const { personaleAnnoRifPerArt23: art23SourceEmployees, annoRiferimento } = state.fundData.annualData;
   const employeeList = employees || [];
   
-  const handleOpenConfirmModal = (id: string) => {
+  const handleOpenConfirmModal = useCallback((id: string) => {
     setEmployeeIdToDelete(id);
     setConfirmModalOpen(true);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (employeeIdToDelete) {
       dispatch({ type: 'REMOVE_PERSONALE_SERVIZIO_DETTAGLIO', payload: { id: employeeIdToDelete } });
     }
     setConfirmModalOpen(false);
     setEmployeeIdToDelete(null);
-  };
+  }, [dispatch, employeeIdToDelete]);
 
-  const handleCancelDelete = () => {
+  const handleCancelDelete = useCallback(() => {
     setConfirmModalOpen(false);
     setEmployeeIdToDelete(null);
-  };
+  }, []);
 
-  const handleSyncFromArt23 = () => {
+  const handleSyncFromArt23 = useCallback(() => {
     const sourceList = art23SourceEmployees || [];
     
     if (sourceList.length === 0) {
@@ -97,7 +95,7 @@ export const PersonaleServizioPage: React.FC = () => {
     const newTargetList: PersonaleServizioDettaglio[] = sourceList.map(sourceEmp => {
       const isFullYear = (sourceEmp.cedoliniEmessi === undefined || sourceEmp.cedoliniEmessi >= 12);
       return {
-          id: sourceEmp.id,
+          id: crypto.randomUUID(),
           matricola: sourceEmp.matricola,
           partTimePercentage: sourceEmp.partTimePercentage,
           fullYearService: isFullYear,
@@ -112,14 +110,14 @@ export const PersonaleServizioPage: React.FC = () => {
 
     dispatch({ type: 'SET_PERSONALE_SERVIZIO_DETTAGLI', payload: newTargetList });
     alert("Sincronizzazione completata con successo!");
-  };
+  }, [dispatch, art23SourceEmployees, employeeList]);
   
-  const handleUpdateEmployee = (id: string, field: keyof PersonaleServizioDettaglio, value: any) => {
+  const handleUpdateEmployee = useCallback((id: string, field: keyof PersonaleServizioDettaglio, value: any) => {
     const changes: Partial<PersonaleServizioDettaglio> = { [field]: value };
     dispatch({ type: 'UPDATE_PERSONALE_SERVIZIO_DETTAGLIO', payload: { id, changes } });
-  };
+  }, [dispatch]);
   
-  const handleAddEmployee = () => {
+  const handleAddEmployee = useCallback(() => {
     const newEmployee: PersonaleServizioDettaglio = {
       id: crypto.randomUUID(),
       fullYearService: true, 
@@ -129,9 +127,9 @@ export const PersonaleServizioPage: React.FC = () => {
       livelloPeoStoriche: undefined, 
     };
     dispatch({ type: 'ADD_PERSONALE_SERVIZIO_DETTAGLIO', payload: newEmployee });
-  };
+  }, [dispatch]);
 
-  const calculateServiceRatio = (employee: PersonaleServizioDettaglio): number => {
+  const calculateServiceRatio = useCallback((employee: PersonaleServizioDettaglio): number => {
     if (employee.fullYearService) return 1;
 
     if (!employee.assunzioneDate && !employee.cessazioneDate) return 0;
@@ -156,7 +154,7 @@ export const PersonaleServizioPage: React.FC = () => {
     const daysInYear = isLeap ? 366 : 365;
     
     return Math.max(0, Math.min(1, serviceDaysInYear / daysInYear));
-  };
+  }, [annoRiferimento]);
   
   const totalAbsorbedProgression = useMemo(() => {
     if (!normativeData) return 0;
@@ -172,7 +170,7 @@ export const PersonaleServizioPage: React.FC = () => {
       }
       return sum;
     }, 0);
-  }, [employeeList, annoRiferimento, normativeData]);
+  }, [employeeList, calculateServiceRatio, normativeData]);
 
   const totalAbsorbedIndennitaComparto = useMemo(() => {
     if (!normativeData) return 0;
@@ -187,7 +185,7 @@ export const PersonaleServizioPage: React.FC = () => {
       }
       return sum;
     }, 0);
-  }, [employeeList, annoRiferimento, normativeData]);
+  }, [employeeList, calculateServiceRatio, normativeData]);
 
   useEffect(() => {
     dispatch({ 
@@ -204,7 +202,7 @@ export const PersonaleServizioPage: React.FC = () => {
   if (!normativeData) return <div>Caricamento...</div>;
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-8 pb-24"> {/* Added padding-bottom to avoid overlap with sticky bar */}
       <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight">
         Personale in servizio nel {annoRiferimento}
       </h2>
@@ -231,7 +229,7 @@ export const PersonaleServizioPage: React.FC = () => {
               title={`Dipendente ${index + 1} ${employee.matricola ? `- Matricola: ${employee.matricola}` : ''}`} 
               className="mb-6 bg-white" 
               isCollapsible 
-              defaultCollapsed={employeeList.length > 1}
+              defaultCollapsed={employeeList.length > 1} // Collapse if more than 1 employee
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-0">
                 <Input
@@ -260,12 +258,16 @@ export const PersonaleServizioPage: React.FC = () => {
                   containerClassName="mb-3"
                 />
                 <div className="flex items-center col-span-full md:col-span-1 mb-3 mt-2 md:mt-8"> 
-                  <Checkbox
+                  <input
+                    type="checkbox"
                     id={`fullYear_${employee.id}`}
-                    label="In servizio tutto l'anno?"
                     checked={employee.fullYearService}
                     onChange={(e) => handleUpdateEmployee(employee.id, 'fullYearService', e.target.checked)}
+                    className="h-5 w-5 text-[#ea2832] border-[#d1c0c1] rounded focus:ring-[#ea2832]/50"
                   />
+                  <label htmlFor={`fullYear_${employee.id}`} className="ml-2 text-sm text-[#1b0e0e]">
+                    In servizio tutto l'anno?
+                  </label>
                 </div>
 
                 {!employee.fullYearService && (

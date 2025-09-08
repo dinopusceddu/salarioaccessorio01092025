@@ -12,7 +12,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   inputInfo?: string | React.ReactNode;
 }
 
-export const Input: React.FC<InputProps> = ({
+export const Input: React.FC<InputProps> = React.memo(({
   label,
   id,
   error,
@@ -38,6 +38,7 @@ export const Input: React.FC<InputProps> = ({
     !error && warning && id ? `${id}-warning` : undefined,
   ].filter(Boolean).join(' ');
 
+
   return (
     <div className={`mb-4 ${containerClassName}`}>
       {label && (
@@ -60,4 +61,4 @@ export const Input: React.FC<InputProps> = ({
       {!error && warning && id && <p id={`${id}-warning`} className="mt-1 text-xs text-amber-700">{warning}</p>}
     </div>
   );
-};
+});

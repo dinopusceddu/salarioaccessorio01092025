@@ -32,7 +32,7 @@ const CustomChevronIcon = () => (
 );
 
 
-export const Select: React.FC<SelectProps> = ({
+export const Select: React.FC<SelectProps> = React.memo(({
   label,
   id,
   error,
@@ -72,4 +72,4 @@ export const Select: React.FC<SelectProps> = ({
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
-};
+});

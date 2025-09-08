@@ -1,6 +1,6 @@
 // components/shared/FundingItem.tsx
 import React from 'react';
-import { Input } from './Input.tsx';
+import { Input } from './Input';
 
 interface FundingItemProps<T> {
   id: keyof T;
@@ -14,7 +14,7 @@ interface FundingItemProps<T> {
   isPercentage?: boolean;
 }
 
-export function FundingItem<T extends Record<string, any>>(props: FundingItemProps<T>) {
+const FundingItemComponent = <T extends Record<string, any>>(props: FundingItemProps<T>) => {
   const {
     id,
     description,
@@ -63,3 +63,5 @@ export function FundingItem<T extends Record<string, any>>(props: FundingItemPro
     </div>
   );
 }
+
+export const FundingItem = React.memo(FundingItemComponent) as typeof FundingItemComponent;

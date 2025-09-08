@@ -1,5 +1,5 @@
 // components/dashboard/FundAllocationChart.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAppContext } from '../../contexts/AppContext';
 import { Card } from '../shared/Card';
@@ -10,7 +10,15 @@ export const FundAllocationChart: React.FC = () => {
   const { state } = useAppContext();
   const { calculatedFund } = state;
 
-  if (!calculatedFund || (calculatedFund.totaleComponenteStabile === 0 && calculatedFund.totaleComponenteVariabile === 0)) {
+  const data = useMemo(() => {
+    if (!calculatedFund) return [];
+    return [
+      { name: 'Parte Stabile', value: calculatedFund.totaleComponenteStabile || 0 },
+      { name: 'Parte Variabile', value: calculatedFund.totaleComponenteVariabile || 0 },
+    ].filter(d => d.value > 0);
+  }, [calculatedFund]);
+
+  if (!calculatedFund || data.length === 0) {
     return (
       <Card title="Ripartizione del Fondo">
         <div className="flex items-center justify-center h-64 text-[#5f5252]">
@@ -19,11 +27,6 @@ export const FundAllocationChart: React.FC = () => {
       </Card>
     );
   }
-
-  const data = [
-    { name: 'Parte Stabile', value: calculatedFund.totaleComponenteStabile || 0 },
-    { name: 'Parte Variabile', value: calculatedFund.totaleComponenteVariabile || 0 },
-  ];
 
   // Using theme colors: a light contrasting color and the primary red
   const COLORS = ['#d1c0c1', '#ea2832'];

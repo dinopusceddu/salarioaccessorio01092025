@@ -1,23 +1,20 @@
-// services/reportService.ts
-import jsPDF from 'jspdf'; 
-import autoTable, { CellHookData, FontStyle } from 'jspdf-autotable';
-import { 
-    CalculatedFund, 
-    FundData, 
-    User, 
-    FondoAccessorioDipendenteData, 
+// src/services/reportService.ts
+import jsPDF from 'jspdf';
+import autoTable, { FontStyle } from 'jspdf-autotable';
+import {
+    CalculatedFund,
     ComplianceCheck,
+    FondoAccessorioDipendenteData,
+    FundData,
+    NormativeData,
     SimulatoreIncrementoInput,
     SimulatoreIncrementoRisultati,
     TipologiaEnte,
-    NormativeData
-} from '../types.ts';
-import { 
-    getFadFieldDefinitions, 
-} from '../pages/FondoAccessorioDipendentePageHelpers.ts';
-import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../constants.ts'; 
-// FIX: Changed import from fundCalculations to fundEngine to resolve module export errors.
-import { getFadEffectiveValueHelper, calculateFadTotals } from '../logic/fundEngine.ts';
+    User,
+} from '@/types';
+import { ALL_TIPOLOGIE_ENTE, TEXTS_UI } from '@/constants';
+import { getFadFieldDefinitions } from '@/pages/FondoAccessorioDipendentePageHelpers';
+import { calculateFadTotals, getFadEffectiveValueHelper } from '@/logic/fundEngine';
 
 
 // --- PDF Helper Functions ---
@@ -276,10 +273,8 @@ export const generateDeterminazioneTXT = (
 
     const enteHeader = () => {
         switch (annualData.tipologiaEnte) {
-            // FIX: Corrected enum access from TitleCase to UPPERCASE.
             case TipologiaEnte.COMUNE:
                 return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
-            // FIX: Corrected enum access from TitleCase to UPPERCASE.
             case TipologiaEnte.PROVINCIA:
                 return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
             default:
@@ -492,7 +487,6 @@ export const generateFADXLS = (
         if (sectionFields.length > 0) {
             html += `<tr><td colspan="4" class="section-header">${section.title.toUpperCase()}</td></tr>`;
             sectionFields.forEach(def => {
-                // FIX: `getFadEffectiveValueHelper` expects 6 arguments. This call has been updated to pass `incrementoEQconRiduzioneDipendenti` to align with the function signature and ensure correct calculations for all fields.
                 const effectiveValue = getFadEffectiveValueHelper(
                     def.key,
                     (fadData as any)[def.key],

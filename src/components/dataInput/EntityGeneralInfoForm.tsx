@@ -1,13 +1,13 @@
 // components/dataInput/EntityGeneralInfoForm.tsx
 import React from 'react';
-import { useAppContext } from '../../contexts/AppContext.tsx';
-import { AnnualData } from '../../types.ts';
-import { TipologiaEnte } from '../../enums.ts';
-import { Input } from '../shared/Input.tsx';
-import { Select } from '../shared/Select.tsx';
-import { Card } from '../shared/Card.tsx';
-import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants.ts';
-import { Checkbox } from '../shared/Checkbox.tsx';
+import { useAppContext } from '../../contexts/AppContext';
+import { AnnualData } from '../../types';
+import { TipologiaEnte } from '../../enums';
+import { Input } from '../shared/Input';
+import { Select } from '../shared/Select';
+import { Card } from '../shared/Card';
+import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants';
+import { Checkbox } from '../shared/Checkbox';
 
 const booleanOptions = [
   { value: 'true', label: TEXTS_UI.trueText },
@@ -59,7 +59,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
 
   const isNumeroAbitantiRequired = annualData.tipologiaEnte === TipologiaEnte.COMUNE || annualData.tipologiaEnte === TipologiaEnte.PROVINCIA;
   const numeroAbitantiWarning = isNumeroAbitantiRequired && (!annualData.numeroAbitanti || annualData.numeroAbitanti <= 0) 
-      ? "Campo obbligatorio per il calcolo corretto del simulatore e dei limiti di spesa. La compilazione non sarà bloccata." 
+      ? "Campo non bloccante ma consigliato per il calcolo corretto del simulatore e dei limiti di spesa." 
       : undefined;
 
   return (
@@ -86,8 +86,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
           onChange={handleGenericChange}
           placeholder="Es. Comune di..."
           containerClassName="md:col-span-2 mb-3"
-          aria-required="true"
-          error={validationErrors['fundData.annualData.denominazioneEnte']}
         />
         <Select
           label="Tipologia Ente"
@@ -126,11 +124,10 @@ export const EntityGeneralInfoForm: React.FC = () => {
           placeholder="Es. 15000"
           step="1"
           min="0"
-          aria-required={isNumeroAbitantiRequired}
           containerClassName="mb-3"
           warning={numeroAbitantiWarning}
           disabled={!isNumeroAbitantiRequired}
-          inputInfo={!isNumeroAbitantiRequired ? "Campo non richiesto per questa tipologia di ente." : "Obbligatorio per Comuni e Province."}
+          inputInfo={!isNumeroAbitantiRequired ? "Campo non richiesto per questa tipologia di ente." : "Consigliato per Comuni e Province."}
         />
       </div>
       <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0">
@@ -142,7 +139,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
           value={annualData.isEnteDissestato === undefined ? '' : String(annualData.isEnteDissestato)}
           onChange={handleGenericChange}
           placeholder="Seleziona..."
-          aria-required="true"
         />
          <Select
           label="Ente strutturalmente deficitario (art. 242 TUEL)?"
@@ -152,7 +148,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
           value={annualData.isEnteStrutturalmenteDeficitario === undefined ? '' : String(annualData.isEnteStrutturalmenteDeficitario)}
           onChange={handleGenericChange}
           placeholder="Seleziona..."
-          aria-required="true"
         />
         <Select
           label="Ente in piano di riequilibrio finanziario pluriennale (art. 243-bis TUEL)?"
@@ -162,7 +157,6 @@ export const EntityGeneralInfoForm: React.FC = () => {
           value={annualData.isEnteRiequilibrioFinanziario === undefined ? '' : String(annualData.isEnteRiequilibrioFinanziario)}
           onChange={handleGenericChange}
           placeholder="Seleziona..."
-          aria-required="true"
         />
         <Select
           label="È un ente con personale dirigente?"
@@ -172,9 +166,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           value={annualData.hasDirigenza === undefined ? '' : String(annualData.hasDirigenza)}
           onChange={handleGenericChange}
           placeholder="Seleziona..."
-          aria-required="true"
           containerClassName="mb-3"
-          error={validationErrors['fundData.annualData.hasDirigenza']}
         />
         <Checkbox
             id="isDistributionMode"
@@ -197,10 +189,12 @@ export const EntityGeneralInfoForm: React.FC = () => {
           name="fondoLavoroStraordinario"
           value={annualData.fondoLavoroStraordinario ?? ''}
           onChange={handleGenericChange}
-          placeholder="Es. 20000.00"
+          placeholder="0.00"
           step="0.01"
           containerClassName="mb-3"
-          inputInfo="Inserire l'importo stanziato per il lavoro straordinario per l'anno di riferimento."
+          inputInfo="Inserire l'importo stanziato per il lavoro straordinario (può essere zero)."
+          aria-required="true"
+          error={validationErrors['fundData.annualData.fondoLavoroStraordinario']}
         />
       </div>
     </Card>

@@ -1,6 +1,8 @@
-// types.ts
+// src/types.ts
 import React from 'react';
 import { z } from 'zod';
+
+import { AreaQualifica, EmployeeCategory, LivelloPeo, TipologiaEnte, TipoMaggiorazione, UserRole } from './enums';
 import {
   AnnualDataSchema,
   AnnualEmployeeCountSchema,
@@ -19,11 +21,10 @@ import {
   SimulatoreIncrementoInputSchema,
   SimulatoreIncrementoRisultatiSchema,
   UserSchema,
-} from './schemas/fundDataSchemas.ts';
-import { AreaQualifica, EmployeeCategory, LivelloPeo, TipologiaEnte, TipoMaggiorazione, UserRole } from './enums.ts';
+} from './schemas/fundDataSchemas';
 
 // Re-export enums for use in the app
-export { UserRole, EmployeeCategory, TipologiaEnte, LivelloPeo, AreaQualifica, TipoMaggiorazione };
+export { AreaQualifica, EmployeeCategory, LivelloPeo, TipologiaEnte, TipoMaggiorazione, UserRole };
 
 // Derive types from Zod schemas
 export type User = z.infer<typeof UserSchema>;
@@ -121,6 +122,8 @@ export interface AppState {
   calculatedFund?: CalculatedFund;
   complianceChecks: ComplianceCheck[];
   isLoading: boolean;
+  isNormativeDataLoading: boolean;
+  normativeData?: NormativeData;
   error?: string;
   validationErrors: { [key: string]: string };
   activeTab: string;
@@ -140,6 +143,7 @@ export type AppAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | undefined }
   | { type: 'SET_VALIDATION_ERRORS'; payload: { [key: string]: string } }
+  | { type: 'CLEAR_VALIDATION_ERRORS' }
   | { type: 'SET_ACTIVE_TAB'; payload: string }
   | { type: 'ADD_ART23_EMPLOYEE_DETAIL'; payload: { yearType: '2018' | 'annoRif'; detail: Art23EmployeeDetail } }
   | { type: 'UPDATE_ART23_EMPLOYEE_DETAIL'; payload: { yearType: '2018' | 'annoRif'; detail: Art23EmployeeDetail } }

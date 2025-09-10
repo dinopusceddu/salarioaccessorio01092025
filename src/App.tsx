@@ -3,23 +3,23 @@ import React, { Suspense } from 'react';
 // FIX: Changed import from '@tanstack/react-query' to a namespace import to resolve potential module export issues with QueryClient.
 import * as TanstackQuery from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { MainLayout } from './components/layout/MainLayout.tsx';
-import { LoadingSpinner } from './components/shared/LoadingSpinner.tsx';
-import { AppProvider, useAppContext } from './contexts/AppContext.tsx';
-import { ChecklistPage } from './pages/ChecklistPage.tsx';
-import { CompliancePage } from './pages/CompliancePage.tsx';
-import { DataEntryPage } from './pages/DataEntryPage.tsx';
-import { DistribuzioneRisorsePage } from './pages/DistribuzioneRisorsePage.tsx';
-import { FondoAccessorioDipendentePage } from './pages/FondoAccessorioDipendentePage.tsx';
-import { FondoDirigenzaPage } from './pages/FondoDirigenzaPage.tsx';
-import { FondoElevateQualificazioniPage } from './pages/FondoElevateQualificazioniPage.tsx';
-import { FondoSegretarioComunalePage } from './pages/FondoSegretarioComunalePage.tsx';
-import { FundDetailsPage } from './pages/FundDetailsPage.tsx';
-import { HomePage } from './pages/HomePage.tsx';
-import { PersonaleServizioPage } from './pages/PersonaleServizioPage.tsx';
-import { ReportsPage } from './pages/ReportsPage.tsx';
-import { PageModule } from './types.ts';
-import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { MainLayout } from './components/layout/MainLayout';
+import { LoadingSpinner } from './components/shared/LoadingSpinner';
+import { AppProvider, useAppContext } from './contexts/AppContext';
+import { ChecklistPage } from './pages/ChecklistPage';
+import { CompliancePage } from './pages/CompliancePage';
+import { DataEntryPage } from './pages/DataEntryPage';
+import { DistribuzioneRisorsePage } from './pages/DistribuzioneRisorsePage';
+import { FondoAccessorioDipendentePage } from './pages/FondoAccessorioDipendentePage';
+import { FondoDirigenzaPage } from './pages/FondoDirigenzaPage';
+import { FondoElevateQualificazioniPage } from './pages/FondoElevateQualificazioniPage';
+import { FondoSegretarioComunalePage } from './pages/FondoSegretarioComunalePage';
+import { FundDetailsPage } from './pages/FundDetailsPage';
+import { HomePage } from './pages/HomePage';
+import { PersonaleServizioPage } from './pages/PersonaleServizioPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { PageModule } from './types';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // FIX: Removed deprecated `suspense: true` option. Suspense is now handled by `useSuspenseQuery`.
 const queryClient = new TanstackQuery.QueryClient({

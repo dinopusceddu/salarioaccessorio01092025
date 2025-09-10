@@ -3,7 +3,8 @@ import React from 'react';
 import { useAppContext } from './AppContext.js';
 import { Card } from './Card.js';
 import { Button } from './Button.js';
-import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from './reportService.js';
+// FIX: Corrected import path for reportService to point to the correct module.
+import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from './services/reportService.js';
 import { TEXTS_UI } from '../constants.js';
 import { LoadingSpinner } from './LoadingSpinner.js';
 

@@ -1,12 +1,12 @@
 // components/dataInput/Art23EmployeeAndIncrementForm.tsx
 import React, { useState } from 'react';
-import { useAppContext } from '../../contexts/AppContext.tsx';
-import { HistoricalData } from '../../types.ts';
-import { Input } from '../shared/Input.tsx';
-import { Button } from '../shared/Button.tsx';
-import { Card } from '../shared/Card.tsx';
-import { TEXTS_UI } from '../../constants.ts';
-import { Art23EmployeeEntryPage } from '../../pages/Art23EmployeeEntryPage.tsx';
+import { useAppContext } from '../../contexts/AppContext';
+import { HistoricalData } from '../../types';
+import { Input } from '../shared/Input';
+import { Button } from '../shared/Button';
+import { Card } from '../shared/Card';
+import { TEXTS_UI } from '../../constants';
+import { Art23EmployeeEntryPage } from '../../pages/Art23EmployeeEntryPage';
 
 const formatNumberForDisplay = (value?: number, digits = 2) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -86,8 +86,9 @@ export const Art23EmployeeAndIncrementForm: React.FC = () => {
           name="fondoEQ2018_Art23"
           value={historicalData.fondoEQ2018_Art23 ?? ''}
           onChange={handleHistoricalChange}
-          placeholder="Es. 10000.00"
+          placeholder="0.00"
           step="0.01"
+          aria-required="true"
           containerClassName="mb-3"
           error={validationErrors['fundData.historicalData.fondoEQ2018_Art23']}
         />

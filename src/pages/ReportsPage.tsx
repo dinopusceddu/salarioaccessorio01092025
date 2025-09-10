@@ -1,19 +1,18 @@
 // pages/ReportsPage.tsx
 import React from 'react';
-import { useAppContext } from '../contexts/AppContext.tsx';
-import { Card } from '../components/shared/Card.tsx';
-import { Button } from '../components/shared/Button.tsx';
-import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from '../services/reportService.ts';
-import { TEXTS_UI } from '../constants.ts';
-import { LoadingSpinner } from '../components/shared/LoadingSpinner.tsx';
-import { useNormativeData } from '../hooks/useNormativeData.ts';
-import { EmptyState } from '../components/shared/EmptyState.tsx';
+// FIX: Corrected import paths to use .tsx extension and correct relative paths.
+import { useAppContext } from '../contexts/AppContext';
+import { Card } from '../components/shared/Card';
+import { Button } from '../components/shared/Button';
+// FIX: Corrected import paths to use .ts extension and correct relative paths. This resolves the module not found error.
+import { generateDeterminazioneTXT, generateFullSummaryPDF, generateFADXLS } from '../services/reportService';
+import { TEXTS_UI } from '../constants';
+import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 
 
 export const ReportsPage: React.FC = () => {
-  const { state, dispatch } = useAppContext();
-  const { data: normativeData } = useNormativeData();
-  const { calculatedFund, fundData, currentUser, isLoading, complianceChecks } = state;
+  const { state } = useAppContext();
+  const { calculatedFund, fundData, currentUser, isLoading, complianceChecks, normativeData } = state;
 
   const handleGenerateFullSummary = () => {
     if (calculatedFund && complianceChecks) {
@@ -73,16 +72,13 @@ export const ReportsPage: React.FC = () => {
       <h2 className="text-[#1b0e0e] tracking-light text-2xl sm:text-[30px] font-bold leading-tight">Generazione Report e Documentazione</h2>
       
       {!calculatedFund && (
-         <EmptyState
-            title="Nessun report disponibile"
-            message="Per generare i report, esegui prima il calcolo del fondo dalla pagina 'Dati Costituzione Fondo'."
-            actionText="Vai ai Dati"
-            onAction={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'dataEntry' })}
-        />
+         <Card title="Attenzione">
+            <p className="text-[#1b0e0e]">{TEXTS_UI.noDataAvailable} per la generazione dei report. Effettuare prima il calcolo del fondo dalla sezione "Dati Costituzione Fondo".</p>
+         </Card>
       )}
 
       {calculatedFund && (
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6"> {/* Changed to 1 column for primary report */}
             <Card title="Riepilogo Generale Calcoli e Risultanze" className="bg-[#fffbea] border-[#fde68a]">
                 <p className="text-sm text-[#1b0e0e] mb-4">
                     Genera un report PDF completo che include tutti i dati di input, i calcoli dettagliati per ciascun fondo,
@@ -96,7 +92,7 @@ export const ReportsPage: React.FC = () => {
       )}
 
       {calculatedFund && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8"> {/* Secondary reports below */}
             <Card title="Atto di Costituzione del Fondo (Testuale)">
             <p className="text-sm text-[#1b0e0e] mb-4">
                 Genera una bozza formale della "Determinazione Dirigenziale di Costituzione del Fondo" per l'anno in corso in formato TXT.

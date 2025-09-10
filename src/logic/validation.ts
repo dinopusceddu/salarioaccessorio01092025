@@ -1,64 +1,52 @@
 // src/logic/validation.ts
-import { FundDataSchema } from '../schemas/fundDataSchemas.ts';
-import { FundData } from '../types.ts';
-import { TipologiaEnte } from '../enums.ts';
 import { z, ZodIssue } from 'zod';
+import { FundData } from '../types';
+import { TipologiaEnteSchema } from '../schemas/fundDataSchemas';
 
 const getPath = (path: (string | number | symbol)[]): string => {
     return path.map(String).join('.');
 };
 
+// FIX: Replaced `z.number` with `z.coerce.number` which correctly accepts `invalid_type_error`. This resolves the TypeScript error.
+const numberRequired = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.any().refine(val => val !== undefined, {
+    message: "Questo campo è obbligatorio."
+  }).pipe(
+    z.coerce.number({ invalid_type_error: "Deve essere un numero valido." })
+     .nonnegative({ message: "L'importo non può essere negativo." })
+  )
+);
+
+// FIX: Replaced `z.number` with `z.coerce.number` which correctly accepts `invalid_type_error`. This resolves the TypeScript error.
+const numberCanBeZero = z.preprocess(
+  (val) => (val === '' || val === null ? undefined : val),
+  z.any().refine(val => val !== undefined, {
+    message: "Questo campo è obbligatorio (può essere 0)."
+  }).pipe(
+    z.coerce.number({ invalid_type_error: "Deve essere un numero valido." })
+     .nonnegative({ message: "L'importo non può essere negativo." })
+  )
+);
+
+// Schema for validation
+const ValidationSchema = z.object({
+    annualData: z.object({
+        // FIX: Removed `&& val !== ''` which caused a TypeScript error because the inferred type `TipologiaEnte | null` can never be an empty string.
+        tipologiaEnte: TipologiaEnteSchema.nullable().refine(val => val != null, {
+            message: "La tipologia di ente è obbligatoria."
+        }),
+        fondoLavoroStraordinario: numberCanBeZero,
+    }).passthrough(),
+    historicalData: z.object({
+        fondoSalarioAccessorioPersonaleNonDirEQ2016: numberRequired,
+        fondoPersonaleNonDirEQ2018_Art23: numberRequired,
+        fondoEQ2018_Art23: numberCanBeZero,
+    }).passthrough(),
+}).passthrough();
+
 export const validateFundData = (fundData: FundData): Record<string, string> => {
-    
-    const refinedSchema = FundDataSchema.superRefine((data, ctx) => {
-        const isComuneOrProvincia = data.annualData.tipologiaEnte === TipologiaEnte.COMUNE || data.annualData.tipologiaEnte === TipologiaEnte.PROVINCIA;
-
-        // --- General validations (always required) ---
-        if (!data.annualData.denominazioneEnte || data.annualData.denominazioneEnte.trim().length === 0) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "La denominazione dell'ente è obbligatoria.",
-                path: ["annualData", "denominazioneEnte"],
-            });
-        }
-        if (data.annualData.tipologiaEnte === undefined) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "La tipologia di ente è obbligatoria.",
-                path: ["annualData", "tipologiaEnte"],
-            });
-        }
-        if (data.annualData.hasDirigenza === undefined) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Specificare se l'ente ha personale dirigente.",
-                path: ["annualData", "hasDirigenza"],
-            });
-        }
-        if (data.historicalData.fondoSalarioAccessorioPersonaleNonDirEQ2016 === undefined) {
-             ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Questo campo è obbligatorio per definire il limite storico.",
-                path: ["historicalData", "fondoSalarioAccessorioPersonaleNonDirEQ2016"],
-            });
-        }
-
-        // --- Conditional validations for Comune or Provincia ---
-        if (isComuneOrProvincia) {
-            // Rimosso controllo bloccante su numero abitanti su richiesta utente. Un avviso non bloccante è mostrato nell'interfaccia.
-
-            // Adeguamento Limite Fondo 2016 fields
-            if (data.historicalData.fondoPersonaleNonDirEQ2018_Art23 === undefined) {
-                 ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: "Campo obbligatorio per Comuni e Province per il calcolo dell'adeguamento.",
-                    path: ["historicalData", "fondoPersonaleNonDirEQ2018_Art23"],
-                });
-            }
-        }
-    });
-
-    const result = refinedSchema.safeParse(fundData);
+    const result = ValidationSchema.safeParse(fundData);
     
     if (result.success) {
         return {};

@@ -1,5 +1,5 @@
 // pages/FondoAccessorioDipendentePageHelpers.ts
-import { FondoAccessorioDipendenteData, NormativeData, DistribuzioneRisorseData } from '../types.ts';
+import { FondoAccessorioDipendenteData, NormativeData, DistribuzioneRisorseData } from '../types';
 
 // FIX: Converted constant array to a function that depends on normativeData to resolve import errors and centralize logic.
 export const getFadFieldDefinitions = (norme: NormativeData): Array<{

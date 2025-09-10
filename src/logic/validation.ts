@@ -7,25 +7,35 @@ const getPath = (path: (string | number | symbol)[]): string => {
     return path.map(String).join('.');
 };
 
-// FIX: Replaced `z.number` with `z.coerce.number` which correctly accepts `invalid_type_error`. This resolves the TypeScript error.
+// FIX: Replaced `z.coerce.number` with an explicit `z.preprocess` to handle number coercion
+// with custom error messages, as `z.coerce.number({ ... })` was causing a TypeScript error,
+// likely due to the Zod version in use.
 const numberRequired = z.preprocess(
   (val) => (val === '' || val === null ? undefined : val),
   z.any().refine(val => val !== undefined, {
     message: "Questo campo è obbligatorio."
   }).pipe(
-    z.coerce.number({ invalid_type_error: "Deve essere un numero valido." })
-     .nonnegative({ message: "L'importo non può essere negativo." })
+    z.preprocess(
+        (val) => Number(val),
+        z.number({ invalid_type_error: "Deve essere un numero valido." })
+         .nonnegative({ message: "L'importo non può essere negativo." })
+    )
   )
 );
 
-// FIX: Replaced `z.number` with `z.coerce.number` which correctly accepts `invalid_type_error`. This resolves the TypeScript error.
+// FIX: Replaced `z.coerce.number` with an explicit `z.preprocess` to handle number coercion
+// with custom error messages, as `z.coerce.number({ ... })` was causing a TypeScript error,
+// likely due to the Zod version in use.
 const numberCanBeZero = z.preprocess(
   (val) => (val === '' || val === null ? undefined : val),
   z.any().refine(val => val !== undefined, {
     message: "Questo campo è obbligatorio (può essere 0)."
   }).pipe(
-    z.coerce.number({ invalid_type_error: "Deve essere un numero valido." })
-     .nonnegative({ message: "L'importo non può essere negativo." })
+    z.preprocess(
+        (val) => Number(val),
+        z.number({ invalid_type_error: "Deve essere un numero valido." })
+         .nonnegative({ message: "L'importo non può essere negativo." })
+    )
   )
 );
 

@@ -74,8 +74,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Ottieni la sessione iniziale
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('🔑 AuthContext: Initial session check:', session?.user?.email || 'No user');
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      console.log('🔑 AuthContext: getSession() result:', { 
+        sessionExists: !!session, 
+        userEmail: session?.user?.email,
+        error: error,
+        accessToken: session?.access_token ? 'Present' : 'Missing'
+      });
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -88,6 +93,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setRole(null);
       }
       
+      setLoading(false);
+    }).catch(err => {
+      console.error('🚨 AuthContext: getSession() error:', err);
       setLoading(false);
     });
 

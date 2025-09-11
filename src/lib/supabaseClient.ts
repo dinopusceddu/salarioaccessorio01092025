@@ -14,3 +14,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 console.log('✅ Supabase client initialized successfully');
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Test diretto autenticazione - RIMUOVERE DOPO DEBUG
+supabase.auth.getUser().then(({ data: { user }, error }) => {
+  console.log('🧪 DIRECT AUTH TEST:', { 
+    userEmail: user?.email, 
+    userId: user?.id,
+    error: error?.message 
+  });
+});

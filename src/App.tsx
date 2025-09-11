@@ -20,6 +20,7 @@ import { PersonaleServizioPage } from './pages/PersonaleServizioPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { PageModule } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // FIX: Removed deprecated `suspense: true` option. Suspense is now handled by `useSuspenseQuery`.
 const queryClient = new TanstackQuery.QueryClient({
@@ -94,11 +95,13 @@ const AppContent: React.FC = () => {
     visibleModules.find((mod) => mod.id === activeTab)?.component || HomePage;
 
   return (
-    <MainLayout modules={visibleModules}>
-      <ErrorBoundary resetKey={activeTab}>
-          <ActiveComponent />
-      </ErrorBoundary>
-    </MainLayout>
+    <ProtectedRoute>
+      <MainLayout modules={visibleModules}>
+        <ErrorBoundary resetKey={activeTab}>
+            <ActiveComponent />
+        </ErrorBoundary>
+      </MainLayout>
+    </ProtectedRoute>
   );
 };
 

@@ -37,14 +37,19 @@ export class DatabaseService {
       
       if (!user) return null;
 
+      console.log('🔍 Loading profile for user ID:', user.id);
+
       // Prima prova a ottenere il profilo esistente
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
+      console.log('📋 Profile query result:', { existingProfile, fetchError });
+
       if (existingProfile) {
+        console.log('✅ Found existing profile with role:', existingProfile.role);
         return existingProfile;
       }
 

@@ -102,13 +102,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Ascolta i cambiamenti nell'autenticazione
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 AuthContext: Auth state change:', { 
+        event, 
+        sessionExists: !!session, 
+        userEmail: session?.user?.email 
+      });
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('✅ AuthContext: Auth state change - User found, loading profile...');
         await refreshProfile();
       } else {
+        console.log('❌ AuthContext: Auth state change - No user, clearing profile');
         setProfile(null);
         setRole(null);
       }

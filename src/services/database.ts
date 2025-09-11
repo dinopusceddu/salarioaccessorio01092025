@@ -33,13 +33,20 @@ export class DatabaseService {
    */
   static async ensureProfile(): Promise<UserProfile | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔄 ensureProfile: Starting...');
       
-      if (!user) return null;
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('🔄 ensureProfile: getUser result:', { userExists: !!user, userError });
+      
+      if (!user) {
+        console.log('❌ ensureProfile: No user from getUser()');
+        return null;
+      }
 
       console.log('🔍 Loading profile for user ID:', user.id);
 
       // Prima prova a ottenere il profilo esistente
+      console.log('🔄 ensureProfile: About to query profiles table...');
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
@@ -51,6 +58,11 @@ export class DatabaseService {
       if (existingProfile) {
         console.log('✅ Found existing profile with role:', existingProfile.role);
         return existingProfile;
+      }
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('❌ ensureProfile: Fetch error (not missing record):', fetchError);
+        return null;
       }
 
       // Se non esiste, crealo

@@ -12,6 +12,8 @@ import {
   DEFAULT_CURRENT_YEAR,
   DEFAULT_USER,
 } from '../constants';
+import { DatabaseService } from '../services/database';
+import { useAuth } from './AuthContext';
 import { useNormativeData } from '../hooks/useNormativeData';
 import { runAllComplianceChecks } from '../logic/complianceChecks';
 import { calculateFundCompletely } from '../logic/fundCalculations';
@@ -138,11 +140,17 @@ const AppContext = createContext<{
   dispatch: Dispatch<AppAction>;
   performFundCalculation: () => Promise<void>;
   saveState: () => void;
+  saveToDatabase: () => Promise<boolean>;
+  loadFromDatabase: (year: number) => Promise<boolean>;
+  getAvailableYears: () => Promise<number[]>;
 }>({
   state: defaultInitialState,
   dispatch: () => null,
   performFundCalculation: async () => {},
   saveState: () => {},
+  saveToDatabase: async () => false,
+  loadFromDatabase: async () => false,
+  getAvailableYears: async () => [],
 });
 
 const appReducer = (state: AppState, action: AppAction): AppState => {
@@ -499,6 +507,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [state]);
 
+  // Nuove funzioni per il database
+  const saveToDatabase = useCallback(async (): Promise<boolean> => {
+    try {
+      const currentYear = state.currentYear;
+      const success = await DatabaseService.upsertAnnualEntry(currentYear, state.fundData);
+      if (success) {
+        console.log(`Dati salvati nel database per l'anno ${currentYear}`);
+      }
+      return success;
+    } catch (error) {
+      console.error('Error saving to database:', error);
+      return false;
+    }
+  }, [state.currentYear, state.fundData]);
+
+  const loadFromDatabase = useCallback(async (year: number): Promise<boolean> => {
+    try {
+      const data = await DatabaseService.getAnnualEntry(year);
+      if (data) {
+        dispatch({ type: 'SET_CURRENT_YEAR', payload: year });
+        dispatch({ type: 'UPDATE_HISTORICAL_DATA', payload: data.historicalData });
+        dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: data.annualData });
+        dispatch({ type: 'UPDATE_FONDO_ACCESSORIO_DIPENDENTE_DATA', payload: data.fondoAccessorioDipendenteData });
+        dispatch({ type: 'UPDATE_FONDO_ELEVATE_QUALIFICAZIONI_DATA', payload: data.fondoElevateQualificazioniData });
+        dispatch({ type: 'UPDATE_FONDO_SEGRETARIO_COMUNALE_DATA', payload: data.fondoSegretarioComunaleData });
+        dispatch({ type: 'UPDATE_FONDO_DIRIGENZA_DATA', payload: data.fondoDirigenzaData });
+        dispatch({ type: 'UPDATE_DISTRIBUZIONE_RISORSE_DATA', payload: data.distribuzioneRisorseData });
+        console.log(`Dati caricati dal database per l'anno ${year}`);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error loading from database:', error);
+      return false;
+    }
+  }, []);
+
+  const getAvailableYears = useCallback(async (): Promise<number[]> => {
+    try {
+      return await DatabaseService.getAvailableYears();
+    } catch (error) {
+      console.error('Error getting available years:', error);
+      return [];
+    }
+  }, []);
+
   const performFundCalculation = useCallback(async () => {
     if (isNormativeDataLoading) {
       dispatch({
@@ -550,6 +604,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     dispatch,
     performFundCalculation,
     saveState,
+    saveToDatabase,
+    loadFromDatabase,
+    getAvailableYears,
   };
 
   return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;

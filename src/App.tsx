@@ -18,9 +18,11 @@ import { FundDetailsPage } from './pages/FundDetailsPage';
 import { HomePage } from './pages/HomePage';
 import { PersonaleServizioPage } from './pages/PersonaleServizioPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { AdminPage } from './pages/AdminPage';
 import { PageModule } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 
 // FIX: Removed deprecated `suspense: true` option. Suspense is now handled by `useSuspenseQuery`.
 const queryClient = new TanstackQuery.QueryClient({
@@ -29,48 +31,60 @@ const queryClient = new TanstackQuery.QueryClient({
   },
 });
 
-const allPageModules: PageModule[] = [
-  { id: 'benvenuto', name: 'Benvenuto!', component: HomePage },
-  { id: 'dataEntry', name: 'Dati Costituzione Fondo', component: DataEntryPage },
-  {
-    id: 'fondoAccessorioDipendente',
-    name: 'Fondo Accessorio Personale',
-    component: FondoAccessorioDipendentePage,
-  },
-  {
-    id: 'fondoElevateQualificazioni',
-    name: 'Fondo Elevate Qualificazioni',
-    component: FondoElevateQualificazioniPage,
-  },
-  {
-    id: 'fondoSegretarioComunale',
-    name: 'Risorse Segretario Comunale',
-    component: FondoSegretarioComunalePage,
-  },
-  { id: 'fondoDirigenza', name: 'Fondo Dirigenza', component: FondoDirigenzaPage },
-  {
-    id: 'personaleServizio',
-    name: 'Personale in servizio',
-    component: PersonaleServizioPage,
-  },
-  {
-    id: 'distribuzioneRisorse',
-    name: 'Distribuzione Risorse',
-    component: DistribuzioneRisorsePage,
-  },
-  {
-    id: 'fundDetails',
-    name: 'Dettaglio Fondo Calcolato',
-    component: FundDetailsPage,
-  },
-  { id: 'compliance', name: 'Conformità', component: CompliancePage },
-  { id: 'checklist', name: 'Check list Interattiva', component: ChecklistPage },
-  { id: 'reports', name: 'Report', component: ReportsPage },
-];
+const getPageModules = (isAdmin: boolean): PageModule[] => {
+  const baseModules: PageModule[] = [
+    { id: 'benvenuto', name: 'Benvenuto!', component: HomePage },
+    { id: 'dataEntry', name: 'Dati Costituzione Fondo', component: DataEntryPage },
+    {
+      id: 'fondoAccessorioDipendente',
+      name: 'Fondo Accessorio Personale',
+      component: FondoAccessorioDipendentePage,
+    },
+    {
+      id: 'fondoElevateQualificazioni',
+      name: 'Fondo Elevate Qualificazioni',
+      component: FondoElevateQualificazioniPage,
+    },
+    {
+      id: 'fondoSegretarioComunale',
+      name: 'Risorse Segretario Comunale',
+      component: FondoSegretarioComunalePage,
+    },
+    { id: 'fondoDirigenza', name: 'Fondo Dirigenza', component: FondoDirigenzaPage },
+    {
+      id: 'personaleServizio',
+      name: 'Personale in servizio',
+      component: PersonaleServizioPage,
+    },
+    {
+      id: 'distribuzioneRisorse',
+      name: 'Distribuzione Risorse',
+      component: DistribuzioneRisorsePage,
+    },
+    {
+      id: 'fundDetails',
+      name: 'Dettaglio Fondo Calcolato',
+      component: FundDetailsPage,
+    },
+    { id: 'compliance', name: 'Conformità', component: CompliancePage },
+    { id: 'checklist', name: 'Check list Interattiva', component: ChecklistPage },
+    { id: 'reports', name: 'Report', component: ReportsPage },
+  ];
+
+  // Aggiungi la pagina Admin solo per gli amministratori
+  if (isAdmin) {
+    baseModules.push({ id: 'admin', name: '👤 Amministrazione', component: AdminPage });
+  }
+
+  return baseModules;
+};
 
 const AppContent: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { activeTab, fundData } = state;
+  const { isAdmin } = useAuth();
+
+  const allPageModules = getPageModules(isAdmin());
 
   const visibleModules = allPageModules.filter((module) => {
     if (module.id === 'fondoDirigenza' && !fundData.annualData.hasDirigenza) {

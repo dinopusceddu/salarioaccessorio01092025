@@ -39,15 +39,25 @@ const AdminDashboard: React.FC = () => {
 
   const loadData = async () => {
     try {
+      console.log('📊 AdminPage: loadData() called');
       setLoading(true);
+      
+      console.log('📊 AdminPage: Loading entries and users...');
       const [entriesData, usersData] = await Promise.all([
         DatabaseService.getAllEntries(),
         DatabaseService.getAllUsers()
       ]);
+      
+      console.log('📊 AdminPage: Data loaded:', {
+        entriesCount: entriesData.length,
+        usersCount: usersData.length,
+        users: usersData
+      });
+      
       setEntries(entriesData);
       setUsers(usersData);
     } catch (error) {
-      console.error('Error loading admin data:', error);
+      console.error('❌ AdminPage: Error loading admin data:', error);
     } finally {
       setLoading(false);
     }

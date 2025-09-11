@@ -341,60 +341,54 @@ export class DatabaseService {
         return { success: false, error: 'Solo gli amministratori possono creare utenti' };
       }
 
-      console.log('📝 Creating new user:', email);
+      console.log('📝 Creating new user via Edge Function:', email);
 
-      // Crea l'utente nell'auth di Supabase
-      const { data, error: authError } = await supabase.auth.signUp({
-        email: email,
-        password: password,
-        options: {
-          data: {
-            full_name: fullName || ''
+      // Ottieni il token di autorizzazione dell'admin corrente
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        return { 
+          success: false, 
+          error: 'Sessione admin non valida' 
+        };
+      }
+
+      // Chiama l'Edge Function per creare l'utente in modo sicuro
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
           },
-          emailRedirectTo: undefined // Disabilita email di conferma per admin
-        }
-      });
-
-      if (authError) {
-        console.error('❌ Auth signup error:', authError);
-        return { 
-          success: false, 
-          error: `Errore nella creazione dell'account: ${authError.message}` 
-        };
-      }
-
-      if (!data.user?.id) {
-        return { 
-          success: false, 
-          error: 'Errore: Utente creato ma ID non disponibile' 
-        };
-      }
-
-      console.log('✅ User created in auth, creating profile...');
-
-      // Crea o aggiorna il profilo nella tabella profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: data.user.id,
-          email: email,
-          full_name: fullName || '',
-          role: 'user'
+          body: JSON.stringify({
+            email: email,
+            password: password,
+            full_name: fullName || ''
+          })
         });
 
-      if (profileError) {
-        console.error('❌ Profile creation error:', profileError);
+        const result = await response.json();
+
+        if (!response.ok) {
+          console.error('❌ Edge Function error:', result);
+          return { 
+            success: false, 
+            error: result.error || 'Errore nella creazione dell\'utente' 
+          };
+        }
+
+        console.log('✅ User created successfully via Edge Function');
+        return { 
+          success: true, 
+          userId: result.userId 
+        };
+      } catch (fetchError) {
+        console.error('❌ Network error calling Edge Function:', fetchError);
         return { 
           success: false, 
-          error: `Errore nella creazione del profilo: ${profileError.message}` 
+          error: 'Errore di rete - Edge Function non disponibile. Contatta l\'amministratore di sistema.' 
         };
       }
-
-      console.log('✅ User and profile created successfully');
-      return { 
-        success: true, 
-        userId: data.user.id 
-      };
     } catch (error) {
       console.error('❌ Error in createUser:', error);
       return { success: false, error: 'Errore interno del server' };

@@ -5,6 +5,7 @@ integrations = ["javascript_supabase:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
+packages = ["supabase-cli"]
 
 [workflows]
 runButton = "Project"
@@ -37,6 +38,10 @@ externalPort = 3000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 46505
+externalPort = 3001
 
 [deployment]
 deploymentTarget = "autoscale"

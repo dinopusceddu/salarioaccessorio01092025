@@ -56,13 +56,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signInWithOtp = async (email: string) => {
-    return await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         // Reindirizza alla dashboard dopo il login
         emailRedirectTo: `${window.location.origin}/`,
       },
     });
+    return { error };
   };
 
   const signOut = async () => {

@@ -290,19 +290,22 @@ export class DatabaseService {
    */
   static async getAllUsers(): Promise<UserProfile[]> {
     try {
+      console.log('🔍 getAllUsers: Starting query...');
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching all users:', error);
+        console.error('❌ getAllUsers: Error fetching users:', error);
         return [];
       }
 
+      console.log('✅ getAllUsers: Found users:', data?.length || 0, data);
       return data as UserProfile[];
     } catch (error) {
-      console.error('Error in getAllUsers:', error);
+      console.error('❌ getAllUsers: Exception:', error);
       return [];
     }
   }

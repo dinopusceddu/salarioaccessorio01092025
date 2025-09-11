@@ -9,7 +9,7 @@ interface AuthContextType {
   profile: UserProfile | null;
   role: 'user' | 'admin' | null;
   loading: boolean;
-  signInWithOtp: (email: string) => Promise<{ error: AuthError | null }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<{ error: AuthError | null }>;
   refreshProfile: () => Promise<void>;
   isAdmin: () => boolean;
@@ -21,7 +21,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   role: null,
   loading: true,
-  signInWithOtp: async () => ({ error: null }),
+  signInWithPassword: async () => ({ error: null }),
   signOut: async () => ({ error: null }),
   refreshProfile: async () => {},
   isAdmin: () => false,
@@ -102,13 +102,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithOtp = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
+  const signInWithPassword = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        // Reindirizza alla dashboard dopo il login
-        emailRedirectTo: `${window.location.origin}/`,
-      },
+      password,
     });
     return { error };
   };
@@ -125,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     profile,
     role,
     loading,
-    signInWithOtp,
+    signInWithPassword,
     signOut,
     refreshProfile,
     isAdmin,

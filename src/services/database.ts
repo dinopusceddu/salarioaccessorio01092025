@@ -311,4 +311,49 @@ export class DatabaseService {
       return false;
     }
   }
+
+  /**
+   * [SOLO ADMIN] Crea un nuovo utente con email e password
+   * NOTA: Questa funzione richiede Edge Functions per la sicurezza
+   */
+  static async createUser(email: string, password: string, fullName?: string): Promise<{ success: boolean; userId?: string; error?: string }> {
+    try {
+      // Verifica che l'utente corrente sia admin
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        return { success: false, error: 'Solo gli amministratori possono creare utenti' };
+      }
+
+      // TODO: Implementare Edge Function per sicurezza
+      return { 
+        success: false, 
+        error: 'Funzionalità temporaneamente disabilitata. Usa il Supabase Dashboard per creare utenti manualmente.' 
+      };
+    } catch (error) {
+      console.error('Error in createUser:', error);
+      return { success: false, error: 'Errore interno del server' };
+    }
+  }
+
+  /**
+   * [SOLO ADMIN] Elimina un utente
+   * NOTA: Questa funzione richiede Edge Functions per la sicurezza
+   */
+  static async deleteUser(userId: string): Promise<boolean> {
+    try {
+      // Verifica che l'utente corrente sia admin
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        console.error('Solo gli amministratori possono eliminare utenti');
+        return false;
+      }
+
+      // TODO: Implementare Edge Function per sicurezza
+      console.error('Funzionalità temporaneamente disabilitata. Usa il Supabase Dashboard per eliminare utenti.');
+      return false;
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      return false;
+    }
+  }
 }

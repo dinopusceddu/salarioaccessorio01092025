@@ -286,11 +286,61 @@ export class DatabaseService {
   }
 
   /**
-   * [SOLO ADMIN] Ottieni tutti gli utenti registrati
+   * [SOLO ADMIN] Ottieni tutti gli utenti registrati via Edge Function
    */
   static async getAllUsers(): Promise<UserProfile[]> {
     try {
-      console.log('🔍 getAllUsers: Starting query...');
+      console.log('🔍 getAllUsers: Starting query via Edge Function...');
+      
+      // Verifica che l'utente corrente sia admin
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        console.log('❌ getAllUsers: Not admin, returning empty array');
+        return [];
+      }
+
+      // Ottieni il token di autorizzazione dell'admin corrente
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        console.error('❌ getAllUsers: No valid admin session');
+        return [];
+      }
+
+      // Chiama l'Edge Function per ottenere tutti i profili con service role
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-get-users`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          console.error('❌ getAllUsers: Edge Function error:', response.status);
+          // Fallback alla query normale se Edge Function non disponibile
+          return this.getAllUsersFallback();
+        }
+
+        const result = await response.json();
+        console.log('✅ getAllUsers: Found users via Edge Function:', result.users?.length || 0, result.users);
+        return result.users || [];
+      } catch (fetchError) {
+        console.warn('⚠️ getAllUsers: Edge Function not available, using fallback');
+        return this.getAllUsersFallback();
+      }
+    } catch (error) {
+      console.error('❌ getAllUsers: Exception:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Fallback method per getAllUsers quando Edge Function non disponibile
+   */
+  private static async getAllUsersFallback(): Promise<UserProfile[]> {
+    try {
+      console.log('🔄 getAllUsers: Using fallback method...');
       
       const { data, error } = await supabase
         .from('profiles')
@@ -298,14 +348,14 @@ export class DatabaseService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ getAllUsers: Error fetching users:', error);
+        console.error('❌ getAllUsers fallback: Error fetching users:', error);
         return [];
       }
 
-      console.log('✅ getAllUsers: Found users:', data?.length || 0, data);
+      console.log('✅ getAllUsers fallback: Found users:', data?.length || 0, data);
       return data as UserProfile[];
     } catch (error) {
-      console.error('❌ getAllUsers: Exception:', error);
+      console.error('❌ getAllUsers fallback: Exception:', error);
       return [];
     }
   }

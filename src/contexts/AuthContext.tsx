@@ -47,10 +47,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // Funzione per ricaricare il profilo utente (crea se non esiste)
-  const refreshProfile = async () => {
-    console.log('🔄 AuthContext: refreshProfile called, user:', user?.email);
+  const refreshProfile = async (sessionUser?: User | null) => {
+    const currentUser = sessionUser || user;
+    console.log('🔄 AuthContext: refreshProfile called, user:', currentUser?.email);
     
-    if (!user) {
+    if (!currentUser) {
       console.log('❌ AuthContext: No user, clearing profile');
       setProfile(null);
       setRole(null);
@@ -86,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (session?.user) {
         console.log('✅ AuthContext: User found, loading profile...');
-        await refreshProfile();
+        await refreshProfile(session.user);
       } else {
         console.log('❌ AuthContext: No user session found');
         setProfile(null);
@@ -114,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (session?.user) {
         console.log('✅ AuthContext: Auth state change - User found, loading profile...');
-        await refreshProfile();
+        await refreshProfile(session.user);
       } else {
         console.log('❌ AuthContext: Auth state change - No user, clearing profile');
         setProfile(null);

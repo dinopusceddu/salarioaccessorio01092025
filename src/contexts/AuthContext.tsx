@@ -75,12 +75,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Ottieni la sessione iniziale
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('🔑 AuthContext: Initial session check:', session?.user?.email || 'No user');
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('✅ AuthContext: User found, loading profile...');
         await refreshProfile();
       } else {
+        console.log('❌ AuthContext: No user session found');
         setProfile(null);
         setRole(null);
       }

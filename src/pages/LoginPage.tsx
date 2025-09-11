@@ -9,27 +9,35 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [useCustomForm, setUseCustomForm] = useState(true); // Default al form OTP personalizzato
-  const { signInWithOtp } = useAuth();
+  const [useCustomForm, setUseCustomForm] = useState(true); // Default al form email/password personalizzato
+  const { signInWithPassword } = useAuth();
 
   const handleCustomLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) {
+      setMessage('Email e password sono obbligatori');
+      return;
+    }
 
     setLoading(true);
     setMessage('');
 
     try {
-      const { error } = await signInWithOtp(email);
+      const { error } = await signInWithPassword(email, password);
       if (error) {
-        setMessage(`Errore: ${error.message}`);
+        if (error.message.includes('Invalid login credentials')) {
+          setMessage('Email o password non corretti');
+        } else {
+          setMessage(`Errore: ${error.message}`);
+        }
       } else {
-        setMessage('Controlla la tua email per il link di login!');
+        setMessage('Login effettuato con successo!');
       }
     } catch (error) {
-      setMessage('Errore durante l\'invio dell\'email');
+      setMessage('Errore durante il login');
     }
 
     setLoading(false);
@@ -48,22 +56,13 @@ export const LoginPage: React.FC = () => {
         </div>
 
         <Card className="p-6">
-          <div className="mb-4">
-            <Button
-              variant={useCustomForm ? 'secondary' : 'primary'}
-              onClick={() => setUseCustomForm(false)}
-              className="mr-2"
-              size="sm"
-            >
-              UI Supabase
-            </Button>
-            <Button
-              variant={useCustomForm ? 'primary' : 'secondary'}
-              onClick={() => setUseCustomForm(true)}
-              size="sm"
-            >
-              Form Personalizzato
-            </Button>
+          <div className="mb-4 text-center">
+            <h2 className="text-xl font-semibold text-[#1b0e0e]">
+              Accesso Riservato
+            </h2>
+            <p className="text-sm text-[#994d51] mt-1">
+              Solo gli amministratori possono accedere al sistema
+            </p>
           </div>
 
           {useCustomForm ? (
@@ -78,16 +77,31 @@ export const LoginPage: React.FC = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tua.email@esempio.it"
+                    placeholder="admin@example.com"
                     required
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-[#1b0e0e] mb-1">
+                    Password
+                  </label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Inserisci la password"
+                    required
+                    disabled={loading}
                   />
                 </div>
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={loading}
+                  disabled={loading || !email || !password}
                 >
-                  {loading ? 'Invio in corso...' : 'Invia Link di Login'}
+                  {loading ? 'Accesso in corso...' : 'Accedi'}
                 </Button>
               </form>
               {message && (
@@ -101,41 +115,19 @@ export const LoginPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <Auth
-              supabaseClient={supabase}
-              appearance={{
-                theme: ThemeSupa,
-                variables: {
-                  default: {
-                    colors: {
-                      brand: '#1b0e0e',
-                      brandAccent: '#5f5252',
-                    },
-                  },
-                },
-              }}
-              theme="light"
-              providers={[]}
-              redirectTo={`${window.location.origin}/`}
-              localization={{
-                variables: {
-                  sign_in: {
-                    email_label: 'Email',
-                    password_label: 'Password',
-                    button_label: 'Accedi',
-                    loading_button_label: 'Accesso in corso...',
-                    link_text: 'Hai già un account? Accedi'
-                  },
-                  sign_up: {
-                    email_label: 'Email',
-                    password_label: 'Password',
-                    button_label: 'Registrati',
-                    loading_button_label: 'Registrazione in corso...',
-                    link_text: 'Non hai un account? Registrati'
-                  },
-                },
-              }}
-            />
+            <div className="text-center py-6">
+              <div className="text-[#994d51] mb-4">
+                <p>La registrazione automatica è disabilitata.</p>
+                <p className="text-sm mt-2">Contatta l'amministratore per ottenere un account.</p>
+              </div>
+              <Button 
+                variant="secondary" 
+                onClick={() => setUseCustomForm(true)}
+                size="sm"
+              >
+                Torna al Login
+              </Button>
+            </div>
           )}
         </Card>
       </div>

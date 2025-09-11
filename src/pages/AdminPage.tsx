@@ -23,6 +23,15 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
+  
+  // Stati per creazione utente
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [createUserForm, setCreateUserForm] = useState({
+    email: '',
+    password: '',
+    fullName: ''
+  });
+  const [creatingUser, setCreatingUser] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -62,6 +71,55 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!createUserForm.email || !createUserForm.password) {
+      alert('Email e password sono obbligatori');
+      return;
+    }
+
+    setCreatingUser(true);
+    
+    try {
+      const result = await DatabaseService.createUser(
+        createUserForm.email,
+        createUserForm.password,
+        createUserForm.fullName || undefined
+      );
+
+      if (result.success) {
+        alert('Utente creato con successo!');
+        setCreateUserForm({ email: '', password: '', fullName: '' });
+        setShowCreateUser(false);
+        await loadData(); // Ricarica i dati
+      } else {
+        alert(`Errore nella creazione dell'utente: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Errore nella creazione dell\'utente');
+    } finally {
+      setCreatingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
+    const confirmed = window.confirm(
+      `Sei sicuro di voler eliminare l'utente ${userEmail}? Questa azione eliminerà anche tutti i suoi dati e non può essere annullata.`
+    );
+    
+    if (!confirmed) return;
+
+    const success = await DatabaseService.deleteUser(userId);
+    if (success) {
+      alert('Utente eliminato con successo!');
+      await loadData(); // Ricarica i dati
+    } else {
+      alert('Errore nell\'eliminazione dell\'utente');
+    }
+  };
+
   // Filtri
   const filteredEntries = entries.filter(entry => {
     const userMatch = selectedUser === 'all' || entry.user_id === selectedUser;
@@ -81,9 +139,17 @@ const AdminDashboard: React.FC = () => {
         <h1 className="text-2xl font-bold text-[#1b0e0e]">
           Pannello di Amministrazione
         </h1>
-        <Button onClick={loadData} variant="secondary">
-          Aggiorna Dati
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            onClick={() => setShowCreateUser(true)} 
+            variant="primary"
+          >
+            + Crea Utente
+          </Button>
+          <Button onClick={loadData} variant="secondary">
+            Aggiorna Dati
+          </Button>
+        </div>
       </div>
 
       {/* Statistiche Generali */}
@@ -107,6 +173,79 @@ const AdminDashboard: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {/* Modale Creazione Utente */}
+      {showCreateUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold text-[#1b0e0e] mb-4">Crea Nuovo Utente</h2>
+            <form onSubmit={handleCreateUser} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[#1b0e0e] mb-1">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={createUserForm.email}
+                  onChange={(e) => setCreateUserForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2 border border-[#f3e7e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#ea2832]"
+                  placeholder="utente@example.com"
+                  required
+                  disabled={creatingUser}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1b0e0e] mb-1">
+                  Password *
+                </label>
+                <input
+                  type="password"
+                  value={createUserForm.password}
+                  onChange={(e) => setCreateUserForm(prev => ({ ...prev, password: e.target.value }))}
+                  className="w-full px-3 py-2 border border-[#f3e7e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#ea2832]"
+                  placeholder="Minimo 6 caratteri"
+                  minLength={6}
+                  required
+                  disabled={creatingUser}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#1b0e0e] mb-1">
+                  Nome Completo
+                </label>
+                <input
+                  type="text"
+                  value={createUserForm.fullName}
+                  onChange={(e) => setCreateUserForm(prev => ({ ...prev, fullName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-[#f3e7e8] rounded-md focus:outline-none focus:ring-2 focus:ring-[#ea2832]"
+                  placeholder="Mario Rossi"
+                  disabled={creatingUser}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateUser(false);
+                    setCreateUserForm({ email: '', password: '', fullName: '' });
+                  }}
+                  variant="secondary"
+                  disabled={creatingUser}
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={creatingUser}
+                >
+                  {creatingUser ? 'Creazione...' : 'Crea Utente'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Gestione Utenti */}
       <Card title="Gestione Utenti" isCollapsible>
@@ -152,6 +291,14 @@ const AdminDashboard: React.FC = () => {
                       Rendi User
                     </Button>
                   )}
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    onClick={() => handleDeleteUser(user.id, user.email)}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Elimina
+                  </Button>
                 </div>
               </div>
             </div>

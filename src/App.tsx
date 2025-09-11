@@ -82,7 +82,9 @@ const getPageModules = (isAdmin: boolean): PageModule[] => {
 const AppContent: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { activeTab, fundData } = state;
-  const { isAdmin } = useAuth();
+  const { isAdmin, role, profile, loading } = useAuth();
+
+  console.log('🏠 App: Auth state:', { role, isAdminResult: isAdmin(), profile: profile?.email, loading });
 
   const allPageModules = getPageModules(isAdmin());
 

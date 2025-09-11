@@ -48,19 +48,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Funzione per ricaricare il profilo utente (crea se non esiste)
   const refreshProfile = async () => {
+    console.log('🔄 AuthContext: refreshProfile called, user:', user?.email);
+    
     if (!user) {
+      console.log('❌ AuthContext: No user, clearing profile');
       setProfile(null);
       setRole(null);
       return;
     }
 
     try {
+      console.log('📞 AuthContext: Calling DatabaseService.ensureProfile()');
       // Assicurati che il profilo esista, crealo se necessario
       const userProfile = await DatabaseService.ensureProfile();
+      console.log('📋 AuthContext: Got profile:', userProfile);
       setProfile(userProfile);
       setRole(userProfile?.role || null);
+      console.log('✅ AuthContext: Set role to:', userProfile?.role);
     } catch (error) {
-      console.error('Error refreshing profile:', error);
+      console.error('❌ AuthContext: Error refreshing profile:', error);
       setProfile(null);
       setRole(null);
     }

@@ -11,7 +11,7 @@ export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [useCustomForm, setUseCustomForm] = useState(false);
+  const [useCustomForm, setUseCustomForm] = useState(true); // Default al form OTP personalizzato
   const { signInWithOtp } = useAuth();
 
   const handleCustomLogin = async (e: React.FormEvent) => {

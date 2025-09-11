@@ -1,6 +1,7 @@
 // components/layout/Header.tsx
 import React from 'react';
-import { useAppContext } from '../../contexts/AppContext.tsx';
+import { useAuth } from '../../contexts/AuthContext';
+import { Button } from '../shared/Button';
 import { APP_NAME } from '../../constants.ts';
 
 interface HeaderProps {
@@ -45,8 +46,14 @@ const AppLogo = () => (
   );
 
 export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
-  const { state } = useAppContext();
-  const { currentUser } = state;
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      console.error('Errore durante il logout:', error.message);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-[#fcf8f8] border-b border-solid border-b-[#f3e7e8]">
@@ -65,10 +72,17 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <AppLogo />
             <h1 className="text-[#1b0e0e] text-lg font-bold leading-tight tracking-[-0.015em]">{APP_NAME}</h1>
           </div>
-          <div className="flex items-center">
-            <span className="text-[#1b0e0e] text-sm font-medium mr-3 hidden sm:block">
-              {currentUser.name} ({currentUser.role})
+          <div className="flex items-center gap-3">
+            <span className="text-[#1b0e0e] text-sm font-medium hidden sm:block">
+              {user?.email}
             </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
           </div>
         </div>
       </div>

@@ -341,13 +341,62 @@ export class DatabaseService {
         return { success: false, error: 'Solo gli amministratori possono creare utenti' };
       }
 
-      // TODO: Implementare Edge Function per sicurezza
+      console.log('📝 Creating new user:', email);
+
+      // Crea l'utente nell'auth di Supabase
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            full_name: fullName || ''
+          },
+          emailRedirectTo: undefined // Disabilita email di conferma per admin
+        }
+      });
+
+      if (authError) {
+        console.error('❌ Auth signup error:', authError);
+        return { 
+          success: false, 
+          error: `Errore nella creazione dell'account: ${authError.message}` 
+        };
+      }
+
+      if (!data.user?.id) {
+        return { 
+          success: false, 
+          error: 'Errore: Utente creato ma ID non disponibile' 
+        };
+      }
+
+      console.log('✅ User created in auth, creating profile...');
+
+      // Crea o aggiorna il profilo nella tabella profiles
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          email: email,
+          full_name: fullName || '',
+          role: 'user'
+        });
+
+      if (profileError) {
+        console.error('❌ Profile creation error:', profileError);
+        return { 
+          success: false, 
+          error: `Errore nella creazione del profilo: ${profileError.message}` 
+        };
+      }
+
+      console.log('✅ User and profile created successfully');
       return { 
-        success: false, 
-        error: 'Funzionalità temporaneamente disabilitata. Usa il Supabase Dashboard per creare utenti manualmente.' 
+        success: true, 
+        userId: data.user.id 
       };
     } catch (error) {
-      console.error('Error in createUser:', error);
+      console.error('❌ Error in createUser:', error);
       return { success: false, error: 'Errore interno del server' };
     }
   }

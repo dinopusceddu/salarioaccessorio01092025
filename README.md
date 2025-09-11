@@ -1,20 +1,39 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Salario Accessorio - Gestione Fondi Enti Locali
 
-# Run and deploy your AI Studio app
+Applicazione web per la gestione dei fondi accessori negli enti locali italiani, sviluppata con React, TypeScript e Vite.
 
-This contains everything you need to run your app locally.
+## 🚀 Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1K7XrtKvhnS6QldF1rDSGc9sHLVluC1lo
+- **Autenticazione Supabase**: Login sicuro via email OTP
+- **Gestione Fondi**: Calcolo e distribuzione fondi accessori
+- **Dashboard Interattiva**: Visualizzazione dati con grafici
+- **Report PDF**: Generazione documenti automatica
+- **Compliance Check**: Verifica conformità normative
 
-## Run Locally
+## 🛠️ Tech Stack
 
-**Prerequisites:**  Node.js
+- **Frontend**: React 18 + TypeScript + Vite
+- **Auth**: Supabase Authentication
+- **UI**: Tailwind CSS
+- **Charts**: Recharts
+- **PDF**: jsPDF + jspdf-autotable
 
+## 📦 Deployment
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+- ✅ **Vercel Ready**: Configurato per deploy automatico
+- ✅ **Environment Variables**: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+- ✅ **Build Ottimizzato**: Asset routing corretto
+
+## 🚀 Quick Start
+
+1. **Install dependencies**: `npm install`
+2. **Configure environment**: Aggiungi le variabili Supabase
+3. **Run locally**: `npm run dev`
+4. **Build**: `npm run build`
+
+## 🔧 Environment Variables
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```

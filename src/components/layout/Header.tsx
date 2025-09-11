@@ -2,7 +2,7 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../shared/Button';
-import { APP_NAME } from '../../constants.ts';
+import { APP_NAME } from '../../constants';
 
 interface HeaderProps {
   toggleSidebar: () => void;

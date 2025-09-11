@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [role, setRole] = useState<'user' | 'admin' | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Funzione per ricaricare il profilo utente
+  // Funzione per ricaricare il profilo utente (crea se non esiste)
   const refreshProfile = async () => {
     if (!user) {
       setProfile(null);
@@ -55,7 +55,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const userProfile = await DatabaseService.getProfile();
+      // Assicurati che il profilo esista, crealo se necessario
+      const userProfile = await DatabaseService.ensureProfile();
       setProfile(userProfile);
       setRole(userProfile?.role || null);
     } catch (error) {

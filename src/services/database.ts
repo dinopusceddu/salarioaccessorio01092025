@@ -29,6 +29,50 @@ export interface AdminEntryView extends AnnualEntry {
 export class DatabaseService {
   
   /**
+   * Crea o aggiorna il profilo dell'utente corrente
+   */
+  static async ensureProfile(): Promise<UserProfile | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) return null;
+
+      // Prima prova a ottenere il profilo esistente
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (existingProfile) {
+        return existingProfile;
+      }
+
+      // Se non esiste, crealo
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || user.email || '',
+          role: 'user'
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error creating profile:', insertError);
+        return null;
+      }
+
+      return newProfile;
+    } catch (error) {
+      console.error('Error in ensureProfile:', error);
+      return null;
+    }
+  }
+
+  /**
    * Ottieni il profilo dell'utente corrente
    */
   static async getProfile(): Promise<UserProfile | null> {
@@ -44,6 +88,10 @@ export class DatabaseService {
         .single();
 
       if (error) {
+        // Se il profilo non esiste, prova a crearlo
+        if (error.code === 'PGRST116') {
+          return await this.ensureProfile();
+        }
         console.error('Error fetching profile:', error);
         return null;
       }

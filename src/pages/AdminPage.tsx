@@ -6,6 +6,7 @@ import { Card } from '../components/shared/Card';
 import { Button } from '../components/shared/Button';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { Select } from '../components/shared/Select';
+import { getPrimaryEntityName } from '../utils/formatters';
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('it-IT', {
@@ -374,7 +375,7 @@ const AdminDashboard: React.FC = () => {
                   <div>
                     <div className="font-medium text-[#1b0e0e]">Ente</div>
                     <div className="text-[#994d51]">
-                      {entry.data?.annualData?.denominazioneEnte || 'N/D'}
+                      {entry.data?.annualData ? getPrimaryEntityName(entry.data.annualData) || 'N/D' : 'N/D'}
                     </div>
                   </div>
                   <div>

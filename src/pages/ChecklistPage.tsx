@@ -7,6 +7,7 @@ import { Button } from '../components/shared/Button';
 import { LoadingSpinner } from '../components/shared/LoadingSpinner';
 import { FundData, CalculatedFund } from '../types';
 import { TEXTS_UI } from '../constants';
+import { getPrimaryEntityName, getPrimaryEntityTipologia, getPrimaryEntityNumeroAbitanti } from '../utils/formatters';
 
 interface Message {
   id: string;
@@ -21,10 +22,15 @@ const formatCurrencyForContext = (value?: number, defaultValue = "non specificat
 };
 
 const generateContextFromState = (fundData: FundData, calculatedFund?: CalculatedFund): string => {
+  // Use utility functions to get entity data with fallback to legacy
+  const entityName = getPrimaryEntityName(fundData.annualData) || 'Non specificato';
+  const entityTipologia = getPrimaryEntityTipologia(fundData.annualData) || 'Non specificato';
+  const entityNumeroAbitanti = getPrimaryEntityNumeroAbitanti(fundData.annualData) || 'Non specificato';
+  
   let context = `CONTESTO DATI FONDO ATTUALMENTE INSERITI (Anno ${fundData.annualData.annoRiferimento}):\n`;
-  context += `Ente: ${fundData.annualData.denominazioneEnte || 'Non specificato'}\n`;
-  context += `Tipologia Ente: ${fundData.annualData.tipologiaEnte || 'Non specificato'}\n`;
-  context += `Numero Abitanti: ${fundData.annualData.numeroAbitanti || 'Non specificato'}\n`;
+  context += `Ente: ${entityName}\n`;
+  context += `Tipologia Ente: ${entityTipologia}\n`;
+  context += `Numero Abitanti: ${entityNumeroAbitanti}\n`;
   context += `Ente con Dirigenza: ${fundData.annualData.hasDirigenza ? 'Sì' : 'No'}\n\n`;
 
   const hd = fundData.historicalData;

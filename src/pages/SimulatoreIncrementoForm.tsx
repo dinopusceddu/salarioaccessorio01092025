@@ -7,6 +7,7 @@ import { Card } from '../shared/Card';
 import { TEXTS_UI } from '../../constants';
 import { calculateSimulazione } from '../../logic/fundEngine';
 import { useNormativeData } from '../../hooks/useNormativeData';
+import { getPrimaryEntityTipologia, getPrimaryEntityNumeroAbitanti } from '../../utils/formatters';
 
 const formatCurrencyForDisplay = (value?: number) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -21,12 +22,17 @@ const formatPercentageForDisplay = (value?: number) => {
 export const SimulatoreIncrementoForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { data: normativeData } = useNormativeData();
-  const { simulatoreInput, numeroAbitanti, tipologiaEnte, simulatoreRisultati } = state.fundData.annualData;
+  const { annualData } = state.fundData;
+  const { simulatoreInput, simulatoreRisultati } = annualData;
+  
+  // Use utility functions to get entity data with fallback to legacy
+  const numeroAbitanti = getPrimaryEntityNumeroAbitanti(annualData);
+  const tipologiaEnte = getPrimaryEntityTipologia(annualData);
 
   const runAndDispatchSimulazione = useCallback(() => {
-    const results = calculateSimulazione(simulatoreInput, numeroAbitanti, tipologiaEnte);
+    const results = calculateSimulazione(simulatoreInput, annualData);
     dispatch({ type: 'UPDATE_SIMULATORE_RISULTATI', payload: results });
-  }, [simulatoreInput, numeroAbitanti, tipologiaEnte, dispatch]);
+  }, [simulatoreInput, annualData, dispatch]);
   
   useEffect(() => {
     runAndDispatchSimulazione();

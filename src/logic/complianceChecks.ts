@@ -49,9 +49,9 @@ const verificaCorrispondenzaRisorseVincolate = (fundData: FundData): ComplianceC
     const fonteImporto = (fondoAccessorioDipendenteData as any)[mapping.fonteKey] as number || 0;
     
     let usoImporto = 0;
-    if ('usoKey' in mapping) {
+    if ('usoKey' in mapping && mapping.usoKey) {
        usoImporto = ((distribuzioneRisorseData as any)[mapping.usoKey] as RisorsaVariabileDetail)?.stanziate || 0;
-    } else if ('usoKeys' in mapping) {
+    } else if ('usoKeys' in mapping && mapping.usoKeys) {
         usoImporto = mapping.usoKeys.reduce((sum, key) => {
             const importo = ((distribuzioneRisorseData as any)[key] as RisorsaVariabileDetail)?.stanziate || 0;
             return sum + importo;

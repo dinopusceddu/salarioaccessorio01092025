@@ -8,6 +8,7 @@ import {
   AnnualEmployeeCountSchema,
   Art23EmployeeDetailSchema,
   DistribuzioneRisorseDataSchema,
+  EntitaSchema,
   FondoDataBaseSchema,
   FondoDirigenzaDataSchema,
   FondoElevateQualificazioniDataSchema,
@@ -51,6 +52,8 @@ export type PersonaleServizioDettaglio = z.infer<typeof PersonaleServizioDettagl
 
 export type AnnualEmployeeCount = z.infer<typeof AnnualEmployeeCountSchema>;
 export type AnnualData = z.infer<typeof AnnualDataSchema>;
+
+export type Entita = z.infer<typeof EntitaSchema>;
 
 export type RisorsaVariabileDetail = z.infer<typeof RisorsaVariabileDetailSchema>;
 export type DistribuzioneRisorseData = z.infer<typeof DistribuzioneRisorseDataSchema>;

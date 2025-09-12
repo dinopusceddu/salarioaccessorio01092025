@@ -1,7 +1,7 @@
 // src/logic/validation.ts
 import { z, ZodIssue } from 'zod';
 import { FundData } from '../types';
-import { TipologiaEnteSchema } from '../schemas/fundDataSchemas';
+import { TipologiaEnteSchema, EntitaSchema } from '../schemas/fundDataSchemas';
 
 const getPath = (path: (string | number | symbol)[]): string => {
     return path.map(String).join('.');
@@ -42,12 +42,27 @@ const numberCanBeZero = z.preprocess(
 // Schema for validation
 const ValidationSchema = z.object({
     annualData: z.object({
-        // FIX: Removed `&& val !== ''` which caused a TypeScript error because the inferred type `TipologiaEnte | null` can never be an empty string.
-        tipologiaEnte: TipologiaEnteSchema.nullable().refine(val => val != null, {
-            message: "La tipologia di ente è obbligatoria."
-        }),
+        // New validation: prefer entita[] array, fallback to legacy fields
+        entita: z.array(EntitaSchema).min(1, { 
+            message: "È necessario aggiungere almeno un'entità." 
+        }).optional(),
+        // Legacy field validation - only required if entita[] is empty
+        tipologiaEnte: TipologiaEnteSchema.nullable().optional(),
         fondoLavoroStraordinario: numberCanBeZero,
-    }).passthrough(),
+    }).passthrough().superRefine((data, ctx) => {
+        // If entita array exists and has items, no need for legacy tipologiaEnte
+        if (data.entita && data.entita.length > 0) {
+            return;
+        }
+        // If no entita, legacy tipologiaEnte is required
+        if (data.tipologiaEnte == null) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "La tipologia di ente è obbligatoria. Aggiungi un'entità o specifica il tipo di ente.",
+                path: ["tipologiaEnte"]
+            });
+        }
+    }),
     historicalData: z.object({
         fondoSalarioAccessorioPersonaleNonDirEQ2016: numberRequired,
         fondoPersonaleNonDirEQ2018_Art23: numberRequired,

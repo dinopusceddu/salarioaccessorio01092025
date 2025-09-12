@@ -15,6 +15,7 @@ import {
 import { ALL_TIPOLOGIE_ENTE, TEXTS_UI } from '@/constants';
 import { getFadFieldDefinitions } from '@/pages/FondoAccessorioDipendentePageHelpers';
 import { calculateFadTotals, getFadEffectiveValueHelper } from '@/logic/fundEngine';
+import { getPrimaryEntityName, getPrimaryEntityTipologia, getPrimaryEntityNumeroAbitanti } from '@/utils/formatters';
 
 
 // --- PDF Helper Functions ---
@@ -100,6 +101,11 @@ export const generateFullSummaryPDF = (
     const doc = new jsPDF();
     CURRENT_Y = MARGIN;
     const { annualData } = fundData;
+    
+    // Use utility functions to get entity data with fallback to legacy
+    const entityName = getPrimaryEntityName(annualData) || 'Non specificato';
+    const entityTipologia = getPrimaryEntityTipologia(annualData);
+    const entityNumeroAbitanti = getPrimaryEntityNumeroAbitanti(annualData);
 
     // Report Header
     doc.setFontSize(18);
@@ -108,7 +114,7 @@ export const generateFullSummaryPDF = (
     CURRENT_Y += LINE_SPACING * 2;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text(`Ente: ${annualData.denominazioneEnte || 'Non specificato'}`, MARGIN, CURRENT_Y);
+    doc.text(`Ente: ${entityName}`, MARGIN, CURRENT_Y);
     doc.text(`Anno Riferimento: ${annualData.annoRiferimento}`, doc.internal.pageSize.width - MARGIN, CURRENT_Y, { align: 'right' });
     CURRENT_Y += LINE_SPACING;
     doc.text(`Generato da: ${currentUser.name} (${currentUser.role})`, MARGIN, CURRENT_Y);
@@ -118,11 +124,11 @@ export const generateFullSummaryPDF = (
     // --- 1. DATI DI INPUT ---
     addSectionTitle(doc, '1. Dati di Input Riepilogati');
 
-    const tipologiaEnteLabel = ALL_TIPOLOGIE_ENTE.find(t => t.value === annualData.tipologiaEnte)?.label || annualData.tipologiaEnte || TEXTS_UI.notApplicable;
+    const tipologiaEnteLabel = ALL_TIPOLOGIE_ENTE.find(t => t.value === entityTipologia)?.label || entityTipologia || TEXTS_UI.notApplicable;
     const infoGeneraliData = [
-        { label: 'Denominazione Ente', value: annualData.denominazioneEnte },
+        { label: 'Denominazione Ente', value: entityName },
         { label: 'Tipologia Ente', value: tipologiaEnteLabel },
-        { label: 'Numero Abitanti (31.12 anno prec.)', value: formatNumber(annualData.numeroAbitanti, 0) },
+        { label: 'Numero Abitanti (31.12 anno prec.)', value: formatNumber(entityNumeroAbitanti, 0) },
         { label: 'Ente in Dissesto Finanziario?', value: formatBoolean(annualData.isEnteDissestato) },
         { label: 'Ente con Personale Dirigente?', value: formatBoolean(annualData.hasDirigenza) },
     ];
@@ -197,7 +203,7 @@ export const generateFullSummaryPDF = (
     CURRENT_Y = (doc as any).lastAutoTable.finalY + SECTION_SPACING;
 
     // Save the PDF
-    doc.save(`Riepilogo_Generale_${annualData.denominazioneEnte || 'Ente'}_${annualData.annoRiferimento}.pdf`);
+    doc.save(`Riepilogo_Generale_${entityName || 'Ente'}_${annualData.annoRiferimento}.pdf`);
 };
 
 
@@ -208,6 +214,10 @@ export const generateDeterminazioneTXT = (
 ): void => {
     const { annualData, historicalData, fondoAccessorioDipendenteData } = fundData;
     const annoRiferimento = annualData.annoRiferimento;
+    
+    // Use utility functions to get entity data with fallback to legacy
+    const entityName = getPrimaryEntityName(annualData);
+    const entityTipologia = getPrimaryEntityTipologia(annualData);
     
     const formatNumberOnly = (value?: number, defaultValue = '………………') => 
         value !== undefined && !isNaN(value) ? value.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : defaultValue;
@@ -272,13 +282,13 @@ export const generateDeterminazioneTXT = (
     };
 
     const enteHeader = () => {
-        switch (annualData.tipologiaEnte) {
+        switch (entityTipologia) {
             case TipologiaEnte.COMUNE:
-                return `Comune di ${annualData.denominazioneEnte || '……………'}\nProvincia di ……………`;
+                return `Comune di ${entityName || '……………'}\nProvincia di ……………`;
             case TipologiaEnte.PROVINCIA:
-                return `Provincia di ${annualData.denominazioneEnte || '……………'}`;
+                return `Provincia di ${entityName || '……………'}`;
             default:
-                return `${annualData.denominazioneEnte || '……………'}`;
+                return `${entityName || '……………'}`;
         }
     };
     

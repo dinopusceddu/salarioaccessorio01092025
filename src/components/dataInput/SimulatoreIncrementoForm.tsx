@@ -8,6 +8,7 @@ import { Card } from '../shared/Card.tsx';
 import { TEXTS_UI } from '../../constants.ts';
 import { calculateSimulazione } from '../../logic/fundEngine.ts';
 import { useNormativeData } from '../../hooks/useNormativeData.ts';
+import { getPrimaryEntityTipologia, getPrimaryEntityNumeroAbitanti } from '../../utils/formatters';
 
 const formatCurrencyForDisplay = (value?: number) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -22,12 +23,25 @@ const formatPercentageForDisplay = (value?: number) => {
 export const SimulatoreIncrementoForm: React.FC = () => {
   const { state, dispatch } = useAppContext();
   const { data: normativeData } = useNormativeData();
-  const { simulatoreInput, numeroAbitanti, tipologiaEnte, simulatoreRisultati } = state.fundData.annualData;
+  const { annualData } = state.fundData;
+  const { simulatoreInput, simulatoreRisultati } = annualData;
+  
+  // Use utility functions to get entity data with fallback to legacy
+  const numeroAbitanti = getPrimaryEntityNumeroAbitanti(annualData);
+  const tipologiaEnte = getPrimaryEntityTipologia(annualData);
 
   const runAndDispatchSimulazione = useCallback(() => {
-    const results = calculateSimulazione(simulatoreInput, numeroAbitanti, tipologiaEnte);
+    // Create a minimal annualData object with only what calculateSimulazione needs
+    // This avoids the circular dependency with simulatoreRisultati
+    const minimalAnnualData = {
+      entita: annualData.entita,
+      // Include legacy fields as fallback
+      tipologiaEnte: annualData.tipologiaEnte,
+      numeroAbitanti: annualData.numeroAbitanti,
+    };
+    const results = calculateSimulazione(simulatoreInput, minimalAnnualData as any);
     dispatch({ type: 'UPDATE_SIMULATORE_RISULTATI', payload: results });
-  }, [simulatoreInput, numeroAbitanti, tipologiaEnte, dispatch]);
+  }, [simulatoreInput, annualData.entita, annualData.tipologiaEnte, annualData.numeroAbitanti, dispatch]);
   
   useEffect(() => {
     runAndDispatchSimulazione();

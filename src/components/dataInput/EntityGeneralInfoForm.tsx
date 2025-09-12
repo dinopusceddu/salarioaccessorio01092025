@@ -8,6 +8,7 @@ import { Select } from '../shared/Select';
 import { Card } from '../shared/Card';
 import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants';
 import { Checkbox } from '../shared/Checkbox';
+import { MultipleEntitaForm } from './MultipleEntitaForm';
 
 const booleanOptions = [
   { value: 'true', label: TEXTS_UI.trueText },
@@ -63,8 +64,9 @@ export const EntityGeneralInfoForm: React.FC = () => {
       : undefined;
 
   return (
-    <Card title="Informazioni Generali Ente e Anno di Riferimento" className="mb-8">
-       <Input
+    <div className="space-y-8">
+      <Card title="Anno di Riferimento" className="mb-8">
+        <Input
           label="Anno di Riferimento per la Costituzione del Fondo"
           type="number"
           id="annoRiferimento"
@@ -76,61 +78,52 @@ export const EntityGeneralInfoForm: React.FC = () => {
           containerClassName="mb-6"
           aria-required="true"
         />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-0">
-        <Input
-          label="Denominazione Ente"
-          type="text"
-          id="denominazioneEnte"
-          name="denominazioneEnte"
-          value={annualData.denominazioneEnte ?? ''}
-          onChange={handleGenericChange}
-          placeholder="Es. Comune di..."
-          containerClassName="md:col-span-2 mb-3"
-        />
-        <Select
-          label="Tipologia Ente"
-          id="tipologiaEnte"
-          name="tipologiaEnte"
-          options={ALL_TIPOLOGIE_ENTE}
-          value={annualData.tipologiaEnte ?? ''}
-          onChange={handleTipologiaChange}
-          placeholder="Seleziona tipologia..."
-          aria-required="true"
-          containerClassName="mb-3"
-          error={validationErrors['fundData.annualData.tipologiaEnte']}
-        />
-        {annualData.tipologiaEnte === TipologiaEnte.ALTRO && (
-          <Input
-            label="Specifica Altra Tipologia Ente"
-            type="text"
-            id="altroTipologiaEnte"
-            name="altroTipologiaEnte"
-            value={annualData.altroTipologiaEnte ?? ''}
-            onChange={handleGenericChange}
-            placeholder="Indicare la tipologia"
-            aria-required={annualData.tipologiaEnte === TipologiaEnte.ALTRO}
-            containerClassName="mb-3"
-            error={validationErrors['fundData.annualData.altroTipologiaEnte']}
-          />
-        )}
-         <Input
-          key={isNumeroAbitantiRequired ? 'abitanti-required' : 'abitanti-optional'}
-          label="Numero Abitanti al 31.12 Anno Precedente"
-          type="number"
-          id="numeroAbitanti"
-          name="numeroAbitanti"
-          value={annualData.numeroAbitanti ?? ''}
-          onChange={handleGenericChange}
-          placeholder="Es. 15000"
-          step="1"
-          min="0"
-          containerClassName="mb-3"
-          warning={numeroAbitantiWarning}
-          disabled={!isNumeroAbitantiRequired}
-          inputInfo={!isNumeroAbitantiRequired ? "Campo non richiesto per questa tipologia di ente." : "Consigliato per Comuni e Province."}
-        />
-      </div>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-0">
+      </Card>
+
+      {/* Nuovo componente per multiple entità */}
+      <MultipleEntitaForm />
+
+      {/* Fallback compatibility - mostrato solo se non ci sono entità nel nuovo formato */}
+      {annualData.entita.length === 0 && annualData.denominazioneEnte && (
+        <Card title="Migrazione Dati Esistenti" className="mb-8 border-amber-200 bg-amber-50">
+          <div className="text-amber-800 text-sm mb-4">
+            ⚠️ <strong>Dati in formato precedente rilevati.</strong> Aggiungi un'entità sopra per utilizzare il nuovo sistema a entità multiple.
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 p-4 bg-white rounded border">
+            <Input
+              label="Denominazione Ente (Legacy)"
+              type="text"
+              id="denominazioneEnte"
+              name="denominazioneEnte"
+              value={annualData.denominazioneEnte ?? ''}
+              onChange={handleGenericChange}
+              placeholder="Es. Comune di..."
+              containerClassName="md:col-span-2"
+              disabled
+            />
+            <Select
+              label="Tipologia Ente (Legacy)"
+              id="tipologiaEnte"
+              name="tipologiaEnte"
+              options={ALL_TIPOLOGIE_ENTE}
+              value={annualData.tipologiaEnte ?? ''}
+              onChange={handleTipologiaChange}
+              placeholder="Seleziona tipologia..."
+              disabled
+            />
+            <Input
+              label="Numero Abitanti (Legacy)"
+              type="number"
+              value={annualData.numeroAbitanti ?? ''}
+              placeholder="Es. 15000"
+              disabled
+            />
+          </div>
+        </Card>
+      )}
+
+      <Card title="Configurazioni Ente" className="mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-4">
          <Select
           label="Ente in dissesto finanziario (art. 244 TUEL)?"
           id="isEnteDissestato"
@@ -197,6 +190,7 @@ export const EntityGeneralInfoForm: React.FC = () => {
           error={validationErrors['fundData.annualData.fondoLavoroStraordinario']}
         />
       </div>
-    </Card>
+      </Card>
+    </div>
   );
 };

@@ -101,11 +101,39 @@ export const AnnualEmployeeCountSchema = z.object({
   count: numberOrUndefined,
 });
 
+// Schema per singola entità
+export const EntitaSchema = z.object({
+  id: z.string(),
+  nome: z.string(),
+  tipologia: TipologiaEnteSchema.optional(),
+  altroTipologia: z.string().optional(),
+  numeroAbitanti: numberOrUndefined,
+}).refine(
+  (entity) =>
+    entity.tipologia !== TipologiaEnte.ALTRO ||
+    (entity.altroTipologia && entity.altroTipologia.length > 0),
+  {
+    message: 'Specificare la tipologia di ente quando è selezionato "Altro"',
+    path: ['altroTipologia'],
+  }
+).refine(
+  (entity) =>
+    (entity.tipologia !== TipologiaEnte.COMUNE && entity.tipologia !== TipologiaEnte.PROVINCIA) ||
+    (entity.numeroAbitanti !== undefined && entity.numeroAbitanti > 0),
+  {
+    message: 'Il numero di abitanti è obbligatorio per Comuni e Province',
+    path: ['numeroAbitanti'],
+  }
+);
+
 export const AnnualDataSchema = z
   .object({
     annoRiferimento: z.number(),
+    // DEPRECATO: mantenuto per retrocompatibilità
     denominazioneEnte: z.string().optional(),
     tipologiaEnte: TipologiaEnteSchema.optional(),
+    // NUOVO: array di entità multiple
+    entita: z.array(EntitaSchema).default([]),
     altroTipologiaEnte: z.string().optional(),
     numeroAbitanti: numberOrUndefined,
     isEnteDissestato: z.boolean().optional(),
@@ -128,16 +156,7 @@ export const AnnualDataSchema = z
     fondoStabile2016PNRR: numberOrUndefined,
     calcolatoIncrementoPNRR3: numberOrUndefined,
     fondoLavoroStraordinario: numberOrUndefined,
-  })
-  .refine(
-    (data) =>
-      data.tipologiaEnte !== TipologiaEnte.ALTRO ||
-      (data.altroTipologiaEnte && data.altroTipologiaEnte.length > 0),
-    {
-      message: 'Specificare la tipologia di ente',
-      path: ['altroTipologiaEnte'],
-    }
-  );
+  });
 
 export const FondoDataBaseSchema = z.object({
   st_art79c1_art67c1_unicoImporto2017: numberOrUndefined,

@@ -15,16 +15,19 @@ import {
   clearValidationErrors,
 } from '../contexts/AppContext';
 import { TipologiaEnte } from '../enums';
+import { getPrimaryEntityTipologia, getPrimaryEntityName } from '../utils/formatters';
 
 export const DataEntryPage: React.FC = () => {
   const { state, performFundCalculation, dispatch } = useAppContext();
   const { isLoading, fundData, error, validationErrors } = state;
-  const { tipologiaEnte } = fundData.annualData;
+  
+  // Use utility functions to get entity data with fallback to legacy
+  const tipologiaEnte = getPrimaryEntityTipologia(fundData.annualData);
 
   const handleSubmit = async () => {
     // Esempio di uso dei nuovi action creators per una validazione lato client
-    const { denominazioneEnte } = state.fundData.annualData;
-    if (!denominazioneEnte || denominazioneEnte.trim() === '') {
+    const entityName = getPrimaryEntityName(state.fundData.annualData);
+    if (!entityName || entityName.trim() === '') {
       const errors = {
         'fundData.annualData.denominazioneEnte':
           "Esempio: La denominazione dell'ente non può essere vuota.",

@@ -444,12 +444,43 @@ export class DatabaseService {
   }
 
   /**
-   * [DISABLED FOR SECURITY] Cross-tenant admin queries disabled in standalone PostgreSQL
-   * TODO: Implement via secure backend proxy or migrate to full Supabase
+   * [ADMIN ONLY] Ottieni tutti gli inserimenti di tutti gli utenti
+   * Ora sicuro con RLS - admin può vedere tutti i dati via policy
    */
   static async getAllEntries(): Promise<AdminEntryView[]> {
-    console.log('⚠️ getAllEntries: DISABLED - Cross-tenant queries not secure without RLS');
-    return [];
+    try {
+      // Verifica che l'utente corrente sia admin
+      const isAdminUser = await this.isAdmin();
+      if (!isAdminUser) {
+        console.log('❌ getAllEntries: Access denied - not admin');
+        return [];
+      }
+
+      const { data, error } = await supabase
+        .from('annual_entries')
+        .select(`
+          *,
+          profile:profiles!annual_entries_user_id_fkey (
+            email,
+            full_name
+          ),
+          entity:entities!annual_entries_entity_id_fkey (
+            name,
+            tipologia
+          )
+        `)
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all entries:', error);
+        return [];
+      }
+
+      return data as AdminEntryView[];
+    } catch (error) {
+      console.error('Error in getAllEntries:', error);
+      return [];
+    }
   }
 
   /**

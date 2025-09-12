@@ -37,6 +37,7 @@ const LOCAL_STORAGE_KEY = 'salario-accessorio-app-state';
 const defaultInitialState: AppState = {
   currentUser: DEFAULT_USER,
   currentYear: DEFAULT_CURRENT_YEAR,
+  selectedEntityId: null,
   fundData: {
     historicalData: INITIAL_HISTORICAL_DATA,
     annualData: INITIAL_ANNUAL_DATA,
@@ -177,6 +178,11 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           ...state.fundData,
           annualData: { ...state.fundData.annualData, annoRiferimento: action.payload },
         },
+      };
+    case 'SET_SELECTED_ENTITY':
+      return {
+        ...state,
+        selectedEntityId: action.payload,
       };
     case 'UPDATE_HISTORICAL_DATA':
       return {
@@ -505,6 +511,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     error: normativeDataError,
   } = useNormativeData();
 
+
   const saveState = useCallback(() => {
     try {
       const stateToSave = {
@@ -522,8 +529,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Nuove funzioni per il database
   const saveToDatabase = useCallback(async (): Promise<boolean> => {
     try {
+      if (!state.selectedEntityId) {
+        console.error('No entity selected for database save');
+        return false;
+      }
       const currentYear = state.currentYear;
-      const success = await DatabaseService.upsertAnnualEntry(currentYear, state.fundData);
+      const success = await DatabaseService.upsertAnnualEntry(state.selectedEntityId, currentYear, state.fundData);
       if (success) {
         console.log(`Dati salvati nel database per l'anno ${currentYear}`);
       }
@@ -532,11 +543,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Error saving to database:', error);
       return false;
     }
-  }, [state.currentYear, state.fundData]);
+  }, [state.currentYear, state.fundData, state.selectedEntityId]);
 
   const loadFromDatabase = useCallback(async (year: number): Promise<boolean> => {
     try {
-      const data = await DatabaseService.getAnnualEntry(year);
+      if (!state.selectedEntityId) {
+        console.error('No entity selected for database load');
+        return false;
+      }
+      const data = await DatabaseService.getAnnualEntry(state.selectedEntityId, year);
       if (data) {
         // Apply migration logic for retrocompatibilità: convert legacy single entity to entita[] array
         const migratedAnnualData = {
@@ -570,16 +585,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.error('Error loading from database:', error);
       return false;
     }
-  }, []);
+  }, [state.selectedEntityId]);
+
+  // Auto-load data when entity is selected
+  React.useEffect(() => {
+    if (state.selectedEntityId && state.currentYear) {
+      loadFromDatabase(state.currentYear);
+    }
+  }, [state.selectedEntityId, state.currentYear, loadFromDatabase]);
 
   const getAvailableYears = useCallback(async (): Promise<number[]> => {
     try {
-      return await DatabaseService.getAvailableYears();
+      if (!state.selectedEntityId) {
+        console.error('No entity selected for getAvailableYears');
+        return [];
+      }
+      return await DatabaseService.getAvailableYears(state.selectedEntityId);
     } catch (error) {
       console.error('Error getting available years:', error);
       return [];
     }
-  }, []);
+  }, [state.selectedEntityId]);
 
   const performFundCalculation = useCallback(async () => {
     if (isNormativeDataLoading) {

@@ -118,6 +118,7 @@ export interface ComplianceCheck {
 export interface AppState {
   currentUser: User;
   currentYear: number;
+  selectedEntityId: string | null;
   fundData: FundData;
   personaleServizio: {
     dettagli: PersonaleServizioDettaglio[];
@@ -135,6 +136,7 @@ export interface AppState {
 export type AppAction =
   | { type: 'SET_USER'; payload: User }
   | { type: 'SET_CURRENT_YEAR'; payload: number }
+  | { type: 'SET_SELECTED_ENTITY'; payload: string | null }
   | { type: 'UPDATE_HISTORICAL_DATA'; payload: Partial<HistoricalData> }
   | { type: 'UPDATE_ANNUAL_DATA'; payload: Partial<AnnualData> }
   | { type: 'ADD_PROVENTO_SPECIFICO'; payload: ProventoSpecifico }

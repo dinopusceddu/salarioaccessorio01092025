@@ -19,6 +19,7 @@ import { HomePage } from './pages/HomePage';
 import { PersonaleServizioPage } from './pages/PersonaleServizioPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { AdminPage } from './pages/AdminPage';
+import { EntitySelectionPage } from './pages/EntitySelectionPage';
 import { PageModule } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -81,10 +82,24 @@ const getPageModules = (isAdmin: boolean): PageModule[] => {
 
 const AppContent: React.FC = () => {
   const { state, dispatch } = useAppContext();
-  const { activeTab, fundData } = state;
+  const { activeTab, fundData, selectedEntityId } = state;
   const { isAdmin, role, profile, loading } = useAuth();
 
-  console.log('🏠 App: Auth state:', { role, isAdminResult: isAdmin(), profile: profile?.email, loading });
+  console.log('🏠 App: Auth state:', { role, isAdminResult: isAdmin(), profile: profile?.email, loading, selectedEntityId });
+
+  // Nuovo workflow: se non c'è un'entità selezionata, mostra EntitySelectionPage
+  if (!selectedEntityId) {
+    return (
+      <ProtectedRoute>
+        <EntitySelectionPage 
+          onEntitySelected={(entityId) => {
+            dispatch({ type: 'SET_SELECTED_ENTITY', payload: entityId });
+            dispatch({ type: 'SET_ACTIVE_TAB', payload: 'benvenuto' });
+          }}
+        />
+      </ProtectedRoute>
+    );
+  }
 
   const allPageModules = getPageModules(isAdmin());
 

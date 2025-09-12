@@ -10,9 +10,21 @@ export interface UserProfile {
   created_at: string;
 }
 
+export interface Entity {
+  id: string;
+  user_id: string;
+  name: string;
+  tipologia?: string;
+  altro_tipologia?: string;
+  numero_abitanti?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AnnualEntry {
   id: string;
   user_id: string;
+  entity_id: string;
   year: number;
   data: FundData;
   created_at: string;
@@ -128,6 +140,176 @@ export class DatabaseService {
     return profile?.role || null;
   }
 
+  // =============
+  // ENTITY METHODS
+  // =============
+
+  /**
+   * Lista tutte le entità dell'utente corrente
+   */
+  static async listEntities(): Promise<Entity[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      const { data, error } = await supabase
+        .from('entities')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching entities:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in listEntities:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Crea una nuova entità per l'utente corrente
+   */
+  static async createEntity(entity: {
+    name: string;
+    tipologia?: string;
+    altro_tipologia?: string;
+    numero_abitanti?: number;
+  }): Promise<{ success: boolean; entity?: Entity; error?: string }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Utente non autenticato' };
+      }
+
+      // Controlla se esiste già un'entità con lo stesso nome (case insensitive)
+      const { data: existing } = await supabase
+        .from('entities')
+        .select('id')
+        .eq('user_id', user.id)
+        .ilike('name', entity.name);
+
+      if (existing && existing.length > 0) {
+        return { success: false, error: 'Esiste già un\'entità con questo nome' };
+      }
+
+      const { data, error } = await supabase
+        .from('entities')
+        .insert({
+          user_id: user.id,
+          name: entity.name,
+          tipologia: entity.tipologia,
+          altro_tipologia: entity.altro_tipologia,
+          numero_abitanti: entity.numero_abitanti
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating entity:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, entity: data };
+    } catch (error) {
+      console.error('Error in createEntity:', error);
+      return { success: false, error: 'Errore interno' };
+    }
+  }
+
+  /**
+   * Aggiorna un'entità esistente
+   */
+  static async updateEntity(entityId: string, updates: {
+    name?: string;
+    tipologia?: string;
+    altro_tipologia?: string;
+    numero_abitanti?: number;
+  }): Promise<{ success: boolean; entity?: Entity; error?: string }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Utente non autenticato' };
+      }
+
+      // Se viene cambiato il nome, controlla che non esista già
+      if (updates.name) {
+        const { data: existing } = await supabase
+          .from('entities')
+          .select('id')
+          .eq('user_id', user.id)
+          .ilike('name', updates.name)
+          .neq('id', entityId);
+
+        if (existing && existing.length > 0) {
+          return { success: false, error: 'Esiste già un\'entità con questo nome' };
+        }
+      }
+
+      const { data, error } = await supabase
+        .from('entities')
+        .update(updates)
+        .eq('id', entityId)
+        .eq('user_id', user.id) // Sicurezza: solo proprie entità
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating entity:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, entity: data };
+    } catch (error) {
+      console.error('Error in updateEntity:', error);
+      return { success: false, error: 'Errore interno' };
+    }
+  }
+
+  /**
+   * Elimina un'entità e tutti i suoi dati annuali
+   */
+  static async deleteEntity(entityId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Utente non autenticato' };
+      }
+
+      // Prima elimina tutti gli annual_entries collegati
+      const { error: entriesError } = await supabase
+        .from('annual_entries')
+        .delete()
+        .eq('entity_id', entityId)
+        .eq('user_id', user.id);
+
+      if (entriesError) {
+        console.error('Error deleting annual entries:', entriesError);
+        return { success: false, error: 'Errore durante l\'eliminazione dei dati annuali' };
+      }
+
+      // Poi elimina l'entità
+      const { error } = await supabase
+        .from('entities')
+        .delete()
+        .eq('id', entityId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting entity:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error in deleteEntity:', error);
+      return { success: false, error: 'Errore interno' };
+    }
+  }
+
   /**
    * Verifica se l'utente corrente è admin
    */
@@ -137,9 +319,9 @@ export class DatabaseService {
   }
 
   /**
-   * Ottieni tutti gli anni per cui l'utente ha dati salvati
+   * Ottieni tutti gli anni per cui l'utente ha dati salvati per un'entità
    */
-  static async getAvailableYears(): Promise<number[]> {
+  static async getAvailableYears(entityId: string): Promise<number[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -149,6 +331,7 @@ export class DatabaseService {
         .from('annual_entries')
         .select('year')
         .eq('user_id', user.id)
+        .eq('entity_id', entityId)
         .order('year', { ascending: false });
 
       if (error) {
@@ -164,9 +347,9 @@ export class DatabaseService {
   }
 
   /**
-   * Ottieni i dati per un anno specifico
+   * Ottieni i dati per un'entità e anno specifici
    */
-  static async getAnnualEntry(year: number): Promise<FundData | null> {
+  static async getAnnualEntry(entityId: string, year: number): Promise<FundData | null> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -176,12 +359,13 @@ export class DatabaseService {
         .from('annual_entries')
         .select('data')
         .eq('user_id', user.id)
+        .eq('entity_id', entityId)
         .eq('year', year)
         .single();
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // No data found for this year
+          // No data found for this entity/year
           return null;
         }
         console.error('Error fetching annual entry:', error);
@@ -196,9 +380,9 @@ export class DatabaseService {
   }
 
   /**
-   * Salva o aggiorna i dati per un anno specifico
+   * Salva o aggiorna i dati per un'entità e anno specifici
    */
-  static async upsertAnnualEntry(year: number, data: FundData): Promise<boolean> {
+  static async upsertAnnualEntry(entityId: string, year: number, data: FundData): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -211,11 +395,12 @@ export class DatabaseService {
         .from('annual_entries')
         .upsert({
           user_id: user.id,
+          entity_id: entityId,
           year: year,
           data: data,
           updated_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,year'
+          onConflict: 'user_id,entity_id,year'
         });
 
       if (error) {
@@ -231,9 +416,9 @@ export class DatabaseService {
   }
 
   /**
-   * Elimina i dati per un anno specifico
+   * Elimina i dati per un'entità e anno specifici
    */
-  static async deleteAnnualEntry(year: number): Promise<boolean> {
+  static async deleteAnnualEntry(entityId: string, year: number): Promise<boolean> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -243,6 +428,7 @@ export class DatabaseService {
         .from('annual_entries')
         .delete()
         .eq('user_id', user.id)
+        .eq('entity_id', entityId)
         .eq('year', year);
 
       if (error) {
@@ -258,31 +444,12 @@ export class DatabaseService {
   }
 
   /**
-   * [SOLO ADMIN] Ottieni tutti gli inserimenti di tutti gli utenti
+   * [DISABLED FOR SECURITY] Cross-tenant admin queries disabled in standalone PostgreSQL
+   * TODO: Implement via secure backend proxy or migrate to full Supabase
    */
   static async getAllEntries(): Promise<AdminEntryView[]> {
-    try {
-      const { data, error } = await supabase
-        .from('annual_entries')
-        .select(`
-          *,
-          profile:profiles!annual_entries_user_id_fkey (
-            email,
-            full_name
-          )
-        `)
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching all entries:', error);
-        return [];
-      }
-
-      return data as AdminEntryView[];
-    } catch (error) {
-      console.error('Error in getAllEntries:', error);
-      return [];
-    }
+    console.log('⚠️ getAllEntries: DISABLED - Cross-tenant queries not secure without RLS');
+    return [];
   }
 
   /**

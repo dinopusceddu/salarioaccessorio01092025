@@ -10,14 +10,18 @@ import { ComplianceStatusWidget } from '../components/dashboard/ComplianceStatus
 import { HomePageSkeleton } from '../components/dashboard/HomePageSkeleton';
 import { Alert } from '../components/shared/Alert';
 import { EmptyState } from '../components/shared/EmptyState';
+import { getPrimaryEntityName } from '../utils/formatters';
 
 export const HomePage: React.FC = () => {
   const { state, dispatch, performFundCalculation } = useAppContext();
   const { calculatedFund, complianceChecks, fundData, isLoading, error } = state;
-  const { denominazioneEnte, annoRiferimento } = fundData.annualData;
+  const { annoRiferimento } = fundData.annualData;
 
+  // Use utility function to get entity name with fallback to legacy
+  const entityName = getPrimaryEntityName(fundData.annualData) || 'Ente non specificato';
+  
   const isDataAvailable = !!calculatedFund;
-  const pageTitle = `Riepilogo fondo - ${denominazioneEnte || 'Ente non specificato'} per l'anno ${annoRiferimento}`;
+  const pageTitle = `Riepilogo fondo - ${entityName} per l'anno ${annoRiferimento}`;
 
   const renderContent = () => {
     if (isLoading) {

@@ -14,10 +14,12 @@ import {
     FondoDirigenzaData,
     DistribuzioneRisorseData,
     RisorsaVariabileDetail,
-    NormativeData
+    NormativeData,
+    AnnualData
 } from '../types.ts';
 
 import { getFadFieldDefinitions } from '../pages/FondoAccessorioDipendentePageHelpers.ts';
+import { getPrimaryEntityTipologia, getPrimaryEntityNumeroAbitanti } from '../utils/formatters';
 
 // --- FROM hooks/useSimulatoreCalculations.ts ---
 
@@ -48,10 +50,13 @@ export const getSogliaSpesaPersonale = (numeroAbitanti?: number, tipologiaEnte?:
 
 export const calculateSimulazione = (
     currentInputs?: SimulatoreIncrementoInput, 
-    numAbitanti?: number, 
-    tipoEnte?: TipologiaEnte
+    annualData?: AnnualData
 ): SimulatoreIncrementoRisultati | undefined => {
-    if (!currentInputs) return undefined;
+    if (!currentInputs || !annualData) return undefined;
+
+    // Use utility functions to get entity data with fallback to legacy
+    const numAbitanti = getPrimaryEntityNumeroAbitanti(annualData);
+    const tipoEnte = getPrimaryEntityTipologia(annualData);
 
     const stipendiTabellari2023 = currentInputs.simStipendiTabellari2023 || 0;
     const fondoStabileAnnoApplicazione = currentInputs.simFondoStabileAnnoApplicazione || 0;

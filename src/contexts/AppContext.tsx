@@ -87,6 +87,18 @@ const loadInitialState = (): AppState => {
           annualData: {
             ...defaultInitialState.fundData.annualData,
             ...(parsedState.fundData?.annualData || {}),
+            // Migrazione per retrocompatibilità: converti denominazioneEnte singola in array entita
+            entita: parsedState.fundData?.annualData?.entita || 
+              (parsedState.fundData?.annualData?.denominazioneEnte ? 
+                [{
+                  id: 'migrated-entity',
+                  nome: parsedState.fundData.annualData.denominazioneEnte,
+                  tipologia: parsedState.fundData?.annualData?.tipologiaEnte,
+                  altroTipologia: parsedState.fundData?.annualData?.altroTipologiaEnte,
+                  numeroAbitanti: parsedState.fundData?.annualData?.numeroAbitanti,
+                }] : 
+                []
+              )
           },
           fondoAccessorioDipendenteData: {
             ...defaultInitialState.fundData.fondoAccessorioDipendenteData,
@@ -526,9 +538,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const data = await DatabaseService.getAnnualEntry(year);
       if (data) {
+        // Apply migration logic for retrocompatibilità: convert legacy single entity to entita[] array
+        const migratedAnnualData = {
+          ...data.annualData,
+          entita: data.annualData.entita || 
+            (data.annualData.denominazioneEnte ? 
+              [{
+                id: 'migrated-entity',
+                nome: data.annualData.denominazioneEnte,
+                tipologia: data.annualData.tipologiaEnte,
+                altroTipologia: data.annualData.altroTipologiaEnte,
+                numeroAbitanti: data.annualData.numeroAbitanti,
+              }] : 
+              []
+            )
+        };
+        
         dispatch({ type: 'SET_CURRENT_YEAR', payload: year });
         dispatch({ type: 'UPDATE_HISTORICAL_DATA', payload: data.historicalData });
-        dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: data.annualData });
+        dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: migratedAnnualData });
         dispatch({ type: 'UPDATE_FONDO_ACCESSORIO_DIPENDENTE_DATA', payload: data.fondoAccessorioDipendenteData });
         dispatch({ type: 'UPDATE_FONDO_ELEVATE_QUALIFICAZIONI_DATA', payload: data.fondoElevateQualificazioniData });
         dispatch({ type: 'UPDATE_FONDO_SEGRETARIO_COMUNALE_DATA', payload: data.fondoSegretarioComunaleData });

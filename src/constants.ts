@@ -209,6 +209,7 @@ export const INITIAL_ANNUAL_DATA = {
   annoRiferimento: DEFAULT_CURRENT_YEAR,
   denominazioneEnte: undefined,
   tipologiaEnte: undefined,
+  entita: [],
   altroTipologiaEnte: undefined,
   numeroAbitanti: undefined,
   isEnteDissestato: undefined,

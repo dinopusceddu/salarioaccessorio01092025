@@ -14,7 +14,7 @@ WHERE n.nspname = 'public'
 -- 2. Check existing policies
 SELECT 
   c.relname as table_name,
-  p.policyname,
+  p.polname as policy_name,
   p.cmd as command_type
 FROM pg_policy p 
 JOIN pg_class c ON p.polrelid = c.oid

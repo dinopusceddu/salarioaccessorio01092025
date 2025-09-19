@@ -19,7 +19,7 @@ import { HomePage } from './pages/HomePage';
 import { PersonaleServizioPage } from './pages/PersonaleServizioPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { AdminPage } from './pages/AdminPage';
-import { EntitySelectionPage } from './pages/EntitySelectionPage';
+import { DashboardPage } from './pages/DashboardPage';
 import { PageModule } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -87,13 +87,14 @@ const AppContent: React.FC = () => {
 
   console.log('🏠 App: Auth state:', { role, isAdminResult: isAdmin(), profile: profile?.email, loading, selectedEntityId });
 
-  // Nuovo workflow: se non c'è un'entità selezionata, mostra EntitySelectionPage
+  // Nuovo workflow: se non c'è un'entità selezionata, mostra DashboardPage
   if (!selectedEntityId) {
     return (
       <ProtectedRoute>
-        <EntitySelectionPage 
-          onEntitySelected={(entityId) => {
+        <DashboardPage 
+          onEntityYearSelected={(entityId, year) => {
             dispatch({ type: 'SET_SELECTED_ENTITY', payload: entityId });
+            dispatch({ type: 'SET_CURRENT_YEAR', payload: year });
             dispatch({ type: 'SET_ACTIVE_TAB', payload: 'benvenuto' });
           }}
         />

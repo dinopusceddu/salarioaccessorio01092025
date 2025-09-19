@@ -1,5 +1,5 @@
 // contexts/AppContext.tsx
-import React, { createContext, Dispatch, useCallback, useContext, useReducer } from 'react';
+import React, { createContext, Dispatch, useCallback, useContext, useReducer, useEffect } from 'react';
 
 import {
   INITIAL_ANNUAL_DATA,
@@ -505,11 +505,31 @@ export const clearValidationErrors = (dispatch: Dispatch<AppAction>) => {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, loadInitialState());
+  const { user } = useAuth();
   const {
     data: normativeData,
     isLoading: isNormativeDataLoading,
     error: normativeDataError,
   } = useNormativeData();
+
+  // SECURITY FIX: Reset selectedEntityId when user changes to prevent cross-user data access
+  useEffect(() => {
+    const currentUserId = user?.id;
+    
+    // If user changes (login/logout/switch user), clear selected entity
+    if (!currentUserId) {
+      // User logged out - clear everything
+      console.log('🛡️ Security: User logged out, clearing selectedEntityId');
+      dispatch({ type: 'SET_SELECTED_ENTITY', payload: null });
+    } else {
+      // User logged in/changed - clear selectedEntityId to force re-selection
+      // This prevents accessing entities from previous user
+      if (state.selectedEntityId) {
+        console.log('🛡️ Security: User changed, clearing selectedEntityId to prevent cross-user access');
+        dispatch({ type: 'SET_SELECTED_ENTITY', payload: null });
+      }
+    }
+  }, [user?.id]); // Only depend on user ID to detect user changes
 
 
   const saveState = useCallback(() => {
@@ -593,6 +613,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       loadFromDatabase(state.currentYear);
     }
   }, [state.selectedEntityId, state.currentYear, loadFromDatabase]);
+
+  // Auto-save data when fundData changes (debounced)
+  React.useEffect(() => {
+    if (!state.selectedEntityId) return;
+    
+    const timeoutId = setTimeout(() => {
+      console.log('💾 Auto-save: Saving data to database...');
+      saveToDatabase().then(success => {
+        if (success) {
+          console.log('✅ Auto-save: Data saved successfully');
+        } else {
+          console.error('❌ Auto-save: Failed to save data');
+        }
+      });
+    }, 2000); // Salva dopo 2 secondi di inattività
+
+    return () => clearTimeout(timeoutId);
+  }, [state.fundData, state.selectedEntityId, saveToDatabase]);
 
   const getAvailableYears = useCallback(async (): Promise<number[]> => {
     try {

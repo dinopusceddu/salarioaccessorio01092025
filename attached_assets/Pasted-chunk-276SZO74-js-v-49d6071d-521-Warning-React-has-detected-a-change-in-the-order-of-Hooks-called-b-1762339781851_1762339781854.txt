@@ -1,0 +1,47 @@
+chunk-276SZO74.js?v=49d6071d:521 Warning: React has detected a change in the order of Hooks called by AppContent. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+1. useContext                 useContext
+2. useContext                 useContext
+3. undefined                  useEffect
+   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+    at AppContent (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/App.tsx:92:31)
+    at AppProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/contexts/AppContext.tsx:475:31)
+    at QueryClientProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/node_modules/.vite/deps/chunk-DFL6GWSO.js?v=49d6071d:3024:3)
+    at Suspense
+    at ErrorBoundary (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/components/ErrorBoundary.tsx:8:5)
+    at App
+    at AuthProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/contexts/AuthContext.tsx:42:32)
+chunk-276SZO74.js?v=49d6071d:521 Warning: Internal React error: Expected static flag was missing. Please notify the React team.
+    at AppContent (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/App.tsx:92:31)
+    at AppProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/contexts/AppContext.tsx:475:31)
+    at QueryClientProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/node_modules/.vite/deps/chunk-DFL6GWSO.js?v=49d6071d:3024:3)
+    at Suspense
+    at ErrorBoundary (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/components/ErrorBoundary.tsx:8:5)
+    at App
+    at AuthProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/contexts/AuthContext.tsx:42:32)
+App.tsx:88 🏠 App: Auth state: 
+Object
+chunk-276SZO74.js?v=49d6071d:521 Warning: Internal React error: Expected static flag was missing. Please notify the React team.
+    at AppContent (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/App.tsx:92:31)
+    at AppProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/contexts/AppContext.tsx:475:31)
+    at QueryClientProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/node_modules/.vite/deps/chunk-DFL6GWSO.js?v=49d6071d:3024:3)
+    at Suspense
+    at ErrorBoundary (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/components/ErrorBoundary.tsx:8:5)
+    at App
+    at AuthProvider (https://1d5ea691-0e63-481c-86fd-e176fc93686f-00-2gxxdn6tpbjdp.janeway.replit.dev/src/contexts/AuthContext.tsx:42:32)
+AppContext.tsx:574 📥 LOAD: Loading data for entityId=b5d65cbe-c1f4-453c-b420-de602a0e6789, year=2025
+AppContext.tsx:593 📥 LOAD: Data loaded from database: 
+Object
+AppContext.tsx:609 ✅ LOAD: Dati caricati dal database per l'anno 2025
+App.tsx:88 🏠 App: Auth state: 
+Object
+App.tsx:88 🏠 App: Auth state: 
+Object
+AppContext.tsx:643 💾 Auto-save: Saving data to database...
+AppContext.tsx:559 Dati salvati nel database per l'anno 2025
+AppContext.tsx:646 ✅ Auto-save: Data saved successfully
+﻿
+

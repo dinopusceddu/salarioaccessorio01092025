@@ -10,8 +10,14 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **BUG FIX - Data Misalignment**: Fixed entity data corruption where clicking "Comune di Milano" showed data from "Comune di Stezzano"
+  - **Root Cause**: Annual entries for entity ID contained wrong denominazioneEnte and entita data
+  - **Fix**: Added detailed logging to track entity selection flow (🔍 CLICK, 📥 LOAD logs)
+  - **Resolution**: Cleared corrupted data from database, allowing fresh start with correct entity alignment
+  - **Prevention**: Enhanced logging now catches entity/data mismatches immediately
 - **ADMIN PANEL ENHANCEMENTS**: Comprehensive user management with full CRUD operations
-  - **Edge Functions**: Created admin-delete-user, admin-reset-password, admin-get-user-entities for secure admin operations
+  - **Edge Functions**: Successfully deployed admin-delete-user, admin-reset-password, admin-get-user-entities via Supabase Management API
+  - **Deployment Method**: Used Management API (POST multipart/form-data) instead of CLI due to Docker unavailability on Replit
   - **User Actions**: Delete users, reset passwords, view user's entities and years - all with proper confirmations
   - **Entity Visibility**: Expandable user rows showing all entities and years associated with each user
   - **Security**: All admin operations protected by JWT validation and role checks in edge functions

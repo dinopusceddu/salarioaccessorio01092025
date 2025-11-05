@@ -43,6 +43,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
   const [expandedUserEntities, setExpandedUserEntities] = useState<Record<string, any>>({});
   const [loadingEntities, setLoadingEntities] = useState<string | null>(null);
 
+  // Stati per gestione enti e anni
+  const [entityToDelete, setEntityToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [yearToDelete, setYearToDelete] = useState<{ entityId: string; entityName: string; year: number } | null>(null);
+  const [yearToDuplicate, setYearToDuplicate] = useState<{ entityId: string; entityName: string; fromYear: number } | null>(null);
+  const [duplicateToYear, setDuplicateToYear] = useState<number>(new Date().getFullYear() + 1);
+
   useEffect(() => {
     loadDashboardData();
   }, [user?.id, isAdmin]);
@@ -265,6 +271,75 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
       setAdminMessage({ type: 'error', text: 'Errore nell\'aggiornamento del ruolo' });
     } finally {
       setAdminLoading(false);
+    }
+  };
+
+  const handleDeleteEntity = async () => {
+    if (!entityToDelete) return;
+
+    setLoading(true);
+    try {
+      const result = await DatabaseService.deleteEntity(entityToDelete.id);
+      if (result.success) {
+        setError(null);
+        await loadDashboardData();
+      } else {
+        setError(result.error || 'Errore durante l\'eliminazione dell\'ente');
+      }
+    } catch (error) {
+      console.error('Error deleting entity:', error);
+      setError('Errore durante l\'eliminazione dell\'ente');
+    } finally {
+      setLoading(false);
+      setEntityToDelete(null);
+    }
+  };
+
+  const handleDeleteYear = async () => {
+    if (!yearToDelete) return;
+
+    setLoading(true);
+    try {
+      const success = await DatabaseService.deleteAnnualEntry(yearToDelete.entityId, yearToDelete.year);
+      if (success) {
+        setError(null);
+        await loadDashboardData();
+      } else {
+        setError('Errore durante l\'eliminazione dell\'anno');
+      }
+    } catch (error) {
+      console.error('Error deleting year:', error);
+      setError('Errore durante l\'eliminazione dell\'anno');
+    } finally {
+      setLoading(false);
+      setYearToDelete(null);
+    }
+  };
+
+  const handleDuplicateYear = async () => {
+    if (!yearToDuplicate) return;
+
+    setLoading(true);
+    try {
+      const result = await DatabaseService.duplicateYear(
+        yearToDuplicate.entityId,
+        yearToDuplicate.fromYear,
+        duplicateToYear
+      );
+      
+      if (result.success) {
+        setError(null);
+        await loadDashboardData();
+      } else {
+        setError(result.error || 'Errore durante la duplicazione dell\'anno');
+      }
+    } catch (error) {
+      console.error('Error duplicating year:', error);
+      setError('Errore durante la duplicazione dell\'anno');
+    } finally {
+      setLoading(false);
+      setYearToDuplicate(null);
+      setDuplicateToYear(new Date().getFullYear() + 1);
     }
   };
 
@@ -588,7 +663,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
                 entities.map((entity) => (
                   <div key={entity.id} className="bg-white rounded-lg shadow-sm p-6 border border-[#994d51]/10">
                     <div className="flex justify-between items-start mb-4">
-                      <div>
+                      <div className="flex-1">
                         <h2 className="text-lg font-semibold text-[#1b0e0e]">{entity.name}</h2>
                         <p className="text-sm text-[#5f5252] capitalize">
                           {entity.tipologia} {entity.altro_tipologia && `- ${entity.altro_tipologia}`}
@@ -600,12 +675,21 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
                           </p>
                         )}
                       </div>
-                      <button
-                        onClick={() => setShowNewYearForm(entity.id)}
-                        className="bg-[#1b0e0e] hover:bg-[#1b0e0e]/90 text-white px-4 py-2 rounded-md text-sm font-medium"
-                      >
-                        + Aggiungi Anno
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEntityToDelete({ id: entity.id, name: entity.name })}
+                          className="text-red-600 hover:text-red-800 px-3 py-2 rounded-md text-sm font-medium border border-red-200 hover:bg-red-50"
+                          title="Elimina ente e tutti i suoi dati"
+                        >
+                          🗑️ Elimina Ente
+                        </button>
+                        <button
+                          onClick={() => setShowNewYearForm(entity.id)}
+                          className="bg-[#1b0e0e] hover:bg-[#1b0e0e]/90 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                          + Aggiungi Anno
+                        </button>
+                      </div>
                     </div>
 
                     {/* Anni disponibili */}
@@ -614,24 +698,44 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
                       {entityYears[entity.id]?.length === 0 ? (
                         <p className="text-sm text-[#5f5252] italic">Nessun anno configurato</p>
                       ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                           {entityYears[entity.id]?.sort((a, b) => b - a).map((year) => (
-                            <button
-                              key={year}
-                              onClick={() => {
-                                console.log('🔍 CLICK: Entity selected:', { 
-                                  entityName: entity.name, 
-                                  entityId: entity.id, 
-                                  year,
-                                  tipologia: entity.tipologia,
-                                  numeroAbitanti: entity.numero_abitanti
-                                });
-                                onEntityYearSelected(entity.id, year);
-                              }}
-                              className="bg-[#994d51]/10 hover:bg-[#994d51]/20 border border-[#994d51]/30 rounded-md px-3 py-2 text-sm font-medium text-[#994d51] transition-colors"
-                            >
-                              {year}
-                            </button>
+                            <div key={year} className="bg-[#fcf8f8] border border-[#994d51]/20 rounded-md p-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-lg font-bold text-[#994d51]">{year}</span>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => setYearToDuplicate({ entityId: entity.id, entityName: entity.name, fromYear: year })}
+                                    className="text-blue-600 hover:text-blue-800 px-2 py-1 rounded text-xs font-medium"
+                                    title="Duplica anno"
+                                  >
+                                    📋 Duplica
+                                  </button>
+                                  <button
+                                    onClick={() => setYearToDelete({ entityId: entity.id, entityName: entity.name, year })}
+                                    className="text-red-600 hover:text-red-800 px-2 py-1 rounded text-xs font-medium"
+                                    title="Elimina anno"
+                                  >
+                                    🗑️
+                                  </button>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  console.log('🔍 CLICK: Entity selected:', { 
+                                    entityName: entity.name, 
+                                    entityId: entity.id, 
+                                    year,
+                                    tipologia: entity.tipologia,
+                                    numeroAbitanti: entity.numero_abitanti
+                                  });
+                                  onEntityYearSelected(entity.id, year);
+                                }}
+                                className="w-full bg-[#994d51] hover:bg-[#994d51]/90 text-white rounded px-3 py-2 text-sm font-medium transition-colors"
+                              >
+                                Apri Anno {year}
+                              </button>
+                            </div>
                           ))}
                         </div>
                       )}
@@ -828,6 +932,112 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
                 className="px-4 py-2 bg-[#994d51] hover:bg-[#994d51]/90 text-white rounded-md text-sm font-medium disabled:opacity-50"
               >
                 {adminLoading ? 'Aggiornamento...' : 'Aggiorna Password'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Conferma Eliminazione Ente */}
+      {entityToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-[#1b0e0e] mb-4">Conferma Eliminazione Ente</h3>
+            <p className="text-[#5f5252] mb-6">
+              Sei sicuro di voler eliminare l'ente <strong>{entityToDelete.name}</strong>?<br/>
+              <span className="text-red-600 text-sm font-medium">Questa azione eliminerà anche tutti gli anni e i dati associati e non può essere annullata.</span>
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setEntityToDelete(null)}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleDeleteEntity}
+                disabled={loading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium disabled:opacity-50"
+              >
+                {loading ? 'Eliminazione...' : 'Elimina Ente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Conferma Eliminazione Anno */}
+      {yearToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-[#1b0e0e] mb-4">Conferma Eliminazione Anno</h3>
+            <p className="text-[#5f5252] mb-6">
+              Sei sicuro di voler eliminare l'anno <strong>{yearToDelete.year}</strong> di <strong>{yearToDelete.entityName}</strong>?<br/>
+              <span className="text-red-600 text-sm font-medium">Questa azione eliminerà tutti i dati associati a questo anno e non può essere annullata.</span>
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setYearToDelete(null)}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleDeleteYear}
+                disabled={loading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium disabled:opacity-50"
+              >
+                {loading ? 'Eliminazione...' : 'Elimina Anno'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Duplica Anno */}
+      {yearToDuplicate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-[#1b0e0e] mb-4">Duplica Anno</h3>
+            <p className="text-[#5f5252] mb-4">
+              Stai per duplicare i dati dell'anno <strong>{yearToDuplicate.fromYear}</strong> di <strong>{yearToDuplicate.entityName}</strong> in un nuovo anno.
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#1b0e0e] mb-1">
+                Anno di Destinazione
+              </label>
+              <input
+                type="number"
+                value={duplicateToYear}
+                onChange={(e) => setDuplicateToYear(parseInt(e.target.value))}
+                min={2020}
+                max={2035}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#994d51] focus:ring-[#994d51] sm:text-sm"
+                autoFocus
+              />
+              <p className="text-xs text-[#5f5252] mt-1">
+                I dati di {yearToDuplicate.fromYear} verranno copiati nell'anno {duplicateToYear}
+              </p>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setYearToDuplicate(null);
+                  setDuplicateToYear(new Date().getFullYear() + 1);
+                }}
+                disabled={loading}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleDuplicateYear}
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium disabled:opacity-50"
+              >
+                {loading ? 'Duplicazione...' : 'Duplica Anno'}
               </button>
             </div>
           </div>

@@ -34,6 +34,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
   });
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminMessage, setAdminMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  
+  // Stati per nuove funzionalità admin
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [userToDelete, setUserToDelete] = useState<{ id: string; email: string } | null>(null);
+  const [expandedUserEntities, setExpandedUserEntities] = useState<Record<string, any>>({});
+  const [loadingEntities, setLoadingEntities] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -170,6 +178,69 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
       setAdminMessage({ type: 'error', text: 'Errore nella creazione dell\'utente' });
     } finally {
       setAdminLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    setAdminLoading(true);
+    try {
+      const result = await DatabaseService.deleteUser(userToDelete.id);
+      if (result.success) {
+        setAdminMessage({ type: 'success', text: 'Utente eliminato con successo' });
+        await loadAllUsers();
+      } else {
+        setAdminMessage({ type: 'error', text: result.error || 'Errore durante l\'eliminazione' });
+      }
+    } catch (error) {
+      setAdminMessage({ type: 'error', text: 'Errore durante l\'eliminazione dell\'utente' });
+    } finally {
+      setAdminLoading(false);
+      setUserToDelete(null);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!selectedUserId || !newPassword) return;
+    
+    setAdminLoading(true);
+    try {
+      const result = await DatabaseService.resetUserPassword(selectedUserId, newPassword);
+      if (result.success) {
+        setAdminMessage({ type: 'success', text: 'Password aggiornata con successo' });
+        setShowPasswordReset(false);
+        setNewPassword('');
+        setSelectedUserId(null);
+      } else {
+        setAdminMessage({ type: 'error', text: result.error || 'Errore durante il reset della password' });
+      }
+    } catch (error) {
+      setAdminMessage({ type: 'error', text: 'Errore durante il reset della password' });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const handleLoadUserEntities = async (userId: string) => {
+    if (expandedUserEntities?.[userId]) {
+      // Collapse
+      setExpandedUserEntities({ ...expandedUserEntities, [userId]: null });
+      return;
+    }
+    
+    setLoadingEntities(userId);
+    try {
+      const result = await DatabaseService.getUserEntities(userId);
+      if (result.success) {
+        setExpandedUserEntities({ ...expandedUserEntities, [userId]: result });
+      } else {
+        setAdminMessage({ type: 'error', text: result.error || 'Errore durante il caricamento degli enti' });
+      }
+    } catch (error) {
+      setAdminMessage({ type: 'error', text: 'Errore durante il caricamento degli enti' });
+    } finally {
+      setLoadingEntities(null);
     }
   };
 
@@ -338,26 +409,98 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
                           <th className="px-4 py-3 text-left text-xs font-medium text-[#1b0e0e] uppercase tracking-wider">Nome</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-[#1b0e0e] uppercase tracking-wider">Ruolo</th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-[#1b0e0e] uppercase tracking-wider">Creato</th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-[#1b0e0e] uppercase tracking-wider">Azioni</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {allUsers.map((userItem) => (
-                          <tr key={userItem.id}>
-                            <td className="px-4 py-3 text-sm text-[#1b0e0e]">{userItem.email}</td>
-                            <td className="px-4 py-3 text-sm text-[#5f5252]">{userItem.full_name || '-'}</td>
-                            <td className="px-4 py-3 text-sm">
-                              <span className={`px-2 py-1 text-xs rounded-full ${
-                                userItem.role === 'admin' 
-                                  ? 'bg-[#994d51] text-white' 
-                                  : 'bg-gray-200 text-gray-700'
-                              }`}>
-                                {userItem.role}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-[#5f5252]">
-                              {new Date(userItem.created_at).toLocaleDateString('it-IT')}
-                            </td>
-                          </tr>
+                          <React.Fragment key={userItem.id}>
+                            <tr className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm text-[#1b0e0e]">{userItem.email}</td>
+                              <td className="px-4 py-3 text-sm text-[#5f5252]">{userItem.full_name || '-'}</td>
+                              <td className="px-4 py-3 text-sm">
+                                <span className={`px-2 py-1 text-xs rounded-full ${
+                                  userItem.role === 'admin' 
+                                    ? 'bg-[#994d51] text-white' 
+                                    : 'bg-gray-200 text-gray-700'
+                                }`}>
+                                  {userItem.role}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-sm text-[#5f5252]">
+                                {new Date(userItem.created_at).toLocaleDateString('it-IT')}
+                              </td>
+                              <td className="px-4 py-3 text-sm space-x-2">
+                                <button
+                                  onClick={() => handleLoadUserEntities(userItem.id)}
+                                  disabled={loadingEntities === userItem.id}
+                                  className="text-blue-600 hover:text-blue-800 text-xs font-medium disabled:opacity-50"
+                                  title="Visualizza enti e anni"
+                                >
+                                  {loadingEntities === userItem.id ? 'Caricamento...' : 
+                                   expandedUserEntities?.[userItem.id] ? '▲ Nascondi Enti' : '▼ Mostra Enti'}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setSelectedUserId(userItem.id);
+                                    setShowPasswordReset(true);
+                                  }}
+                                  className="text-[#994d51] hover:text-[#994d51]/80 text-xs font-medium"
+                                  title="Resetta password"
+                                >
+                                  🔑 Reset Password
+                                </button>
+                                <button
+                                  onClick={() => setUserToDelete({ id: userItem.id, email: userItem.email })}
+                                  disabled={userItem.id === user?.id}
+                                  className="text-red-600 hover:text-red-800 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                  title={userItem.id === user?.id ? 'Non puoi eliminare te stesso' : 'Elimina utente'}
+                                >
+                                  🗑️ Elimina
+                                </button>
+                              </td>
+                            </tr>
+                            {/* Riga espansa con enti e anni */}
+                            {expandedUserEntities?.[userItem.id] && (
+                              <tr>
+                                <td colSpan={5} className="px-4 py-4 bg-gray-50">
+                                  <div className="pl-8">
+                                    <h4 className="font-semibold text-[#1b0e0e] mb-2">
+                                      Enti e Anni dell'utente
+                                    </h4>
+                                    {expandedUserEntities[userItem.id].entities && expandedUserEntities[userItem.id].entities.length > 0 ? (
+                                      <div className="space-y-2">
+                                        <p className="text-sm text-[#5f5252] mb-2">
+                                          <strong>Totale:</strong> {expandedUserEntities[userItem.id].totalEntities} enti, {expandedUserEntities[userItem.id].totalYears} anni
+                                        </p>
+                                        {expandedUserEntities[userItem.id].entities.map((entity: any) => (
+                                          <div key={entity.id} className="bg-white p-3 rounded border border-gray-200">
+                                            <div className="font-medium text-[#1b0e0e]">{entity.name}</div>
+                                            <div className="text-xs text-[#5f5252] mt-1">
+                                              Tipologia: {entity.tipologia || 'N/D'}
+                                              {entity.numero_abitanti && ` • Abitanti: ${entity.numero_abitanti.toLocaleString()}`}
+                                            </div>
+                                            {entity.years && entity.years.length > 0 ? (
+                                              <div className="mt-2">
+                                                <span className="text-xs font-medium text-[#5f5252]">Anni: </span>
+                                                <span className="text-xs text-[#994d51]">
+                                                  {entity.years.join(', ')}
+                                                </span>
+                                              </div>
+                                            ) : (
+                                              <div className="text-xs text-gray-400 mt-2 italic">Nessun anno configurato</div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-gray-500 italic">Nessun ente trovato per questo utente</p>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         ))}
                       </tbody>
                     </table>
@@ -563,6 +706,81 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
           </div>
         )}
       </div>
+
+      {/* Modal Conferma Eliminazione */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-[#1b0e0e] mb-4">Conferma Eliminazione</h3>
+            <p className="text-[#5f5252] mb-6">
+              Sei sicuro di voler eliminare l'utente <strong>{userToDelete.email}</strong>?<br/>
+              <span className="text-red-600 text-sm">Questa azione eliminerà anche tutti gli enti e i dati associati e non può essere annullata.</span>
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setUserToDelete(null)}
+                disabled={adminLoading}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={adminLoading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium disabled:opacity-50"
+              >
+                {adminLoading ? 'Eliminazione...' : 'Elimina'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Reset Password */}
+      {showPasswordReset && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-[#1b0e0e] mb-4">Reset Password</h3>
+            <p className="text-[#5f5252] mb-4">
+              Inserisci la nuova password per l'utente
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#1b0e0e] mb-1">
+                Nuova Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#994d51] focus:ring-[#994d51] sm:text-sm"
+                placeholder="Minimo 6 caratteri"
+                minLength={6}
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowPasswordReset(false);
+                  setNewPassword('');
+                  setSelectedUserId(null);
+                }}
+                disabled={adminLoading}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={adminLoading || newPassword.length < 6}
+                className="px-4 py-2 bg-[#994d51] hover:bg-[#994d51]/90 text-white rounded-md text-sm font-medium disabled:opacity-50"
+              >
+                {adminLoading ? 'Aggiornamento...' : 'Aggiorna Password'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

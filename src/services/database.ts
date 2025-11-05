@@ -678,23 +678,121 @@ export class DatabaseService {
 
   /**
    * [SOLO ADMIN] Elimina un utente
-   * NOTA: Questa funzione richiede Edge Functions per la sicurezza
    */
-  static async deleteUser(userId: string): Promise<boolean> {
+  static async deleteUser(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Verifica che l'utente corrente sia admin
-      const isAdminUser = await this.isAdmin();
-      if (!isAdminUser) {
-        console.error('Solo gli amministratori possono eliminare utenti');
-        return false;
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        return { success: false, error: 'Sessione non valida' };
       }
 
-      // TODO: Implementare Edge Function per sicurezza
-      console.error('Funzionalità temporaneamente disabilitata. Usa il Supabase Dashboard per eliminare utenti.');
-      return false;
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('❌ deleteUser: Edge Function error:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (!data.success) {
+        return { success: false, error: data.error };
+      }
+
+      return { success: true };
     } catch (error) {
       console.error('Error in deleteUser:', error);
-      return false;
+      return { success: false, error: 'Errore durante l\'eliminazione dell\'utente' };
+    }
+  }
+
+  /**
+   * [SOLO ADMIN] Resetta la password di un utente
+   */
+  static async resetUserPassword(userId: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        return { success: false, error: 'Sessione non valida' };
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-reset-password', {
+        body: { userId, newPassword },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('❌ resetUserPassword: Edge Function error:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (!data.success) {
+        return { success: false, error: data.error };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error in resetUserPassword:', error);
+      return { success: false, error: 'Errore durante il reset della password' };
+    }
+  }
+
+  /**
+   * [SOLO ADMIN] Ottieni gli enti e anni di un utente
+   */
+  static async getUserEntities(userId: string): Promise<{
+    success: boolean;
+    entities?: Array<{
+      id: string;
+      name: string;
+      tipologia?: string;
+      numero_abitanti?: number;
+      created_at: string;
+      years: number[];
+    }>;
+    totalEntities?: number;
+    totalYears?: number;
+    error?: string;
+  }> {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        return { success: false, error: 'Sessione non valida' };
+      }
+
+      const { data, error } = await supabase.functions.invoke('admin-get-user-entities', {
+        body: { userId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('❌ getUserEntities: Edge Function error:', error);
+        return { success: false, error: error.message };
+      }
+
+      if (!data.success) {
+        return { success: false, error: data.error };
+      }
+
+      return { 
+        success: true, 
+        entities: data.entities,
+        totalEntities: data.totalEntities,
+        totalYears: data.totalYears
+      };
+    } catch (error) {
+      console.error('Error in getUserEntities:', error);
+      return { success: false, error: 'Errore durante il caricamento degli enti' };
     }
   }
 }

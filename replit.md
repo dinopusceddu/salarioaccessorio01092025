@@ -9,11 +9,13 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Port**: 5000 (configured for Replit environment)
 - **Dependencies**: All installed and working
 
-## Recent Changes (September 11, 2025)
-- Fixed package.json to use correct @google/genai version (1.17.0)
+## Recent Changes (November 5, 2025)
+- **DEPLOYMENT FIX**: Added preview server port configuration to vite.config.ts (preview server now correctly uses port 5000 instead of default 4173)
+- **UI REDESIGN**: Complete rebrand with FP CGIL Lombardia logo and consistent color palette (#fcf8f8, #1b0e0e, #994d51, #5f5252)
+- **ADMIN PANEL**: Implemented comprehensive admin controls in DashboardPage with user creation and management
+- **NAVIGATION**: Added logout button in dashboard, "← Dashboard" button in app header, admin access from HomePage
+- **BUG FIX - Data Caching**: Fixed AppContext.loadFromDatabase() to reset all data to initial values when no database data exists, preventing cross-entity data leakage
 - Configured Vite for Replit environment with proper host settings (0.0.0.0:5000)
-- Cleaned up duplicate file structure (removed root-level duplicates, kept src/ as single source)
-- Fixed TypeScript path aliases and Vite configuration
 - Set up deployment configuration for autoscale deployment
 - Created workflow for frontend development server
 

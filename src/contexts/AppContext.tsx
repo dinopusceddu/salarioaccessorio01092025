@@ -18,6 +18,7 @@ import { useNormativeData } from '../hooks/useNormativeData';
 import { runAllComplianceChecks } from '../logic/complianceChecks';
 import { calculateFundCompletely } from '../logic/fundCalculations';
 import { validateFundData } from '../logic/validation';
+import { getMappedDistribuzioneUpdates, roundToTwoDecimals } from '../config/fondoDistribuzioneMapping';
 import {
   AppAction,
   AppState,
@@ -248,7 +249,10 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           },
         },
       };
-    case 'UPDATE_FONDO_ACCESSORIO_DIPENDENTE_DATA':
+    case 'UPDATE_FONDO_ACCESSORIO_DIPENDENTE_DATA': {
+      // Auto-sync mapped fields to Distribuzione Risorse with rounding
+      const distribuzioneUpdates = getMappedDistribuzioneUpdates(action.payload);
+      
       return {
         ...state,
         fundData: {
@@ -257,8 +261,14 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
             ...state.fundData.fondoAccessorioDipendenteData,
             ...action.payload,
           } as FondoAccessorioDipendenteData,
+          // Auto-update corresponding Distribuzione fields
+          distribuzioneRisorseData: {
+            ...state.fundData.distribuzioneRisorseData,
+            ...distribuzioneUpdates,
+          } as DistribuzioneRisorseData,
         },
       };
+    }
     case 'UPDATE_FONDO_ELEVATE_QUALIFICAZIONI_DATA':
       return {
         ...state,
@@ -292,17 +302,28 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
           } as FondoDirigenzaData,
         },
       };
-    case 'UPDATE_DISTRIBUZIONE_RISORSE_DATA':
+    case 'UPDATE_DISTRIBUZIONE_RISORSE_DATA': {
+      // Round all numeric values to 2 decimal places
+      const roundedPayload: Partial<DistribuzioneRisorseData> = {};
+      Object.entries(action.payload).forEach(([key, value]) => {
+        if (typeof value === 'number') {
+          roundedPayload[key as keyof DistribuzioneRisorseData] = roundToTwoDecimals(value) as any;
+        } else {
+          roundedPayload[key as keyof DistribuzioneRisorseData] = value as any;
+        }
+      });
+      
       return {
         ...state,
         fundData: {
           ...state.fundData,
           distribuzioneRisorseData: {
             ...state.fundData.distribuzioneRisorseData,
-            ...action.payload,
+            ...roundedPayload,
           } as DistribuzioneRisorseData,
         },
       };
+    }
     case 'ADD_PROVENTO_SPECIFICO':
       return {
         ...state,

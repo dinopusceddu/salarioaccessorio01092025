@@ -10,6 +10,13 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **ENTITY/YEAR MANAGEMENT**: Complete entity and year data management capabilities
+  - **Delete Entity**: Button to delete entire entities with all their data - includes confirmation modal with clear warnings
+  - **Delete Year**: Individual year deletion per entity - removes only specific year's data with confirmation
+  - **Duplicate Year**: Copy all fund data from one year to another (e.g., 2025 → 2026) with customizable target year
+  - **UI/UX**: Card-based year display with action buttons (Duplica, Elimina) alongside main "Apri Anno" button
+  - **Safety**: All destructive operations require explicit confirmation modals to prevent accidental data loss
+  - **Implementation**: DatabaseService.duplicateYear() clones entire FundData payload with updated annoRiferimento
 - **ADMIN PANEL CONSOLIDATION**: Centralized admin panel access exclusively to Dashboard
   - **Removed**: Admin panel button from HomePage and all fund pages
   - **Removed**: Separate AdminPage.tsx file and routing

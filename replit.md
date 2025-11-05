@@ -10,6 +10,10 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **ENTITY WORKFLOW FIX**: Removed entity editing form from main app, entity/year now selected only from dashboard (user → entity → year workflow)
+  - Created SelectedEntityDisplay component to show readonly entity and year information
+  - Added DatabaseService.getEntity() method for fetching single entity details
+  - Removed MultipleEntitaForm from EntityGeneralInfoForm - entity changes now only through dashboard
 - **DEPLOYMENT FIX**: Added preview server port configuration to vite.config.ts (preview server now correctly uses port 5000 instead of default 4173)
 - **UI REDESIGN**: Complete rebrand with FP CGIL Lombardia logo and consistent color palette (#fcf8f8, #1b0e0e, #994d51, #5f5252)
 - **ADMIN PANEL**: Implemented comprehensive admin controls in DashboardPage with user creation and management

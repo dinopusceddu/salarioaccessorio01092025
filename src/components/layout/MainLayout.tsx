@@ -1,8 +1,8 @@
 // components/layout/MainLayout.tsx
 import React, { useState } from 'react';
-import { Header } from './Header.tsx';
-import { Sidebar } from './Sidebar.tsx';
-import { PageModule } from '../../types.ts';
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+import { PageModule } from '../../types';
 
 interface MainLayoutProps {
   modules: PageModule[];

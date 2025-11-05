@@ -47,6 +47,13 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-[#fcf8f8] flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/attached_assets/LOGO_FP_1758267371308.jpg" 
+              alt="FP CGIL Lombardia" 
+              className="h-24 w-auto"
+            />
+          </div>
           <h1 className="text-3xl font-bold text-[#1b0e0e] mb-2">
             Salario Accessorio
           </h1>

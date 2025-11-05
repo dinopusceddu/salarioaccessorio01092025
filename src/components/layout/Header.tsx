@@ -1,6 +1,7 @@
 // components/layout/Header.tsx
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAppContext } from '../../contexts/AppContext';
 import { Button } from '../shared/Button';
 import { APP_NAME } from '../../constants';
 
@@ -47,12 +48,18 @@ const AppLogo = () => (
 
 export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   const { user, signOut } = useAuth();
+  const { state, dispatch } = useAppContext();
+  const { selectedEntityId } = state;
 
   const handleLogout = async () => {
     const { error } = await signOut();
     if (error) {
       console.error('Errore durante il logout:', error.message);
     }
+  };
+
+  const handleBackToDashboard = () => {
+    dispatch({ type: 'SET_SELECTED_ENTITY', payload: null });
   };
 
   return (
@@ -76,6 +83,15 @@ export const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             <span className="text-[#1b0e0e] text-sm font-medium hidden sm:block">
               {user?.email}
             </span>
+            {selectedEntityId && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleBackToDashboard}
+              >
+                ← Dashboard
+              </Button>
+            )}
             <Button
               variant="secondary"
               size="sm"

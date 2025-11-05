@@ -599,8 +599,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dispatch({ type: 'UPDATE_DISTRIBUZIONE_RISORSE_DATA', payload: data.distribuzioneRisorseData });
         console.log(`Dati caricati dal database per l'anno ${year}`);
         return true;
+      } else {
+        // ⚠️ FIX BUG: Se non ci sono dati nel database, resetta ai valori iniziali
+        // per evitare di mostrare dati cached di altre entità
+        console.log(`⚠️ Nessun dato trovato nel database per l'anno ${year} - Reset ai valori iniziali`);
+        dispatch({ type: 'SET_CURRENT_YEAR', payload: year });
+        dispatch({ type: 'UPDATE_HISTORICAL_DATA', payload: INITIAL_HISTORICAL_DATA });
+        dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: { ...INITIAL_ANNUAL_DATA, annoRiferimento: year } });
+        dispatch({ type: 'UPDATE_FONDO_ACCESSORIO_DIPENDENTE_DATA', payload: INITIAL_FONDO_ACCESSORIO_DIPENDENTE_DATA });
+        dispatch({ type: 'UPDATE_FONDO_ELEVATE_QUALIFICAZIONI_DATA', payload: INITIAL_FONDO_ELEVATE_QUALIFICAZIONI_DATA });
+        dispatch({ type: 'UPDATE_FONDO_SEGRETARIO_COMUNALE_DATA', payload: INITIAL_FONDO_SEGRETARIO_COMUNALE_DATA });
+        dispatch({ type: 'UPDATE_FONDO_DIRIGENZA_DATA', payload: INITIAL_FONDO_DIRIGENZA_DATA });
+        dispatch({ type: 'UPDATE_DISTRIBUZIONE_RISORSE_DATA', payload: INITIAL_DISTRIBUZIONE_RISORSE_DATA });
+        return false;
       }
-      return false;
     } catch (error) {
       console.error('Error loading from database:', error);
       return false;

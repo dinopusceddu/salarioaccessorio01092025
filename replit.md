@@ -10,6 +10,18 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **AUTO-SINCRONIZZAZIONE FONDO-DISTRIBUZIONE**: Implementato sistema automatico di allineamento tra Fondo Accessorio e Distribuzione Risorse
+  - **Auto-compilazione**: Quando si inseriscono valori nel Fondo Accessorio Dipendente, i corrispondenti campi in Distribuzione Risorse vengono automaticamente compilati
+  - **Mapping campi**: 
+    * Recupero evasione ICI → Incentivi conto terzi
+    * Risorse personale case da gioco → Compensi case da gioco
+    * Quota rimborso spese notifica → Compensi messi notificatori
+    * Incentivi funzioni tecniche → Incentivi condono/funzioni tecniche pre-2018
+    * Incentivi spese giudizio → Compensi avvocatura
+    * Incentivi riscossione IMU/TARI → Incentivi IMU/TARI
+  - **Arrotondamento**: Tutti i valori in Distribuzione Risorse arrotondati automaticamente a 2 cifre decimali
+  - **Compliance check**: Nuovi controlli di conformità verificano allineamento Fondo-Distribuzione e generano warning se modifiche manuali creano discordanze
+  - **File**: Configurazione in `src/config/fondoDistribuzioneMapping.ts`, logica in AppContext.tsx, controlli in complianceChecks.ts
 - **BUG FIX - Simulatore e Art23 non visibili**: Risolto problema di case sensitivity nella tipologia ente
   - **Problema**: I form "Simulatore Incremento" e "Art. 23" non apparivano per i Comuni
   - **Causa**: Database salva "comune" (minuscolo) ma enum richiede "Comune" (maiuscolo) - confronto falliva

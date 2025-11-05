@@ -628,10 +628,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [state.selectedEntityId]);
 
-  // Auto-load data when entity is selected
+  // ✅ FIX: Reset data IMMEDIATELY when entity changes to prevent data leakage
+  React.useEffect(() => {
+    if (state.selectedEntityId) {
+      console.log(`🔄 RESET: Entity changed, resetting to initial values before loading data`);
+      // Reset all data to initial values
+      dispatch({ type: 'UPDATE_HISTORICAL_DATA', payload: INITIAL_HISTORICAL_DATA });
+      dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: { ...INITIAL_ANNUAL_DATA, annoRiferimento: state.currentYear } });
+      dispatch({ type: 'UPDATE_FONDO_ACCESSORIO_DIPENDENTE_DATA', payload: INITIAL_FONDO_ACCESSORIO_DIPENDENTE_DATA });
+      dispatch({ type: 'UPDATE_FONDO_ELEVATE_QUALIFICAZIONI_DATA', payload: INITIAL_FONDO_ELEVATE_QUALIFICAZIONI_DATA });
+      dispatch({ type: 'UPDATE_FONDO_SEGRETARIO_COMUNALE_DATA', payload: INITIAL_FONDO_SEGRETARIO_COMUNALE_DATA });
+      dispatch({ type: 'UPDATE_FONDO_DIRIGENZA_DATA', payload: INITIAL_FONDO_DIRIGENZA_DATA });
+      dispatch({ type: 'UPDATE_DISTRIBUZIONE_RISORSE_DATA', payload: INITIAL_DISTRIBUZIONE_RISORSE_DATA });
+      // Clear calculated fund to show empty state
+      dispatch({ type: 'CALCULATE_FUND_SUCCESS', payload: { fund: null as any, checks: [] } });
+    }
+  }, [state.selectedEntityId, state.currentYear]);
+
+  // Auto-load data when entity is selected (after reset)
   React.useEffect(() => {
     if (state.selectedEntityId && state.currentYear) {
-      loadFromDatabase(state.currentYear);
+      // Small delay to ensure reset happens first
+      const timeoutId = setTimeout(() => {
+        loadFromDatabase(state.currentYear);
+      }, 100);
+      return () => clearTimeout(timeoutId);
     }
   }, [state.selectedEntityId, state.currentYear, loadFromDatabase]);
 

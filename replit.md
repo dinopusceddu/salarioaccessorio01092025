@@ -10,11 +10,12 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
-- **UX IMPROVEMENT - Removed Validation Blockers**: Eliminated all validation errors in DataEntryPage to improve user experience
-  - **Issue**: Alert "Sono presenti errori di validazione" appeared without highlighted fields, blocking workflow
-  - **Fix**: Completely removed client-side validation logic from DataEntryPage.tsx
-  - **Resolution**: Users can now freely enter and save data without validation interruptions
-  - **Impact**: Cleaner, more streamlined data entry experience
+- **UX IMPROVEMENT - Removed ALL Validation Blockers**: Eliminated all validation errors across entire application
+  - **Issue**: Alert "Sono presenti errori di validazione" blocked calculation without showing which fields had errors
+  - **Fix 1**: Removed validation block from performFundCalculation in AppContext.tsx (lines 685-693)
+  - **Fix 2**: Removed client-side validation logic from DataEntryPage.tsx
+  - **Resolution**: Calculation now proceeds regardless of data validation state
+  - **Impact**: Users can enter data freely and perform calculations without validation interruptions
 - **BUG FIX - Entity Name Display**: Fixed "Ente non specificato" appearing in HomePage and missing components in DataEntryPage
   - **Root Cause**: Functions getPrimaryEntityName/Tipologia relied on entita[] array which was empty after database reset
   - **Fix**: Modified HomePage and DataEntryPage to load entity data directly from database using selectedEntityId

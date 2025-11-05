@@ -8,7 +8,7 @@ import { Select } from '../shared/Select';
 import { Card } from '../shared/Card';
 import { TEXTS_UI, ALL_TIPOLOGIE_ENTE } from '../../constants';
 import { Checkbox } from '../shared/Checkbox';
-import { MultipleEntitaForm } from './MultipleEntitaForm';
+import { SelectedEntityDisplay } from './SelectedEntityDisplay';
 
 const booleanOptions = [
   { value: 'true', label: TEXTS_UI.trueText },
@@ -65,62 +65,8 @@ export const EntityGeneralInfoForm: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      <Card title="Anno di Riferimento" className="mb-8">
-        <Input
-          label="Anno di Riferimento per la Costituzione del Fondo"
-          type="number"
-          id="annoRiferimento"
-          name="annoRiferimento"
-          value={annualData.annoRiferimento}
-          onChange={(e) => dispatch({ type: 'SET_CURRENT_YEAR', payload: parseInt(e.target.value) || new Date().getFullYear() })}
-          min="2000"
-          max="2099"
-          containerClassName="mb-6"
-          aria-required="true"
-        />
-      </Card>
-
-      {/* Nuovo componente per multiple entità */}
-      <MultipleEntitaForm />
-
-      {/* Fallback compatibility - mostrato solo se non ci sono entità nel nuovo formato */}
-      {annualData.entita.length === 0 && annualData.denominazioneEnte && (
-        <Card title="Migrazione Dati Esistenti" className="mb-8 border-amber-200 bg-amber-50">
-          <div className="text-amber-800 text-sm mb-4">
-            ⚠️ <strong>Dati in formato precedente rilevati.</strong> Aggiungi un'entità sopra per utilizzare il nuovo sistema a entità multiple.
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 p-4 bg-white rounded border">
-            <Input
-              label="Denominazione Ente (Legacy)"
-              type="text"
-              id="denominazioneEnte"
-              name="denominazioneEnte"
-              value={annualData.denominazioneEnte ?? ''}
-              onChange={handleGenericChange}
-              placeholder="Es. Comune di..."
-              containerClassName="md:col-span-2"
-              disabled
-            />
-            <Select
-              label="Tipologia Ente (Legacy)"
-              id="tipologiaEnte"
-              name="tipologiaEnte"
-              options={ALL_TIPOLOGIE_ENTE}
-              value={annualData.tipologiaEnte ?? ''}
-              onChange={handleTipologiaChange}
-              placeholder="Seleziona tipologia..."
-              disabled
-            />
-            <Input
-              label="Numero Abitanti (Legacy)"
-              type="number"
-              value={annualData.numeroAbitanti ?? ''}
-              placeholder="Es. 15000"
-              disabled
-            />
-          </div>
-        </Card>
-      )}
+      {/* Display readonly dell'entità e anno selezionati dalla dashboard */}
+      <SelectedEntityDisplay />
 
       <Card title="Configurazioni Ente" className="mb-8">
         <div className="grid grid-cols-1 md:grid-cols-1 gap-x-6 gap-y-4">

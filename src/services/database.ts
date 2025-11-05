@@ -171,6 +171,36 @@ export class DatabaseService {
   }
 
   /**
+   * Ottieni una singola entità per ID
+   */
+  static async getEntity(entityId: string): Promise<Entity | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('entities')
+        .select('*')
+        .eq('id', entityId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        console.error('Error fetching entity:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in getEntity:', error);
+      return null;
+    }
+  }
+
+  /**
    * Crea una nuova entità per l'utente corrente
    */
   static async createEntity(entity: {

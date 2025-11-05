@@ -1,6 +1,17 @@
 // services/database.ts - Service layer per interagire con il database Supabase
 import { supabase } from '../lib/supabaseClient';
 import { FundData } from '../types';
+import type { TipologiaEnte } from '../enums';
+
+/**
+ * Normalizza la tipologia ente dal database (minuscolo) all'enum (capitalizzato)
+ * Es: "comune" -> "Comune", "provincia" -> "Provincia"
+ */
+export function normalizeTipologia(tipologia: string | undefined | null): TipologiaEnte | undefined {
+  if (!tipologia) return undefined;
+  // Capitalize first letter to match enum values
+  return (tipologia.charAt(0).toUpperCase() + tipologia.slice(1)) as TipologiaEnte;
+}
 
 export interface UserProfile {
   id: string;

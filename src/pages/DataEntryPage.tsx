@@ -41,6 +41,11 @@ export const DataEntryPage: React.FC = () => {
     loadEntityTipologia();
   }, [selectedEntityId]);
 
+  // ✅ FIX: Clear validation errors when page loads
+  useEffect(() => {
+    clearValidationErrors(dispatch);
+  }, [dispatch]);
+
   const handleSubmit = async () => {
     // Esempio di uso dei nuovi action creators per una validazione lato client
     const entityName = getPrimaryEntityName(state.fundData.annualData);

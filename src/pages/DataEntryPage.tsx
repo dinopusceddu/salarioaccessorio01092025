@@ -9,22 +9,17 @@ import { SimulatoreIncrementoForm } from '../components/dataInput/SimulatoreIncr
 import { Alert } from '../components/shared/Alert';
 import { Button } from '../components/shared/Button';
 import { TEXTS_UI } from '../constants';
-import {
-  useAppContext,
-  setValidationErrors,
-  clearValidationErrors,
-} from '../contexts/AppContext';
+import { useAppContext } from '../contexts/AppContext';
 import { TipologiaEnte } from '../enums';
-import { getPrimaryEntityName } from '../utils/formatters';
 import { DatabaseService } from '../services/database';
 
 export const DataEntryPage: React.FC = () => {
-  const { state, performFundCalculation, dispatch } = useAppContext();
-  const { isLoading, fundData, error, validationErrors, selectedEntityId } = state;
+  const { state, performFundCalculation } = useAppContext();
+  const { isLoading, error, selectedEntityId } = state;
   
   const [tipologiaEnte, setTipologiaEnte] = useState<TipologiaEnte | undefined>(undefined);
 
-  // ✅ FIX: Load entity tipologia from database using selectedEntityId
+  // Load entity tipologia from database using selectedEntityId
   useEffect(() => {
     const loadEntityTipologia = async () => {
       if (!selectedEntityId) {
@@ -41,30 +36,10 @@ export const DataEntryPage: React.FC = () => {
     loadEntityTipologia();
   }, [selectedEntityId]);
 
-  // ✅ FIX: Clear validation errors when page loads
-  useEffect(() => {
-    clearValidationErrors(dispatch);
-  }, [dispatch]);
-
   const handleSubmit = async () => {
-    // Esempio di uso dei nuovi action creators per una validazione lato client
-    const entityName = getPrimaryEntityName(state.fundData.annualData);
-    if (!entityName || entityName.trim() === '') {
-      const errors = {
-        'fundData.annualData.denominazioneEnte':
-          "Esempio: La denominazione dell'ente non può essere vuota.",
-      };
-      // Uso del nuovo action creator per impostare gli errori
-      setValidationErrors(dispatch, errors);
-      return; // Interrompe l'esecuzione
-    }
-
-    // Se la validazione custom passa, pulisci gli errori prima di procedere con il calcolo completo
-    clearValidationErrors(dispatch);
     await performFundCalculation();
   };
 
-  const hasValidationErrors = Object.keys(validationErrors).length > 0;
   const showSimulatoreAndArt23Form =
     tipologiaEnte === TipologiaEnte.COMUNE || tipologiaEnte === TipologiaEnte.PROVINCIA;
 
@@ -75,14 +50,6 @@ export const DataEntryPage: React.FC = () => {
       </h2>
 
       {error && <Alert type="error" title="Errore" message={error} />}
-
-      {hasValidationErrors && !error && (
-        <Alert
-          type="warning"
-          title="Attenzione"
-          message="Sono presenti errori nei dati inseriti. Correggi i campi evidenziati prima di procedere."
-        />
-      )}
 
       <EntityGeneralInfoForm />
       <HistoricalDataForm />

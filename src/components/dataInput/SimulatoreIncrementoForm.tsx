@@ -1,5 +1,5 @@
 // components/dataInput/SimulatoreIncrementoForm.tsx
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useAppContext } from '../../contexts/AppContext.tsx';
 import { SimulatoreIncrementoInput } from '../../types.ts';
 import { TipologiaEnte } from '../../enums.ts';
@@ -8,7 +8,7 @@ import { Card } from '../shared/Card.tsx';
 import { TEXTS_UI } from '../../constants.ts';
 import { calculateSimulazione } from '../../logic/fundEngine.ts';
 import { useNormativeData } from '../../hooks/useNormativeData.ts';
-import { getPrimaryEntityTipologia, getPrimaryEntityNumeroAbitanti } from '../../utils/formatters';
+import { DatabaseService, normalizeTipologia } from '../../services/database.ts';
 
 const formatCurrencyForDisplay = (value?: number) => {
   if (value === undefined || value === null || isNaN(value)) return TEXTS_UI.notApplicable;
@@ -26,22 +26,46 @@ export const SimulatoreIncrementoForm: React.FC = () => {
   const { annualData } = state.fundData;
   const { simulatoreInput, simulatoreRisultati } = annualData;
   
-  // Use utility functions to get entity data with fallback to legacy
-  const numeroAbitanti = getPrimaryEntityNumeroAbitanti(annualData);
-  const tipologiaEnte = getPrimaryEntityTipologia(annualData);
+  // Load entity data from database using selectedEntityId
+  const [numeroAbitanti, setNumeroAbitanti] = useState<number | undefined>(undefined);
+  const [tipologiaEnte, setTipologiaEnte] = useState<TipologiaEnte | undefined>(undefined);
+
+  useEffect(() => {
+    const loadEntityData = async () => {
+      if (!state.selectedEntityId) {
+        setNumeroAbitanti(undefined);
+        setTipologiaEnte(undefined);
+        return;
+      }
+      
+      const entity = await DatabaseService.getEntity(state.selectedEntityId);
+      console.log('🏗️ SimulatoreIncrementoForm: Loaded entity:', entity);
+      if (entity) {
+        setNumeroAbitanti(entity.numero_abitanti);
+        setTipologiaEnte(normalizeTipologia(entity.tipologia));
+        console.log('📊 SimulatoreIncrementoForm: Using entity data:', { 
+          numeroAbitanti: entity.numero_abitanti, 
+          tipologia: entity.tipologia,
+          normalized: normalizeTipologia(entity.tipologia)
+        });
+      }
+    };
+    
+    loadEntityData();
+  }, [state.selectedEntityId]);
 
   const runAndDispatchSimulazione = useCallback(() => {
     // Create a minimal annualData object with only what calculateSimulazione needs
-    // This avoids the circular dependency with simulatoreRisultati
+    // Use entity data loaded from database
     const minimalAnnualData = {
-      entita: annualData.entita,
-      // Include legacy fields as fallback
-      tipologiaEnte: annualData.tipologiaEnte,
-      numeroAbitanti: annualData.numeroAbitanti,
+      entita: [],
+      // Use data from database entity
+      tipologiaEnte: tipologiaEnte,
+      numeroAbitanti: numeroAbitanti,
     };
     const results = calculateSimulazione(simulatoreInput, minimalAnnualData as any);
     dispatch({ type: 'UPDATE_SIMULATORE_RISULTATI', payload: results });
-  }, [simulatoreInput, annualData.entita, annualData.tipologiaEnte, annualData.numeroAbitanti, dispatch]);
+  }, [simulatoreInput, tipologiaEnte, numeroAbitanti, dispatch]);
   
   useEffect(() => {
     runAndDispatchSimulazione();

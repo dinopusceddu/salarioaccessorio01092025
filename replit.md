@@ -10,6 +10,13 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **BUG FIX - Simulatore e Art23 non visibili**: Risolto problema di case sensitivity nella tipologia ente
+  - **Problema**: I form "Simulatore Incremento" e "Art. 23" non apparivano per i Comuni
+  - **Causa**: Database salva "comune" (minuscolo) ma enum richiede "Comune" (maiuscolo) - confronto falliva
+  - **Fix 1**: Creata funzione normalizeTipologia() in database.ts per convertire valori database all'enum
+  - **Fix 2**: Aggiornato DataEntryPage e SimulatoreIncrementoForm per usare normalizeTipologia()
+  - **Fix 3**: SimulatoreIncrementoForm ora carica numero abitanti e tipologia direttamente dal database entity
+  - **Risultato**: I form ora appaiono correttamente per Comuni e Province, usando dati corretti dall'entità
 - **ENTITY/YEAR MANAGEMENT**: Complete entity and year data management capabilities
   - **Delete Entity**: Button to delete entire entities with all their data - includes confirmation modal with clear warnings
   - **Delete Year**: Individual year deletion per entity - removes only specific year's data with confirmation

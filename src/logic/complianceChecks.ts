@@ -8,6 +8,7 @@ import {
     FondoElevateQualificazioniData,
     NormativeData
 } from '../types';
+import { checkFondoDistribuzioneAlignment } from '../config/fondoDistribuzioneMapping';
 
 /**
  * Verifica la corrispondenza tra le fonti di finanziamento vincolate e il loro utilizzo nella distribuzione delle risorse.
@@ -98,6 +99,33 @@ const verificaCorrispondenzaRisorseVincolate = (fundData: FundData): ComplianceC
         });
     }
   }
+
+  return results;
+};
+
+/**
+ * Verifica l'allineamento tra i campi del Fondo Accessorio e i corrispondenti campi in Distribuzione Risorse
+ * Genera warning se i valori non corrispondono dopo modifiche manuali
+ */
+const verificaAllineamentoFondoDistribuzione = (fundData: FundData): ComplianceCheck[] => {
+  const { fondoAccessorioDipendenteData, distribuzioneRisorseData } = fundData;
+  const results: ComplianceCheck[] = [];
+
+  const mismatches = checkFondoDistribuzioneAlignment(fondoAccessorioDipendenteData, distribuzioneRisorseData);
+
+  mismatches.forEach((mismatch, index) => {
+    results.push({
+      id: `allineamento_fondo_distribuzione_${index}`,
+      descrizione: `Discordanza ${mismatch.description}`,
+      isCompliant: false,
+      valoreAttuale: `Distribuzione: € ${mismatch.distribuzioneValue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      limite: `Fondo: € ${mismatch.fondoValue.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      messaggio: `Il valore in Distribuzione Risorse (€ ${mismatch.distribuzioneValue.toFixed(2)}) non corrisponde al valore nel Fondo Accessorio (€ ${mismatch.fondoValue.toFixed(2)}). Differenza: € ${Math.abs(mismatch.difference).toFixed(2)}. Verificare e allineare i valori.`,
+      riferimentoNormativo: 'Art. 67 e Art. 80 CCNL 2022',
+      gravita: 'warning',
+      relatedPage: 'distribuzioneRisorse',
+    });
+  });
 
   return results;
 };
@@ -354,6 +382,9 @@ export const runAllComplianceChecks = (calculatedFund: CalculatedFund, fundData:
           });
       }
   }
+
+  // Check alignment between Fondo Accessorio and Distribuzione Risorse
+  checks = [...checks, ...verificaAllineamentoFondoDistribuzione(fundData)];
   
   return checks;
 };

@@ -1,5 +1,5 @@
 // pages/DataEntryPage.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { Art23EmployeeAndIncrementForm } from '../components/dataInput/Art23EmployeeAndIncrementForm';
 import { AnnualDataForm } from '../components/dataInput/AnnualDataForm';
@@ -15,14 +15,31 @@ import {
   clearValidationErrors,
 } from '../contexts/AppContext';
 import { TipologiaEnte } from '../enums';
-import { getPrimaryEntityTipologia, getPrimaryEntityName } from '../utils/formatters';
+import { getPrimaryEntityName } from '../utils/formatters';
+import { DatabaseService } from '../services/database';
 
 export const DataEntryPage: React.FC = () => {
   const { state, performFundCalculation, dispatch } = useAppContext();
-  const { isLoading, fundData, error, validationErrors } = state;
+  const { isLoading, fundData, error, validationErrors, selectedEntityId } = state;
   
-  // Use utility functions to get entity data with fallback to legacy
-  const tipologiaEnte = getPrimaryEntityTipologia(fundData.annualData);
+  const [tipologiaEnte, setTipologiaEnte] = useState<TipologiaEnte | undefined>(undefined);
+
+  // ✅ FIX: Load entity tipologia from database using selectedEntityId
+  useEffect(() => {
+    const loadEntityTipologia = async () => {
+      if (!selectedEntityId) {
+        setTipologiaEnte(undefined);
+        return;
+      }
+      
+      const entity = await DatabaseService.getEntity(selectedEntityId);
+      if (entity?.tipologia) {
+        setTipologiaEnte(entity.tipologia as TipologiaEnte);
+      }
+    };
+    
+    loadEntityTipologia();
+  }, [selectedEntityId]);
 
   const handleSubmit = async () => {
     // Esempio di uso dei nuovi action creators per una validazione lato client

@@ -682,16 +682,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    const validationErrors = validateFundData(state.fundData);
-    if (Object.keys(validationErrors).length > 0) {
-      dispatch({ type: 'SET_VALIDATION_ERRORS', payload: validationErrors });
-      dispatch({
-        type: 'CALCULATE_FUND_ERROR',
-        payload: 'Sono presenti errori di validazione. Controlla i campi evidenziati.',
-      });
-      return;
-    }
-
+    // ✅ REMOVED VALIDATION BLOCK - Calculation now proceeds without validation checks
+    
     dispatch({ type: 'CALCULATE_FUND_START' });
     try {
       const calculatedFund = calculateFundCompletely(state.fundData, normativeData);

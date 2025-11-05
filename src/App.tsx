@@ -87,6 +87,30 @@ const AppContent: React.FC = () => {
 
   console.log('🏠 App: Auth state:', { role, isAdminResult: isAdmin(), profile: profile?.email, loading, selectedEntityId });
 
+  const allPageModules = getPageModules(isAdmin());
+
+  const visibleModules = allPageModules.filter((module) => {
+    if (module.id === 'fondoDirigenza' && !fundData.annualData.hasDirigenza) {
+      return false;
+    }
+    if (module.id === 'distribuzioneRisorse' && !fundData.annualData.isDistributionMode) {
+      return false;
+    }
+    return true;
+  });
+
+  // ✅ FIX: Hook must be called before any conditional returns
+  React.useEffect(() => {
+    if (!selectedEntityId) return; // Skip if no entity selected
+    
+    const activeModuleIsVisible = visibleModules.some(
+      (mod) => mod.id === activeTab
+    );
+    if (!activeModuleIsVisible && activeTab !== 'benvenuto') {
+      dispatch({ type: 'SET_ACTIVE_TAB', payload: 'benvenuto' });
+    }
+  }, [selectedEntityId, visibleModules, activeTab, dispatch]);
+
   // Nuovo workflow: se non c'è un'entità selezionata, mostra DashboardPage
   if (!selectedEntityId) {
     return (
@@ -101,27 +125,6 @@ const AppContent: React.FC = () => {
       </ProtectedRoute>
     );
   }
-
-  const allPageModules = getPageModules(isAdmin());
-
-  const visibleModules = allPageModules.filter((module) => {
-    if (module.id === 'fondoDirigenza' && !fundData.annualData.hasDirigenza) {
-      return false;
-    }
-    if (module.id === 'distribuzioneRisorse' && !fundData.annualData.isDistributionMode) {
-      return false;
-    }
-    return true;
-  });
-
-  React.useEffect(() => {
-    const activeModuleIsVisible = visibleModules.some(
-      (mod) => mod.id === activeTab
-    );
-    if (!activeModuleIsVisible && activeTab !== 'benvenuto') {
-      dispatch({ type: 'SET_ACTIVE_TAB', payload: 'benvenuto' });
-    }
-  }, [visibleModules, activeTab, dispatch]);
 
   const ActiveComponent =
     visibleModules.find((mod) => mod.id === activeTab)?.component || HomePage;

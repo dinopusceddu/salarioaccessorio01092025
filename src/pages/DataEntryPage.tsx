@@ -11,7 +11,7 @@ import { Button } from '../components/shared/Button';
 import { TEXTS_UI } from '../constants';
 import { useAppContext } from '../contexts/AppContext';
 import { TipologiaEnte } from '../enums';
-import { DatabaseService } from '../services/database';
+import { DatabaseService, normalizeTipologia } from '../services/database';
 
 export const DataEntryPage: React.FC = () => {
   const { state, performFundCalculation } = useAppContext();
@@ -28,8 +28,11 @@ export const DataEntryPage: React.FC = () => {
       }
       
       const entity = await DatabaseService.getEntity(selectedEntityId);
+      console.log('🔍 DataEntryPage: Loaded entity:', entity);
       if (entity?.tipologia) {
-        setTipologiaEnte(entity.tipologia as TipologiaEnte);
+        const normalizedTipologia = normalizeTipologia(entity.tipologia);
+        console.log('📝 DataEntryPage: Setting tipologia:', { original: entity.tipologia, normalized: normalizedTipologia });
+        setTipologiaEnte(normalizedTipologia);
       }
     };
     
@@ -42,6 +45,8 @@ export const DataEntryPage: React.FC = () => {
 
   const showSimulatoreAndArt23Form =
     tipologiaEnte === TipologiaEnte.COMUNE || tipologiaEnte === TipologiaEnte.PROVINCIA;
+  
+  console.log('🎯 DataEntryPage: Show Art23/Simulatore?', { tipologiaEnte, showSimulatoreAndArt23Form, COMUNE: TipologiaEnte.COMUNE });
 
   return (
     <div className="space-y-8">

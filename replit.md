@@ -10,6 +10,12 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **BUG FIX - Data Leakage Between Entities**: Fixed critical issue where data from one entity appeared in another
+  - **Issue**: When selecting a new entity, the form showed data from the previously selected entity
+  - **Root Cause**: Race condition between auto-save and data loading - auto-save would save old data to new entity
+  - **Fix**: Added immediate reset of all data when selectedEntityId changes (before loading from database)
+  - **Resolution**: Each entity now starts with a clean, empty form unless data exists in database
+  - **Implementation**: New useEffect in AppContext.tsx resets all fundData to INITIAL values on entity change
 - **UX IMPROVEMENT - Removed ALL Validation Blockers**: Eliminated all validation errors across entire application
   - **Issue**: Alert "Sono presenti errori di validazione" blocked calculation without showing which fields had errors
   - **Fix 1**: Removed validation block from performFundCalculation in AppContext.tsx (lines 685-693)

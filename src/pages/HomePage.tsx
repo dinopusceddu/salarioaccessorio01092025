@@ -1,6 +1,7 @@
 // src/pages/HomePage.tsx
 import React from 'react';
 import { useAppContext } from '../contexts/AppContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/shared/Button';
 import { TEXTS_UI } from '../constants';
 import { DashboardSummary } from '../components/dashboard/DashboardSummary';
@@ -14,6 +15,7 @@ import { getPrimaryEntityName } from '../utils/formatters';
 
 export const HomePage: React.FC = () => {
   const { state, dispatch, performFundCalculation } = useAppContext();
+  const { isAdmin } = useAuth();
   const { calculatedFund, complianceChecks, fundData, isLoading, error } = state;
   const { annoRiferimento } = fundData.annualData;
 
@@ -66,15 +68,26 @@ export const HomePage: React.FC = () => {
             Visione d'insieme dei dati calcolati e dello stato di conformità del fondo.
           </p>
         </div>
-        <Button
-          onClick={performFundCalculation}
-          isLoading={isLoading}
-          disabled={isLoading}
-          variant="primary"
-          size="md"
-        >
-          {isLoading ? TEXTS_UI.calculating : 'Aggiorna Calcoli'}
-        </Button>
+        <div className="flex items-center gap-3">
+          {isAdmin() && (
+            <Button
+              onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'admin' })}
+              variant="secondary"
+              size="md"
+            >
+              👤 Amministrazione
+            </Button>
+          )}
+          <Button
+            onClick={performFundCalculation}
+            isLoading={isLoading}
+            disabled={isLoading}
+            variant="primary"
+            size="md"
+          >
+            {isLoading ? TEXTS_UI.calculating : 'Aggiorna Calcoli'}
+          </Button>
+        </div>
       </div>
 
       {error && !isLoading && (

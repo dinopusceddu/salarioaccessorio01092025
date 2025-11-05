@@ -10,6 +10,14 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **ADMIN PANEL CONSOLIDATION**: Centralized admin panel access exclusively to Dashboard
+  - **Removed**: Admin panel button from HomePage and all fund pages
+  - **Removed**: Separate AdminPage.tsx file and routing
+  - **Added**: "Rendi Admin/User" functionality to Dashboard admin panel
+  - **Location**: Admin panel now accessible ONLY from Dashboard via "👤 Amministrazione" button
+  - **Features**: All admin functions consolidated - create users, manage roles, reset passwords, delete users, view entities/years per user
+  - **Security**: Self-protection - admins cannot delete or demote themselves
+  - **UI**: Consistent design with FP CGIL Lombardia branding throughout admin interface
 - **BUG FIX - Data Leakage Between Entities**: Fixed critical issue where data from one entity appeared in another
   - **Issue**: When selecting a new entity, the form showed data from the previously selected entity
   - **Root Cause**: Race condition between auto-save and data loading - auto-save would save old data to new entity

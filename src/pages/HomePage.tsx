@@ -15,7 +15,6 @@ import { DatabaseService } from '../services/database';
 
 export const HomePage: React.FC = () => {
   const { state, dispatch, performFundCalculation } = useAppContext();
-  const { isAdmin } = useAuth();
   const { calculatedFund, complianceChecks, fundData, isLoading, error, selectedEntityId } = state;
   const { annoRiferimento } = fundData.annualData;
   
@@ -85,15 +84,6 @@ export const HomePage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {isAdmin() && (
-            <Button
-              onClick={() => dispatch({ type: 'SET_ACTIVE_TAB', payload: 'admin' })}
-              variant="secondary"
-              size="md"
-            >
-              👤 Amministrazione
-            </Button>
-          )}
           <Button
             onClick={performFundCalculation}
             isLoading={isLoading}

@@ -244,6 +244,30 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
     }
   };
 
+  const handleRoleUpdate = async (userId: string, userEmail: string, newRole: 'user' | 'admin') => {
+    const confirmMessage = newRole === 'admin' 
+      ? `Sei sicuro di voler promuovere ${userEmail} ad amministratore?` 
+      : `Sei sicuro di voler retrocedere ${userEmail} a ruolo normale?`;
+    
+    if (!window.confirm(confirmMessage)) return;
+
+    setAdminLoading(true);
+    try {
+      const success = await DatabaseService.updateUserRole(userId, newRole);
+      if (success) {
+        setAdminMessage({ type: 'success', text: `Ruolo aggiornato con successo per ${userEmail}!` });
+        await loadAllUsers();
+      } else {
+        setAdminMessage({ type: 'error', text: 'Errore nell\'aggiornamento del ruolo' });
+      }
+    } catch (error) {
+      console.error('Error updating role:', error);
+      setAdminMessage({ type: 'error', text: 'Errore nell\'aggiornamento del ruolo' });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
   const handleToggleAdminPanel = async () => {
     if (!showAdminPanel && isAdmin()) {
       await loadAllUsers();
@@ -440,6 +464,25 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
                                   {loadingEntities === userItem.id ? 'Caricamento...' : 
                                    expandedUserEntities?.[userItem.id] ? '▲ Nascondi Enti' : '▼ Mostra Enti'}
                                 </button>
+                                {userItem.role !== 'admin' ? (
+                                  <button
+                                    onClick={() => handleRoleUpdate(userItem.id, userItem.email, 'admin')}
+                                    disabled={adminLoading}
+                                    className="text-green-600 hover:text-green-800 text-xs font-medium disabled:opacity-50"
+                                    title="Promuovi ad amministratore"
+                                  >
+                                    ⬆️ Rendi Admin
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleRoleUpdate(userItem.id, userItem.email, 'user')}
+                                    disabled={adminLoading || userItem.id === user?.id}
+                                    className="text-orange-600 hover:text-orange-800 text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title={userItem.id === user?.id ? 'Non puoi retrocedere te stesso' : 'Retrocedi a utente normale'}
+                                  >
+                                    ⬇️ Rendi User
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => {
                                     setSelectedUserId(userItem.id);

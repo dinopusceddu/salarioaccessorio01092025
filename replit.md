@@ -10,6 +10,11 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **BUG FIX - Entity Name Display**: Fixed "Ente non specificato" appearing in HomePage and missing components in DataEntryPage
+  - **Root Cause**: Functions getPrimaryEntityName/Tipologia relied on entita[] array which was empty after database reset
+  - **Fix**: Modified HomePage and DataEntryPage to load entity data directly from database using selectedEntityId
+  - **Resolution**: Entity name now displays correctly in page title, Art23 and Simulatore components now appear for Comuni
+  - **Implementation**: Added useEffect hooks to fetch entity data via DatabaseService.getEntity()
 - **BUG FIX - Data Misalignment**: Fixed entity data corruption where clicking "Comune di Milano" showed data from "Comune di Stezzano"
   - **Root Cause**: Annual entries for entity ID contained wrong denominazioneEnte and entita data
   - **Fix**: Added detailed logging to track entity selection flow (🔍 CLICK, 📥 LOAD logs)

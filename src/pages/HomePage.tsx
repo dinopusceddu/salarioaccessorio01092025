@@ -1,5 +1,5 @@
 // src/pages/HomePage.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/shared/Button';
@@ -11,16 +11,32 @@ import { ComplianceStatusWidget } from '../components/dashboard/ComplianceStatus
 import { HomePageSkeleton } from '../components/dashboard/HomePageSkeleton';
 import { Alert } from '../components/shared/Alert';
 import { EmptyState } from '../components/shared/EmptyState';
-import { getPrimaryEntityName } from '../utils/formatters';
+import { DatabaseService } from '../services/database';
 
 export const HomePage: React.FC = () => {
   const { state, dispatch, performFundCalculation } = useAppContext();
   const { isAdmin } = useAuth();
-  const { calculatedFund, complianceChecks, fundData, isLoading, error } = state;
+  const { calculatedFund, complianceChecks, fundData, isLoading, error, selectedEntityId } = state;
   const { annoRiferimento } = fundData.annualData;
+  
+  const [entityName, setEntityName] = useState<string>('Ente non specificato');
 
-  // Use utility function to get entity name with fallback to legacy
-  const entityName = getPrimaryEntityName(fundData.annualData) || 'Ente non specificato';
+  // ✅ FIX: Load entity name from database using selectedEntityId
+  useEffect(() => {
+    const loadEntityName = async () => {
+      if (!selectedEntityId) {
+        setEntityName('Ente non specificato');
+        return;
+      }
+      
+      const entity = await DatabaseService.getEntity(selectedEntityId);
+      if (entity) {
+        setEntityName(entity.name);
+      }
+    };
+    
+    loadEntityName();
+  }, [selectedEntityId]);
   
   const isDataAvailable = !!calculatedFund;
   const pageTitle = `Riepilogo fondo - ${entityName} per l'anno ${annoRiferimento}`;

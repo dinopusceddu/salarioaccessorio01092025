@@ -474,6 +474,61 @@ export class DatabaseService {
   }
 
   /**
+   * Duplica i dati di un anno in un nuovo anno per la stessa entità
+   */
+  static async duplicateYear(entityId: string, fromYear: number, toYear: number): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        return { success: false, error: 'Utente non autenticato' };
+      }
+
+      // Carica i dati dell'anno sorgente
+      const sourceData = await this.getAnnualEntry(entityId, fromYear);
+      
+      if (!sourceData) {
+        return { success: false, error: `Nessun dato trovato per l'anno ${fromYear}` };
+      }
+
+      // Verifica che l'anno di destinazione non esista già
+      const existingData = await this.getAnnualEntry(entityId, toYear);
+      if (existingData) {
+        return { success: false, error: `Esistono già dati per l'anno ${toYear}` };
+      }
+
+      // Crea una copia dei dati aggiornando l'anno di riferimento
+      const duplicatedData: FundData = {
+        ...sourceData,
+        annualData: {
+          ...sourceData.annualData,
+          annoRiferimento: toYear,
+        },
+      };
+
+      // Inserisci i dati duplicati
+      const { error } = await supabase
+        .from('annual_entries')
+        .insert({
+          user_id: user.id,
+          entity_id: entityId,
+          year: toYear,
+          data: duplicatedData,
+        });
+
+      if (error) {
+        console.error('Error duplicating year:', error);
+        return { success: false, error: 'Errore durante la duplicazione dell\'anno' };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error in duplicateYear:', error);
+      return { success: false, error: 'Errore durante la duplicazione dell\'anno' };
+    }
+  }
+
+  /**
    * [ADMIN ONLY] Ottieni tutti gli inserimenti di tutti gli utenti
    * Ora sicuro con RLS - admin può vedere tutti i dati via policy
    */

@@ -18,7 +18,6 @@ import { FundDetailsPage } from './pages/FundDetailsPage';
 import { HomePage } from './pages/HomePage';
 import { PersonaleServizioPage } from './pages/PersonaleServizioPage';
 import { ReportsPage } from './pages/ReportsPage';
-import { AdminPage } from './pages/AdminPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PageModule } from './types';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -32,7 +31,7 @@ const queryClient = new TanstackQuery.QueryClient({
   },
 });
 
-const getPageModules = (isAdmin: boolean): PageModule[] => {
+const getPageModules = (): PageModule[] => {
   const baseModules: PageModule[] = [
     { id: 'benvenuto', name: 'Benvenuto!', component: HomePage },
     { id: 'dataEntry', name: 'Dati Costituzione Fondo', component: DataEntryPage },
@@ -72,11 +71,6 @@ const getPageModules = (isAdmin: boolean): PageModule[] => {
     { id: 'reports', name: 'Report', component: ReportsPage },
   ];
 
-  // Aggiungi la pagina Admin solo per gli amministratori
-  if (isAdmin) {
-    baseModules.push({ id: 'admin', name: '👤 Amministrazione', component: AdminPage });
-  }
-
   return baseModules;
 };
 
@@ -87,7 +81,7 @@ const AppContent: React.FC = () => {
 
   console.log('🏠 App: Auth state:', { role, isAdminResult: isAdmin(), profile: profile?.email, loading, selectedEntityId });
 
-  const allPageModules = getPageModules(isAdmin());
+  const allPageModules = getPageModules();
 
   const visibleModules = allPageModules.filter((module) => {
     if (module.id === 'fondoDirigenza' && !fundData.annualData.hasDirigenza) {

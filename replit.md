@@ -10,6 +10,12 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Dependencies**: All installed and working
 
 ## Recent Changes (November 5, 2025)
+- **ADMIN PANEL ENHANCEMENTS**: Comprehensive user management with full CRUD operations
+  - **Edge Functions**: Created admin-delete-user, admin-reset-password, admin-get-user-entities for secure admin operations
+  - **User Actions**: Delete users, reset passwords, view user's entities and years - all with proper confirmations
+  - **Entity Visibility**: Expandable user rows showing all entities and years associated with each user
+  - **Security**: All admin operations protected by JWT validation and role checks in edge functions
+  - **UI/UX**: Modal confirmations for destructive actions, real-time feedback, disabled self-deletion
 - **ENTITY WORKFLOW FIX**: Removed entity editing form from main app, entity/year now selected only from dashboard (user → entity → year workflow)
   - Created SelectedEntityDisplay component to show readonly entity and year information
   - Added DatabaseService.getEntity() method for fetching single entity details

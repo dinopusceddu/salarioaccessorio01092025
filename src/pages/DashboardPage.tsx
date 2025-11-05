@@ -575,7 +575,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
                           {entityYears[entity.id]?.sort((a, b) => b - a).map((year) => (
                             <button
                               key={year}
-                              onClick={() => onEntityYearSelected(entity.id, year)}
+                              onClick={() => {
+                                console.log('🔍 CLICK: Entity selected:', { 
+                                  entityName: entity.name, 
+                                  entityId: entity.id, 
+                                  year,
+                                  tipologia: entity.tipologia,
+                                  numeroAbitanti: entity.numero_abitanti
+                                });
+                                onEntityYearSelected(entity.id, year);
+                              }}
                               className="bg-[#994d51]/10 hover:bg-[#994d51]/20 border border-[#994d51]/30 rounded-md px-3 py-2 text-sm font-medium text-[#994d51] transition-colors"
                             >
                               {year}

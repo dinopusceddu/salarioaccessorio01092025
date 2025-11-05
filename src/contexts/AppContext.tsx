@@ -571,6 +571,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.error('No entity selected for database load');
         return false;
       }
+      console.log(`📥 LOAD: Loading data for entityId=${state.selectedEntityId}, year=${year}`);
       const data = await DatabaseService.getAnnualEntry(state.selectedEntityId, year);
       if (data) {
         // Apply migration logic for retrocompatibilità: convert legacy single entity to entita[] array
@@ -589,6 +590,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             )
         };
         
+        console.log(`📥 LOAD: Data loaded from database:`, {
+          entityId: state.selectedEntityId,
+          year,
+          entitaInData: migratedAnnualData.entita?.map(e => ({ nome: e.nome, tipologia: e.tipologia })),
+          denominazioneEnte: data.annualData.denominazioneEnte,
+          tipologiaEnte: data.annualData.tipologiaEnte
+        });
+        
         dispatch({ type: 'SET_CURRENT_YEAR', payload: year });
         dispatch({ type: 'UPDATE_HISTORICAL_DATA', payload: data.historicalData });
         dispatch({ type: 'UPDATE_ANNUAL_DATA', payload: migratedAnnualData });
@@ -597,7 +606,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dispatch({ type: 'UPDATE_FONDO_SEGRETARIO_COMUNALE_DATA', payload: data.fondoSegretarioComunaleData });
         dispatch({ type: 'UPDATE_FONDO_DIRIGENZA_DATA', payload: data.fondoDirigenzaData });
         dispatch({ type: 'UPDATE_DISTRIBUZIONE_RISORSE_DATA', payload: data.distribuzioneRisorseData });
-        console.log(`Dati caricati dal database per l'anno ${year}`);
+        console.log(`✅ LOAD: Dati caricati dal database per l'anno ${year}`);
         return true;
       } else {
         // ⚠️ FIX BUG: Se non ci sono dati nel database, resetta ai valori iniziali

@@ -9,7 +9,11 @@ This is a React TypeScript application for calculating supplementary salaries fo
 - **Port**: 5000 (configured for Replit environment)
 - **Dependencies**: All installed and working
 
-## Recent Changes (November 5, 2025)
+## Recent Changes (November 12, 2025)
+- **FIX LOGO IN PRODUZIONE**: Risolto problema logo FP CGIL non visibile in deployment
+  - **Problema**: Il logo non appariva nel sito pubblicato perché i file in `attached_assets/` non vengono inclusi nel build di produzione
+  - **Soluzione**: Spostato il logo da `attached_assets/` a `public/logo-fp-cgil.jpg` e aggiornati tutti i riferimenti in LoginPage e DashboardPage
+  - **Risultato**: Il logo ora appare correttamente sia in sviluppo che in produzione
 - **AUTO-SINCRONIZZAZIONE FONDO-DISTRIBUZIONE**: Implementato sistema automatico di allineamento tra Fondo Accessorio e Distribuzione Risorse
   - **Auto-compilazione**: Quando si inseriscono valori nel Fondo Accessorio Dipendente, i corrispondenti campi in Distribuzione Risorse vengono automaticamente compilati
   - **Mapping campi**: 

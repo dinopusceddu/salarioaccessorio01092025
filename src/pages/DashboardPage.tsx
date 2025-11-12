@@ -377,7 +377,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ onEntityYearSelect
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-6">
               <img 
-                src="/attached_assets/LOGO_FP_1758267371308.jpg" 
+                src="/logo-fp-cgil.jpg" 
                 alt="FP CGIL Lombardia" 
                 className="h-16 w-auto"
               />
